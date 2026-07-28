@@ -7,4 +7,15 @@ dist/
 *.egg-info/
 accepted/*.json
 !accepted/.gitkeep
-
+.env
+.env.*
+!.env.example
+.aws/
+credentials
+*.key
+*.pem
+*.p12
+*.auto.tfvars
+*.tfstate
+*.tfstate.*
+.DS_Store

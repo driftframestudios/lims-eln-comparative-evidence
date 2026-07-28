@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/lims-eln/comparison-profile/1.0.0",
+  "title": "Comparative evidence profile",
+  "type": "object",
+  "required": [
+    "profile_version",
+    "scenario_id",
+    "critical_exact_paths",
+    "declared_nondeterminism",
+    "numeric_tolerances",
+    "reportable_paths",
+    "adjudications"
+  ],
+  "properties": {
+    "profile_version": {"const": "1.0.0"},
+    "scenario_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$"},
+    "critical_exact_paths": {"$ref": "#/$defs/paths"},
+    "declared_nondeterminism": {"$ref": "#/$defs/paths"},
+    "reportable_paths": {"$ref": "#/$defs/paths"},
+    "numeric_tolerances": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "absolute": {"type": "number", "minimum": 0},
+          "relative": {"type": "number", "minimum": 0}
+        },
+        "additionalProperties": false
+      }
+    },
+    "adjudications": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["classification", "rationale"],
+        "properties": {
+          "classification": {
+            "enum": [
+              "actual_defect",
+              "actual_gap",
+              "comparison_inconclusive",
+              "context_changed",
+              "desired_divergence",
+              "receipt_pending",
+              "shared_specification_violation",
+              "simulation_fault"
+            ]
+          },
+          "rationale": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^\\$\\."}
+    }
+  },
+  "additionalProperties": false
+}

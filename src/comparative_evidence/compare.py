@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
+from .gate import validate_for_accepted
 from .model import ObservationEnvelope, digest
 from .normalize import normalize, path_value
+from .safety import (
+    EvidenceSafetyError,
+    validate_observation_id,
+    validate_repository_safe_content,
+)
 
 
 CLASSIFICATIONS = {
@@ -28,6 +35,7 @@ class Difference:
     classification: str
     rationale: str
     critical: bool
+    value_visibility: str
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -37,6 +45,7 @@ class Difference:
             "classification": self.classification,
             "rationale": self.rationale,
             "critical": self.critical,
+            "value_visibility": self.value_visibility,
         }
 
 
@@ -45,6 +54,7 @@ def compare(
     actual: ObservationEnvelope,
     profile: dict[str, Any],
 ) -> dict[str, Any]:
+    _validate_authority(simulation, actual, profile)
     if simulation.scenario_id != actual.scenario_id:
         raise ValueError("paired observations require the same scenario_id")
 
@@ -54,6 +64,7 @@ def compare(
     critical_paths = set(profile.get("critical_exact_paths", []))
     tolerances = profile.get("numeric_tolerances", {})
     dispositions = profile.get("adjudications", {})
+    reportable_paths = set(profile.get("reportable_paths", []))
 
     paths = sorted(set(_leaf_paths(expected)) | set(_leaf_paths(observed)))
     differences: list[Difference] = []
@@ -74,14 +85,15 @@ def compare(
         differences.append(
             Difference(
                 path=path,
-                expected=expected_value,
-                actual=actual_value,
+                expected=_report_value(path, expected_value, reportable_paths),
+                actual=_report_value(path, actual_value, reportable_paths),
                 classification=classification,
                 rationale=disposition.get(
                     "rationale",
                     "Independent adjudication required for this material difference.",
                 ),
                 critical=path in critical_paths,
+                value_visibility="explicit" if path in reportable_paths else "digest_only",
             )
         )
 
@@ -97,7 +109,8 @@ def compare(
         },
     }
     report = {
-        "comparison_version": "1.0.0",
+        "comparator_release": "0.2.0",
+        "comparison_contract_version": "1.0.0",
         "scenario_id": actual.scenario_id,
         "simulation": {
             "observation_id": simulation.observation_id,
@@ -116,6 +129,55 @@ def compare(
     }
     report["report_digest"] = digest(report)
     return report
+
+
+def _validate_authority(
+    simulation: ObservationEnvelope,
+    actual: ObservationEnvelope,
+    profile: dict[str, Any],
+) -> None:
+    if simulation.evidence_mode != "simulated" or simulation.assurance_stage != "specified":
+        raise ValueError("forecast input requires simulated evidence at the specified assurance stage")
+    if actual.evidence_mode != "observed":
+        raise ValueError("actual input requires observed evidence")
+    if actual.assurance_stage not in {"verified", "qualified", "validated", "accepted"}:
+        raise ValueError("actual input requires an observed assurance stage")
+    if profile.get("profile_version") != "1.0.0":
+        raise ValueError("comparison profile requires the released 1.0.0 contract")
+    if profile.get("scenario_id") != simulation.scenario_id or profile.get("scenario_id") != actual.scenario_id:
+        raise ValueError("comparison profile requires the paired scenario_id")
+
+    critical = set(profile.get("critical_exact_paths", []))
+    ignored = set(profile.get("declared_nondeterminism", []))
+    tolerances = set(profile.get("numeric_tolerances", {}))
+    if critical & ignored:
+        raise ValueError("critical exact paths require deterministic comparison")
+    if critical & tolerances:
+        raise ValueError("critical exact paths require exact comparison")
+    for path, tolerance in profile.get("numeric_tolerances", {}).items():
+        if not isinstance(tolerance, dict):
+            raise ValueError(f"numeric tolerance {path} requires an object")
+        for name in ("absolute", "relative"):
+            amount = tolerance.get(name, 0.0)
+            if not isinstance(amount, (int, float)) or isinstance(amount, bool):
+                raise ValueError(f"numeric tolerance {path}.{name} requires a number")
+            if amount < 0 or not math.isfinite(amount):
+                raise ValueError(f"numeric tolerance {path}.{name} requires a finite, nonnegative value")
+    try:
+        validate_observation_id(simulation.observation_id)
+        validate_repository_safe_content(simulation.as_dict())
+        validate_for_accepted(actual)
+    except EvidenceSafetyError as error:
+        raise ValueError(str(error)) from error
+
+
+def _report_value(path: str, value: Any, reportable_paths: set[str]) -> Any:
+    if path in reportable_paths:
+        return value
+    return {
+        "classification": "redacted-comparison-value",
+        "digest": digest(value),
+    }
 
 
 def _leaf_paths(value: Any, path: str = "$") -> list[str]:
@@ -145,4 +207,3 @@ def _equivalent(expected: Any, actual: Any, tolerance: dict[str, float] | None) 
         relative = tolerance.get("relative", 0.0)
         return abs(actual - expected) <= max(absolute, relative * abs(expected))
     return expected == actual
-

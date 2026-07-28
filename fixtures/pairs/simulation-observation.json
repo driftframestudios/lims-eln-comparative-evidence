@@ -7,7 +7,7 @@
   "source": {
     "environment_id": "simulated-final-state",
     "implementation_commit": "forecast-2026-Q3-r1",
-    "configuration_digest": "sha256:simulated-configuration"
+    "configuration_digest": "sha256:e0161b2640abc6b0461414b100f176b8376507e8a6426c2012667daf744ce867"
   },
   "result": {
     "specimen": {
@@ -25,7 +25,7 @@
     "execution": {"completed_at": "2026-08-17T14:31:00Z", "trace_id": "sim-trace-001"}
   },
   "provenance": {
-    "raw_artifact_digest": "sha256:simulated",
+    "raw_artifact_digest": "sha256:daeb30e06dcf80565ac935eca8ec3e87a2cd7194440c14842b470d3cb7fed353",
     "governed_locator": "simulation://forecast-2026-Q3-r1",
     "performed_by": "simulation-runner",
     "reviewed_by": "simulation-reviewer"
@@ -36,4 +36,3 @@
     "redaction_status": "generated-identities"
   }
 }
-

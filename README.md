@@ -39,7 +39,9 @@ PYTHONPATH=src python -m comparative_evidence.cli compare \
   --output build/comparison
 ```
 
-The output contains `comparison.json` and `comparison.html`.
+The output contains `comparison.json` and `comparison.html`. Difference values appear
+only for paths declared in the released profile's `reportable_paths`. Every other
+value becomes a classification and content digest.
 
 Admission uses a separate command:
 
@@ -78,4 +80,3 @@ The report retains every judgment rule so a reviewer can challenge the adjudicat
 
 Fixture, oracle, critical-path, tolerance, and admission changes receive independent
 review. Release tags use `comparison-vMAJOR.MINOR.PATCH`.
-

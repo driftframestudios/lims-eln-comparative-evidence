@@ -7,7 +7,7 @@
   "source": {
     "environment_id": "configured-environment-example",
     "implementation_commit": "fedcba9876543210fedcba9876543210fedcba98",
-    "configuration_digest": "sha256:configuration-example"
+    "configuration_digest": "sha256:db363af6c87de895b187fcf6b4e35d9c8873e88e90c47f74ef9c3ec1de24e292"
   },
   "result": {
     "intended_use": "bounded synthetic exemplar",
@@ -16,7 +16,7 @@
     "regulatory_applicability": "accepted_for_named_scope"
   },
   "provenance": {
-    "raw_artifact_digest": "sha256:raw-evidence-example",
+    "raw_artifact_digest": "sha256:b2d92fac5a5eaafc99a1532d0f4be3f88c625cb5c22fb569960d77258b649fdf",
     "governed_locator": "evidence-vault://acceptance/example-001",
     "performed_by": "validation-operator",
     "reviewed_by": "independent-validation-reviewer"
@@ -31,4 +31,3 @@
     "redaction_status": "reviewed-redacted-manifest"
   }
 }
-

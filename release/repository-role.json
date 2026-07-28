@@ -1,0 +1,26 @@
+{
+  "manifest_version": "1.0.0",
+  "repository_role": "comparative_evidence",
+  "repository_release": "0.2.0",
+  "external_release": "comparison-v0.2.0",
+  "reference_report_digest": "sha256:147168aea604922948480c48fa0b1088d788307a4b73a66eaf7cfc8a660ab286",
+  "historical_external_releases": [
+    {
+      "repository_release": "0.1.0",
+      "external_release": "comparison-v0.1.0",
+      "status": "preserved_historical_baseline"
+    }
+  ],
+  "contract_bindings": {
+    "governance_schema": "1.0.0",
+    "comparison_profile_schema": "1.0.0",
+    "observation_envelope_schema": "1.0.0",
+    "redacted_receipt_schema": "1.0.0"
+  },
+  "release_coordinates": {
+    "governance_commit": "716d4581d723a5c1b56f16efdbcd25790549ae33",
+    "program_specification_commit": "fc7707134b58ed12ad349bf649d2af1c3689bd01",
+    "simulation_commit": "6194a1c3911a97aa5e29b1861819a55554019488",
+    "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
+  }
+}

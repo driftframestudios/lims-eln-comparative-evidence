@@ -9,17 +9,23 @@
     "environment_id": "configured-vendor-example",
     "vendor": "example",
     "vendor_build": "recorded-in-governed-evidence",
-    "schema_digest": "sha256:schema-example",
-    "permissions_digest": "sha256:permissions-example"
+    "schema_digest": "sha256:c0ee535f878d9158a65974818045d7a3f4cadf3615b9d0e1e96fc07b18865b32",
+    "permissions_digest": "sha256:07acb501d901b7a0a2cdbde40840a99df720397b4f2fc867eebb8490687087c8"
   },
   "implementation_commit": "0123456789abcdef0123456789abcdef01234567",
   "scenario_ids": ["SPEC-VENDOR-REPLAY-001", "SPEC-VENDOR-AMBIGUITY-001"],
   "result": "qualified_with_named_scope",
-  "raw_artifact_digest": "sha256:raw-vendor-receipt-example",
+  "raw_artifact_digest": "sha256:4f42caff1cf995f374dd400c86f9cb0df54cdb191cc698104e1f240cb308bc08",
   "governed_locator": "evidence-vault://vendor/example-001",
   "limitations": ["synthetic qualification fixtures", "named configured environment"],
   "performed_by": "qualification-operator",
   "reviewed_by": "independent-platform-reviewer",
+  "approvals": [
+    {"domain": "engineering", "decision": "accept", "approver": "platform-owner"}
+  ],
+  "classification": {
+    "data_class": "approved-synthetic-qualification",
+    "redaction_status": "reviewed-redacted-manifest"
+  },
   "retest_triggers": ["vendor build", "SDK version", "schema", "permissions", "adapter commit"]
 }
-
