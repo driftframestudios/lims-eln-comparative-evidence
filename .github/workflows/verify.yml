@@ -1,0 +1,37 @@
+name: verify-comparative-evidence
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop, "release/**", "hotfix/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run comparison and admission tests
+        run: python -m unittest discover -s tests -v
+      - name: Generate portable comparison
+        env:
+          PYTHONPATH: src
+        run: >-
+          python -m comparative_evidence.cli compare
+          --profile specification/comparison-profile.json
+          --simulation fixtures/pairs/simulation-observation.json
+          --actual fixtures/pairs/actual-observation.json
+          --output build/comparison
+      - uses: actions/upload-artifact@v4
+        with:
+          name: comparative-report-${{ matrix.python-version }}
+          path: build/comparison/
+

@@ -1,0 +1,41 @@
+{
+  "envelope_version": "1.0.0",
+  "observation_id": "OBS-GOLDEN-001",
+  "evidence_mode": "observed",
+  "assurance_stage": "qualified",
+  "scenario_id": "SPEC-GOLDEN-SPECIMEN-E2E-001",
+  "source": {
+    "environment_id": "qualification-synthetic-01",
+    "implementation_commit": "0123456789abcdef0123456789abcdef01234567",
+    "configuration_digest": "sha256:qualification-configuration"
+  },
+  "result": {
+    "specimen": {
+      "specimen_id": "SPM-SYN-0001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "status": "released",
+      "revision": 5,
+      "result": {"unit": "copies", "quality_flag": "pass"}
+    },
+    "migration": {"semantic_parity": true},
+    "restore": {"clean_environment": true, "observed_recovery_seconds": 41},
+    "security": {"tenant_boundary": "enforced"},
+    "telemetry": {"vendor_projection_readback": 0.9994},
+    "operations": {"manual_steps": 2},
+    "execution": {"completed_at": "2026-08-21T10:22:00Z", "trace_id": "observed-trace-redacted"}
+  },
+  "provenance": {
+    "raw_artifact_digest": "sha256:observed-raw-artifact-placeholder",
+    "governed_locator": "evidence-vault://qualification/OBS-GOLDEN-001",
+    "performed_by": "qualification-operator-a",
+    "reviewed_by": "independent-reviewer-b"
+  },
+  "approvals": [
+    {"domain": "engineering", "decision": "accept", "approver": "engineering-owner"}
+  ],
+  "classification": {
+    "data_class": "approved-synthetic-qualification",
+    "redaction_status": "reviewed-redacted-manifest"
+  }
+}
+

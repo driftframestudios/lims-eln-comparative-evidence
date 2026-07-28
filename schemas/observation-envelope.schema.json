@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/lims-eln/observation-envelope/1.0.0",
+  "title": "Comparative observation envelope",
+  "type": "object",
+  "required": [
+    "envelope_version",
+    "observation_id",
+    "evidence_mode",
+    "assurance_stage",
+    "scenario_id",
+    "source",
+    "result",
+    "provenance",
+    "approvals",
+    "classification"
+  ],
+  "properties": {
+    "envelope_version": {"const": "1.0.0"},
+    "observation_id": {"type": "string", "minLength": 1},
+    "evidence_mode": {"enum": ["planned", "simulated", "observed"]},
+    "assurance_stage": {"enum": ["specified", "verified", "qualified", "validated", "accepted"]},
+    "scenario_id": {"type": "string", "minLength": 1},
+    "source": {"type": "object"},
+    "result": {"type": "object"},
+    "provenance": {"type": "object"},
+    "approvals": {"type": "array", "items": {"type": "object"}},
+    "classification": {"type": "object"}
+  },
+  "additionalProperties": false
+}
+

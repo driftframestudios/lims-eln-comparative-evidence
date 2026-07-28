@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparative evidence · SPEC-GOLDEN-SPECIMEN-E2E-001</title>
+<style>
+:root { color-scheme: light; --ink:#152433; --paper:#f4f0e8; --blue:#2357d9; --coral:#dd6b55; --line:#b8c2cc; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 ui-sans-serif,system-ui,sans-serif; }
+main { max-width:1500px; margin:auto; padding:3rem; }
+h1 { font-size:clamp(2rem,5vw,4.5rem); line-height:.95; max-width:13ch; letter-spacing:-.04em; }
+.kicker { color:var(--blue); font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
+.summary { display:grid; grid-template-columns:repeat(4,minmax(10rem,1fr)); gap:1rem; margin:2rem 0; }
+.card { border:1px solid var(--line); border-radius:1rem; padding:1.2rem; background:#fff9; }
+.value { display:block; font-size:2.4rem; font-weight:750; }
+table { width:100%; border-collapse:collapse; background:#fff9; }
+th,td { border:1px solid var(--line); padding:.8rem; text-align:left; vertical-align:top; }
+th { background:#e7ecf6; }
+pre { margin:0; max-width:34ch; overflow:auto; white-space:pre-wrap; }
+.pill { display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; }
+.actual_defect,.shared_specification_violation { color:#a82d21; }
+.desired_divergence,.simulation_fault { color:#176b45; }
+footer { margin-top:2rem; font-size:.85rem; color:#536270; }
+@media(max-width:900px) { main{padding:1rem} .summary{grid-template-columns:1fr 1fr} table{display:block;overflow:auto} }
+</style>
+</head>
+<body>
+<main>
+<p class="kicker">Three-way comparative receipt</p>
+<h1>SPEC-GOLDEN-SPECIMEN-E2E-001</h1>
+<section class="summary" aria-label="Comparison summary">
+  <div class="card"><span class="value">14</span>paths compared</div>
+  <div class="card"><span class="value">12</span>converged</div>
+  <div class="card"><span class="value">2</span>material differences</div>
+  <div class="card"><span class="value">0</span>critical differences</div>
+</section>
+<h2>Adjudication surface</h2>
+<table>
+<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Rationale</th><th>Simulation</th><th>Observed</th></tr></thead>
+<tbody><tr><td><code>$.operations.manual_steps</code></td><td><span class="pill actual_gap">actual_gap</span></td><td>Standard</td><td>Observed operation requires an additional manual handoff; the team will assess automation and accountable control value.</td><td><pre>1</pre></td><td><pre>2</pre></td></tr>
+<tr><td><code>$.restore.observed_recovery_seconds</code></td><td><span class="pill desired_divergence">desired_divergence</span></td><td>Standard</td><td>Observed recovery is faster than the conservative forecast and remains within the approved objective.</td><td><pre>72</pre></td><td><pre>41</pre></td></tr></tbody>
+</table>
+<footer>
+  <p>Report digest: <code>sha256:7209fa2621e186e76ef1fa7a3113f4782eb71ef6b7178685f2f0a36db1357159</code></p>
+  <details><summary>Machine-readable report</summary><pre>{&quot;actual&quot;: {&quot;assurance_stage&quot;: &quot;qualified&quot;, &quot;digest&quot;: &quot;sha256:62861d951b2472fb6e4670e72629a06aa3d26b19d77492b1aa2b3ecebd10483f&quot;, &quot;evidence_mode&quot;: &quot;observed&quot;, &quot;observation_id&quot;: &quot;OBS-GOLDEN-001&quot;}, &quot;comparison_version&quot;: &quot;1.0.0&quot;, &quot;differences&quot;: [{&quot;actual&quot;: 2, &quot;classification&quot;: &quot;actual_gap&quot;, &quot;critical&quot;: false, &quot;expected&quot;: 1, &quot;path&quot;: &quot;$.operations.manual_steps&quot;, &quot;rationale&quot;: &quot;Observed operation requires an additional manual handoff; the team will assess automation and accountable control value.&quot;}, {&quot;actual&quot;: 41, &quot;classification&quot;: &quot;desired_divergence&quot;, &quot;critical&quot;: false, &quot;expected&quot;: 72, &quot;path&quot;: &quot;$.restore.observed_recovery_seconds&quot;, &quot;rationale&quot;: &quot;Observed recovery is faster than the conservative forecast and remains within the approved objective.&quot;}], &quot;profile_digest&quot;: &quot;sha256:8c6ec9615ab733888970306be1cbab9a19a337d3e653b0b3002143aee751c095&quot;, &quot;report_digest&quot;: &quot;sha256:7209fa2621e186e76ef1fa7a3113f4782eb71ef6b7178685f2f0a36db1357159&quot;, &quot;scenario_id&quot;: &quot;SPEC-GOLDEN-SPECIMEN-E2E-001&quot;, &quot;simulation&quot;: {&quot;digest&quot;: &quot;sha256:adfa44b6ebabdd7a7c480cd5e84503eaac584a2644431db128493642dc1199ec&quot;, &quot;evidence_mode&quot;: &quot;simulated&quot;, &quot;observation_id&quot;: &quot;SIM-OBS-GOLDEN-001&quot;}, &quot;summary&quot;: {&quot;classification_counts&quot;: {&quot;actual_gap&quot;: 1, &quot;desired_divergence&quot;: 1}, &quot;converged_paths&quot;: 12, &quot;critical_differences&quot;: 0, &quot;leaf_paths_compared&quot;: 14, &quot;material_differences&quot;: 2}}</pre></details>
+</footer>
+</main>
+</body>
+</html>
