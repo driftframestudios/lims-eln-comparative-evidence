@@ -8,8 +8,11 @@ from typing import Any
 
 def write_reports(report: dict[str, Any], output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
-    (output / "comparison.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
-    (output / "comparison.html").write_text(render_html(report))
+    (output / "comparison.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    (output / "comparison.html").write_text(render_html(report), encoding="utf-8")
 
 
 def render_html(report: dict[str, Any]) -> str:
@@ -19,13 +22,14 @@ def render_html(report: dict[str, Any]) -> str:
         f"<td><code>{escape(item['path'])}</code></td>"
         f"<td><span class=\"pill {escape(item['classification'])}\">{escape(item['classification'])}</span></td>"
         f"<td>{'Critical' if item['critical'] else 'Standard'}</td>"
+        f"<td>{escape(item['value_visibility'])}</td>"
         f"<td>{escape(item['rationale'])}</td>"
-        f"<td><pre>{escape(json.dumps(item['expected'], indent=2, sort_keys=True))}</pre></td>"
-        f"<td><pre>{escape(json.dumps(item['actual'], indent=2, sort_keys=True))}</pre></td>"
+        f"<td><pre>{escape(json.dumps(item['expected'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
+        f"<td><pre>{escape(json.dumps(item['actual'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
         "</tr>"
         for item in report["differences"]
     )
-    embedded = escape(json.dumps(report, sort_keys=True))
+    embedded = escape(json.dumps(report, sort_keys=True, allow_nan=False))
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -65,8 +69,8 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
 </section>
 <h2>Adjudication surface</h2>
 <table>
-<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Rationale</th><th>Simulation</th><th>Observed</th></tr></thead>
-<tbody>{rows or '<tr><td colspan="6">All compared paths converged.</td></tr>'}</tbody>
+<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>Observed</th></tr></thead>
+<tbody>{rows or '<tr><td colspan="7">All compared paths converged.</td></tr>'}</tbody>
 </table>
 <footer>
   <p>Report digest: <code>{escape(report['report_digest'])}</code></p>

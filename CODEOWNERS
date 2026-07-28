@@ -3,4 +3,7 @@
 /specification/ @driftframestudios/scientific-data @driftframestudios/quality-regulatory
 /fixtures/ @driftframestudios/scientific-data
 /accepted/ @driftframestudios/quality-regulatory
-
+/src/comparative_evidence/safety.py @driftframestudios/quality-regulatory @driftframestudios/security
+/schemas/ @driftframestudios/quality-regulatory @driftframestudios/security
+/SECURITY.md @driftframestudios/security
+/release/ @driftframestudios/solution-architecture @driftframestudios/quality-regulatory
