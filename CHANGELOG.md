@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.1
+
+- Bound the simulated observation to the exact future-reality identity, closure,
+  distinct simulation and implementation commits, source-result digest, and
+  aggregate artifact.
+- Added required-path detection and direction-aware adjudication for recovery time
+  and manual effort.
+- Reserved accepted evidence for qualified, validated, and accepted observed stages.
+- Advanced the comparison profile contract to 1.1.0 and the independently
+  reproducible simulated-closure bundle to 2.0.1.
+- Advanced the observation envelope to 1.1.0 so simulated evidence retains
+  semantically distinct simulation and implementation coordinates.
+- Added an observed-outcome calibration ledger and Brier scorer whose empty state
+  preserves the distinction between simulated and observed evidence.
+- Added one stable aggregate validation gate for evidence derivation, JSON
+  integrity, calibration posture, and repository credential-shape safety.
+- Migrated orientation and external vocabulary bindings to governance 2.0.1 and
+  the exact program candidate artifact.
+- Made the stable aggregate explicitly require a successful proof matrix.
+
 ## 0.3.0
 
 - Added immutable admission for an exact governance 2.0.0 selected-future closure

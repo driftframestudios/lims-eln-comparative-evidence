@@ -41,3 +41,23 @@ jobs:
           path: build/comparison/
           if-no-files-found: error
           retention-days: 7
+
+  comparative-validation:
+    if: ${{ always() }}
+    needs: test-and-report
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the complete comparative proof matrix
+        env:
+          TEST_AND_REPORT_RESULT: ${{ needs.test-and-report.result }}
+        run: test "$TEST_AND_REPORT_RESULT" = "success"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Validate released evidence, calibration posture, and repository safety
+        run: python tools/validate_repository.py

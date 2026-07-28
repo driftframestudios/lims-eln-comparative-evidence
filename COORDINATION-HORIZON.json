@@ -27,9 +27,9 @@
       "horizon_label": "Governance conformance",
       "sequence": 2,
       "state": "complete",
-      "desired_state": "The closure, Machine Node, first receipt, and Coordination Horizon satisfy governance schema release 2.0.0.",
+      "desired_state": "The closure, Machine Node, first receipt, and Coordination Horizon satisfy governance schema release 2.0.1.",
       "entry_evidence": [
-        "Governance schema release 2.0.0 and its bounded validator are available."
+        "Governance schema release 2.0.1 and its bounded validator are available."
       ],
       "completion_evidence": [
         "Each comparator control-plane document passes its matching governance schema."
@@ -44,7 +44,7 @@
       "horizon_label": "Immutable comparative-evidence promotion",
       "sequence": 3,
       "state": "settling",
-      "desired_state": "The promoted comparison-v0.3.0 release records immutable local provenance and governance, simulation, implementation, and specification coordinates.",
+      "desired_state": "The promoted comparison-v0.3.1 release records immutable local provenance and governance, simulation, implementation, and specification coordinates.",
       "entry_evidence": [
         "All repository-local contracts and tests pass against the shared schema release."
       ],
@@ -60,12 +60,12 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "Canonical selected-future closure admission and governance conformance are complete; candidate comparison-v0.3.0 promotion and immutable cross-repository release coordinates are settling.",
+    "current_state": "Canonical selected-future closure admission and governance conformance are complete; candidate comparison-v0.3.1 promotion and immutable cross-repository release coordinates are settling.",
     "recent_decisions": [
       "DECISION-GOVERNANCE-CLOSURE-AS-AUTHORITY-BOUNDARY-001",
       "DECISION-OBSERVED-EVIDENCE-AS-INDEPENDENT-COMPARISON-001"
     ],
-    "next_safe_action": "Run the full comparator suite and governance contract validations, then promote comparison-v0.3.0 and close RCP-COMPARATIVE-PROMOTION-003 with immutable provenance.",
+    "next_safe_action": "Run the full comparator suite and governance contract validations, then promote comparison-v0.3.1 and close RCP-COMPARATIVE-PROMOTION-003 with immutable provenance.",
     "verification": "Confirm the canonical closure digest, four receipt links, non-authorizing posture, immutable admission, schema conformance, repository artifact safety, and exact promoted commit and digest."
   },
   "retained_effects": [
@@ -77,7 +77,7 @@
     "Which observed encounter would create enough decision value to justify its collection cost?"
   ],
   "metadata": {
-    "schema_version": "2.0.0",
+    "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
     "updated_at": "2026-07-28T20:30:00Z",
     "owner": {

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.driftframe.org/lims-eln-comparative-evidence/v2.0/simulated-closure-bundle.schema.json",
+  "$id": "https://schemas.driftframe.org/lims-eln-comparative-evidence/v2.0.1/simulated-closure-bundle.schema.json",
   "title": "Governance-bound selected-future closure bundle",
   "type": "object",
   "additionalProperties": false,
@@ -9,16 +9,20 @@
     "future_reality_version",
     "governance_closure_digest",
     "governance_closure",
-    "detailed_receipts"
+    "detailed_receipts",
+    "source_result_digest"
   ],
   "properties": {
     "bundle_version": {
-      "const": "2.0.0"
+      "const": "2.0.1"
     },
     "future_reality_version": {
       "$ref": "#/$defs/futureRealityVersion"
     },
     "governance_closure_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "source_result_digest": {
       "$ref": "#/$defs/digest"
     },
     "governance_closure": {

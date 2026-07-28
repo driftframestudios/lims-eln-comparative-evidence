@@ -1,16 +1,16 @@
 {
-  "bundle_version": "2.0.0",
+  "bundle_version": "2.0.1",
   "detailed_receipts": [
     {
       "assurance_stage": "verified",
-      "checks": [
-        "task-scoped authentication resolved from governed references",
-        "read and write projections converged through authoritative readback",
-        "ambiguous Sapio response converged by stable request identity",
-        "version bands and configuration digest were retained"
-      ],
+      "checks": {
+        "ambiguous_write_reconciled": true,
+        "authoritative_identity_readback": true,
+        "task_scoped_configuration": true,
+        "version_bands_retained": true
+      },
       "claim_scope": "Configured, authenticated, version-banded vendor environments in the selected future",
-      "closure_digest": "sha256:5ef6952316d627943e448ab7164c106724021f76764f8f607c7f67036ec39585",
+      "closure_digest": "sha256:b63b7b0f5a48add8d7eb2f103e4a95d1f77b0892621aa94d7151ce966e8ec11e",
       "closure_status": "closed_in_simulation",
       "environment": {
         "configuration_provider": "aws-ssm-and-secrets-manager",
@@ -60,19 +60,27 @@
       "checks": {
         "clean_environment": true,
         "data_exit_reconstructable": true,
-        "failure_twins_detected": true,
+        "migration_failure_twin_detected": true,
         "observed_recovery_seconds": 42,
         "readback_parity": true,
+        "recovery_objective_met": true,
         "recovery_objective_seconds": 300,
+        "representative_artifact_count": true,
+        "representative_record_count": true,
+        "restore_failure_twin_detected": true,
+        "rollback_ready": true,
         "semantic_parity": true
       },
       "claim_scope": "Representative migration, clean restore, rollback, and data-exit rehearsal",
-      "closure_digest": "sha256:2efa82199469d42328a8a2f788ab558adccf5c30025358369f529f34415f513d",
+      "closure_digest": "sha256:15d96330f69e4ca49df9aad6ae557eabf48ccc242f4720a3b81fd81ee479737d",
       "closure_status": "closed_in_simulation",
       "corpus": {
+        "artifact_count": 3,
         "fixture_class": "representative_synthetic",
-        "source_digest": "sha256:22e619e1db4369e7ca04c10221b7977ae23b97b6b0de12750771c26a1fedf739",
-        "target_digest": "sha256:22e619e1db4369e7ca04c10221b7977ae23b97b6b0de12750771c26a1fedf739"
+        "fixture_digest": "sha256:e5a5911f5c329ed33fd8f9b6b1740a3461d17265892e8894437a16e7300b9742",
+        "record_count": 4,
+        "source_digest": "sha256:00b8598f317dc392e2c0a018e77fcb0c65088dcca4c482e9bd7fc960f85c72ca",
+        "target_digest": "sha256:00b8598f317dc392e2c0a018e77fcb0c65088dcca4c482e9bd7fc960f85c72ca"
       },
       "evidence_mode": "simulated",
       "future_reality_version": "future-reality-2028-06-30-v1",
@@ -96,16 +104,18 @@
           "bounded_scenarios": 3,
           "broad_write_approval_bound": true
         },
-        "credential_store_reference": "passed",
-        "migration_parity_sli": 1.0,
-        "parameter_store_reference": "passed",
-        "protected_trace_projection": "passed",
+        "bounded_caller_failure_twins": true,
+        "broad_write_approval_bound": true,
+        "credential_store_reference": true,
+        "migration_parity_sli": true,
+        "parameter_store_reference": true,
+        "protected_trace_projection": true,
         "rotation_posture": "refresh by version stage within the bounded cache window",
-        "tenant_boundary": "passed",
-        "vendor_readback_sli": 1.0
+        "tenant_boundary": true,
+        "vendor_readback_sli": true
       },
       "claim_scope": "Production-shape security, secret lifecycle, observability, and recovery exercise",
-      "closure_digest": "sha256:b44870fb0aecf1f585e1f8b3c42e5b8b13a6e4481a3917f7dca4fa8ea8f7dae4",
+      "closure_digest": "sha256:4fe426f279579302afdc606b8d5aba8121a2b16f9104181aab39e664713ccfaf",
       "closure_status": "closed_in_simulation",
       "evidence_mode": "simulated",
       "failure_twins": [
@@ -128,26 +138,33 @@
     },
     {
       "assurance_stage": "verified",
+      "checks": {
+        "distinct_accountable_domains": true,
+        "intended_use_released": true,
+        "prerequisite_receipts_passed": true,
+        "shared_basis": true,
+        "simulated_evidence_declared": true
+      },
       "claim_scope": "Independent Scientific, Quality, and Regulatory acceptance in the selected future",
-      "closure_digest": "sha256:70cdf5e03a798d718f79a941b587ef3e14a3cc1f3a29b314ab59c10a54b6b550",
+      "closure_digest": "sha256:d4544b91410af54043b8227b02d4ef72eb07731793435e5f504a896b96377aac",
       "closure_status": "closed_in_simulation",
       "decisions": [
         {
-          "basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
           "decision": "accept",
           "domain": "scientific",
           "scope": "selected future reality and released intended-use profile",
           "simulated_accountable_role": "future-scientific-authority"
         },
         {
-          "basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
           "decision": "accept",
           "domain": "quality",
           "scope": "selected future reality and released intended-use profile",
           "simulated_accountable_role": "future-quality-authority"
         },
         {
-          "basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
           "decision": "accept",
           "domain": "regulatory",
           "scope": "selected future reality and released intended-use profile",
@@ -159,7 +176,7 @@
       "independence": {
         "mode": "distinct_simulated_accountable_roles",
         "role_count": 3,
-        "shared_basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79"
+        "shared_basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90"
       },
       "outcome": "passed",
       "reality_basis": {
@@ -180,7 +197,7 @@
     "aggregate_artifacts": [
       {
         "artifact_id": "ARTIFACT-SIM-SUBSTANTIVE-CLOSURE-2028-V1",
-        "digest": "sha256:9ca1cba1efb73cd3c0bdede1d98f995835d4a3d7eaccbc1b87b4f4188591a9ad",
+        "digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
         "locator": "evidence://simulation/closures/substantive-2028-v1",
         "media_type": "application/json",
         "retention_class": "simulation-baseline",
@@ -316,7 +333,7 @@
         "artifacts": [
           {
             "artifact_id": "ARTIFACT-SIM-VENDOR-CONFORMANCE-2028-V1",
-            "digest": "sha256:5ef6952316d627943e448ab7164c106724021f76764f8f607c7f67036ec39585",
+            "digest": "sha256:b63b7b0f5a48add8d7eb2f103e4a95d1f77b0892621aa94d7151ce966e8ec11e",
             "locator": "evidence://simulation/closures/configured-vendors-2028-v1",
             "media_type": "application/json",
             "retention_class": "simulation-baseline",
@@ -359,7 +376,7 @@
         "artifacts": [
           {
             "artifact_id": "ARTIFACT-SIM-MIGRATION-RESTORE-2028-V1",
-            "digest": "sha256:2efa82199469d42328a8a2f788ab558adccf5c30025358369f529f34415f513d",
+            "digest": "sha256:15d96330f69e4ca49df9aad6ae557eabf48ccc242f4720a3b81fd81ee479737d",
             "locator": "evidence://simulation/closures/migration-restore-2028-v1",
             "media_type": "application/json",
             "retention_class": "simulation-baseline",
@@ -385,7 +402,7 @@
         "scope": "A representative synthetic laboratory corpus with scientific results, lineage, artifacts, and explicit failure twins.",
         "simulated_environment": {
           "class": "qualification",
-          "configuration_digest": "sha256:bac923f373f8c0dd276ebd9b640cbf222901e1aaeca8bad77c41fe6956603b2e",
+          "configuration_digest": "sha256:157dff2cc178c49a257c8a8c8f38f1937477f3464b6782b8f01bf060b94cbf5c",
           "environment_id": "ENV-SIM-MIGRATION-2028-V1",
           "region": "synthetic-us-east",
           "schema_version": "migration-contract-3.0"
@@ -401,7 +418,7 @@
         "artifacts": [
           {
             "artifact_id": "ARTIFACT-SIM-SECURITY-OBSERVABILITY-2028-V1",
-            "digest": "sha256:b44870fb0aecf1f585e1f8b3c42e5b8b13a6e4481a3917f7dca4fa8ea8f7dae4",
+            "digest": "sha256:4fe426f279579302afdc606b8d5aba8121a2b16f9104181aab39e664713ccfaf",
             "locator": "evidence://simulation/closures/security-observability-2028-v1",
             "media_type": "application/json",
             "retention_class": "simulation-baseline",
@@ -427,7 +444,7 @@
         "scope": "Synthetic tenant workloads, AWS Parameter Store and Secrets Manager references, protected traces, vendor readback signals, and failure twins.",
         "simulated_environment": {
           "class": "production",
-          "configuration_digest": "sha256:7ae195b9cae1481a0d2cc23c27f0f6af7455331a1ec14bff4efcf677aed80e48",
+          "configuration_digest": "sha256:d7f29dc59dd68efe589f3ab2f3d7f1ae48760e8273290d87c0a9cbc7c58161a4",
           "environment_id": "ENV-SIM-PRODUCTION-2028-V1",
           "region": "synthetic-us-east",
           "schema_version": "runtime-control-profile-3.0"
@@ -443,7 +460,7 @@
         "artifacts": [
           {
             "artifact_id": "ARTIFACT-SIM-ACCOUNTABLE-ACCEPTANCE-2028-V1",
-            "digest": "sha256:70cdf5e03a798d718f79a941b587ef3e14a3cc1f3a29b314ab59c10a54b6b550",
+            "digest": "sha256:d4544b91410af54043b8227b02d4ef72eb07731793435e5f504a896b96377aac",
             "locator": "evidence://simulation/closures/accountable-acceptance-2028-v1",
             "media_type": "application/json",
             "retention_class": "simulation-baseline",
@@ -470,7 +487,7 @@
         "scope": "The selected future research-use lifecycle, vendor integrations, migration, recovery, security, observability, and retained evidence.",
         "simulated_environment": {
           "class": "qualification",
-          "configuration_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "configuration_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
           "environment_id": "ENV-SIM-ACCEPTANCE-2028-V1",
           "region": "synthetic-us-east",
           "schema_version": "acceptance-packet-3.0"
@@ -484,5 +501,6 @@
       }
     ]
   },
-  "governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9"
+  "governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
+  "source_result_digest": "sha256:9d42b972c77764c81ff32fefe8f02367a27406e9ba082a704587cc9b5a9da860"
 }

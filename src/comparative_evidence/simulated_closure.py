@@ -7,15 +7,19 @@ import re
 from typing import Any
 
 from .model import canonical_json, digest
-from .safety import validate_repository_safe_content
+from .safety import (
+    EvidenceSafetyError,
+    validate_digest,
+    validate_repository_safe_content,
+)
 
 
-BUNDLE_VERSION = "2.0.0"
+BUNDLE_VERSION = "2.0.1"
 TRUSTED_CLOSURE_ID = "CLOSURE-SIM-SUBSTANTIVE-2028-V1"
 TRUSTED_FUTURE_REALITY_VERSION = "future-reality-2028-06-30-v1"
 TRUSTED_FUTURE_REALITY_ID = "FUTURE-REALITY-LIMS-2028-001"
 TRUSTED_GOVERNANCE_CLOSURE_DIGEST = (
-    "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9"
+    "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
 )
 TRUSTED_SOURCE_COORDINATES = (
     {
@@ -76,6 +80,7 @@ def validate_simulated_closure_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
         "governance_closure_digest",
         "governance_closure",
         "detailed_receipts",
+        "source_result_digest",
     }:
         raise SimulatedClosureError(
             "closure bundle requires its released version, future reality, "
@@ -98,7 +103,17 @@ def validate_simulated_closure_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
         bundle["detailed_receipts"],
         reality,
     )
-    _validate_projection_links(closure, closure_by_family, detailed_by_family)
+    source_result_digest = bundle["source_result_digest"]
+    try:
+        validate_digest(source_result_digest, "source_result_digest")
+    except EvidenceSafetyError as error:
+        raise SimulatedClosureError(str(error)) from error
+    _validate_projection_links(
+        closure,
+        closure_by_family,
+        detailed_by_family,
+        source_result_digest,
+    )
     validate_repository_safe_content(bundle)
     _validate_trusted_release_binding(closure, reality, closure_digest)
 
@@ -108,6 +123,7 @@ def validate_simulated_closure_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
         "closure_id": closure["closure_id"],
         "governance_closure_digest": closure_digest,
         "aggregate_artifact_digest": closure["aggregate_artifacts"][0]["digest"],
+        "source_result_digest": source_result_digest,
         "receipt_families": sorted(detailed_by_family),
         "families_closed": len(detailed_by_family),
         "closure_status": closure["closure_status"],
@@ -434,6 +450,7 @@ def _validate_projection_links(
     closure: dict[str, Any],
     projections: dict[str, dict[str, Any]],
     details: dict[str, dict[str, Any]],
+    source_result_digest: str,
 ) -> None:
     for family in REQUIRED_FAMILIES:
         artifact = projections[family]["artifacts"][0]
@@ -492,7 +509,7 @@ def _validate_projection_links(
             "future_reality_version": details[
                 "configured_vendor_environments"
             ]["future_reality_version"],
-            "content_digest": evidence_basis_digest,
+            "content_digest": source_result_digest,
             "receipt_digests": projected_digests,
         }
     )
@@ -504,6 +521,19 @@ def _validate_projection_links(
 
 
 def _validate_vendor(receipt: dict[str, Any]) -> None:
+    checks = _mapping(receipt.get("checks"), "configured vendor checks")
+    required_true = {
+        "ambiguous_write_reconciled",
+        "authoritative_identity_readback",
+        "task_scoped_configuration",
+        "version_bands_retained",
+    }
+    if set(checks) != required_true or any(
+        checks[field] is not True for field in required_true
+    ):
+        raise SimulatedClosureError(
+            "configured vendor closure requires every released conformance criterion"
+        )
     bindings = receipt.get("vendor_bindings")
     if not isinstance(bindings, list) or {
         item.get("vendor") for item in bindings
@@ -530,7 +560,12 @@ def _validate_migration(receipt: dict[str, Any]) -> None:
         "clean_environment",
         "readback_parity",
         "data_exit_reconstructable",
-        "failure_twins_detected",
+        "migration_failure_twin_detected",
+        "restore_failure_twin_detected",
+        "representative_artifact_count",
+        "representative_record_count",
+        "recovery_objective_met",
+        "rollback_ready",
     )
     if any(checks.get(field) is not True for field in required_true):
         raise SimulatedClosureError(
@@ -552,15 +587,29 @@ def _validate_security(receipt: dict[str, Any]) -> None:
         "protected_trace_projection",
         "parameter_store_reference",
         "credential_store_reference",
+        "bounded_caller_failure_twins",
+        "broad_write_approval_bound",
+        "migration_parity_sli",
+        "vendor_readback_sli",
     ):
-        if checks.get(field) != "passed":
+        if checks.get(field) is not True:
             raise SimulatedClosureError(
-                f"security closure requires {field}=passed"
+                f"security closure requires {field}=true"
             )
-    bounded = _mapping(checks.get("bounded_caller"), "bounded caller summary")
-    if bounded.get("broad_write_approval_bound") is not True:
+    if not isinstance(checks.get("rotation_posture"), str) or not checks[
+        "rotation_posture"
+    ].strip():
         raise SimulatedClosureError(
-            "security closure requires digest-bound broad-write approval"
+            "security closure requires an explicit credential rotation posture"
+        )
+    bounded = _mapping(checks.get("bounded_caller"), "bounded caller summary")
+    if (
+        bounded.get("broad_write_approval_bound") is not True
+        or bounded.get("allowed_operations") != 3
+        or bounded.get("bounded_scenarios") != 3
+    ):
+        raise SimulatedClosureError(
+            "security closure requires the released bounded-caller operation set"
         )
     if set(receipt.get("failure_twins", [])) != {
         "approval_required",
@@ -573,6 +622,20 @@ def _validate_security(receipt: dict[str, Any]) -> None:
 
 
 def _validate_acceptance(receipt: dict[str, Any]) -> None:
+    checks = _mapping(receipt.get("checks"), "acceptance checks")
+    required_true = {
+        "distinct_accountable_domains",
+        "intended_use_released",
+        "prerequisite_receipts_passed",
+        "shared_basis",
+        "simulated_evidence_declared",
+    }
+    if set(checks) != required_true or any(
+        checks[field] is not True for field in required_true
+    ):
+        raise SimulatedClosureError(
+            "acceptance closure requires every released acceptance criterion"
+        )
     decisions = receipt.get("decisions")
     if not isinstance(decisions, list):
         raise SimulatedClosureError(

@@ -1,11 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lims-eln/comparison-profile/1.0.0",
+  "$id": "https://example.invalid/lims-eln/comparison-profile/1.1.0",
   "title": "Comparative evidence profile",
   "type": "object",
   "required": [
     "profile_version",
     "scenario_id",
+    "required_paths",
     "critical_exact_paths",
     "declared_nondeterminism",
     "numeric_tolerances",
@@ -13,8 +14,9 @@
     "adjudications"
   ],
   "properties": {
-    "profile_version": {"const": "1.0.0"},
+    "profile_version": {"const": "1.1.0"},
     "scenario_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$"},
+    "required_paths": {"$ref": "#/$defs/paths"},
     "critical_exact_paths": {"$ref": "#/$defs/paths"},
     "declared_nondeterminism": {"$ref": "#/$defs/paths"},
     "reportable_paths": {"$ref": "#/$defs/paths"},
@@ -33,9 +35,18 @@
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["classification", "rationale"],
+        "required": [
+          "direction",
+          "favorable_classification",
+          "unfavorable_classification",
+          "favorable_rationale",
+          "unfavorable_rationale"
+        ],
         "properties": {
-          "classification": {
+          "direction": {
+            "enum": ["lower_is_better", "higher_is_better"]
+          },
+          "favorable_classification": {
             "enum": [
               "actual_defect",
               "actual_gap",
@@ -47,7 +58,20 @@
               "simulation_fault"
             ]
           },
-          "rationale": {"type": "string", "minLength": 1, "maxLength": 2048}
+          "unfavorable_classification": {
+            "enum": [
+              "actual_defect",
+              "actual_gap",
+              "comparison_inconclusive",
+              "context_changed",
+              "desired_divergence",
+              "receipt_pending",
+              "shared_specification_violation",
+              "simulation_fault"
+            ]
+          },
+          "favorable_rationale": {"type": "string", "minLength": 1, "maxLength": 2048},
+          "unfavorable_rationale": {"type": "string", "minLength": 1, "maxLength": 2048}
         },
         "additionalProperties": false
       }

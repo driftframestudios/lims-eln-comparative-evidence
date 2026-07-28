@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
+from hashlib import sha256
 import json
 from pathlib import Path
 import sys
@@ -11,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from comparative_evidence.calibration import CalibrationError, score_calibration
 from comparative_evidence.compare import compare
 from comparative_evidence.cli import _load
 from comparative_evidence import __version__
@@ -35,6 +37,69 @@ def load(path: str) -> dict:
 
 
 class ComparativeEvidenceTests(unittest.TestCase):
+    def test_calibration_ledger_preserves_honest_empty_state(self) -> None:
+        result = score_calibration(
+            load("fixtures/calibration/observed-outcomes.json")
+        )
+        self.assertEqual(result["resolved_forecast_count"], 0)
+        self.assertIsNone(result["brier_score"])
+        self.assertEqual(
+            result["status"],
+            "awaiting_independently_observed_outcomes",
+        )
+
+    def test_calibration_scores_only_independently_observed_resolutions(self) -> None:
+        ledger = load("fixtures/calibration/observed-outcomes.json")
+        ledger["entries"] = [
+            {
+                "forecast_id": "FORECAST-CLOSURE-001",
+                "event": "The released migration rehearsal meets its recovery objective.",
+                "probability": 0.8,
+                "outcome": 1,
+                "forecasted_at": "2026-07-28T10:00:00Z",
+                "resolved_at": "2026-08-28T10:00:00Z",
+                "resolution_mode": "observed",
+                "resolution_evidence_digest": "sha256:" + "a" * 64,
+            },
+            {
+                "forecast_id": "FORECAST-VENDOR-001",
+                "event": "The qualified vendor environment passes the released contract.",
+                "probability": 0.25,
+                "outcome": 0,
+                "forecasted_at": "2026-07-28T10:00:00Z",
+                "resolved_at": "2026-08-29T10:00:00Z",
+                "resolution_mode": "observed",
+                "resolution_evidence_digest": "sha256:" + "b" * 64,
+            },
+        ]
+        result = score_calibration(ledger)
+        self.assertEqual(result["status"], "scored")
+        self.assertEqual(result["resolved_forecast_count"], 2)
+        self.assertAlmostEqual(result["brier_score"], 0.05125)
+
+    def test_calibration_rejects_simulated_resolution_and_duplicate_identity(
+        self,
+    ) -> None:
+        entry = {
+            "forecast_id": "FORECAST-CLOSURE-001",
+            "event": "The released migration rehearsal meets its recovery objective.",
+            "probability": 0.8,
+            "outcome": 1,
+            "forecasted_at": "2026-07-28T10:00:00Z",
+            "resolved_at": "2026-08-28T10:00:00Z",
+            "resolution_mode": "simulated",
+            "resolution_evidence_digest": "sha256:" + "a" * 64,
+        }
+        ledger = load("fixtures/calibration/observed-outcomes.json")
+        ledger["entries"] = [entry]
+        with self.assertRaisesRegex(CalibrationError, "independently observed"):
+            score_calibration(ledger)
+
+        entry["resolution_mode"] = "observed"
+        ledger["entries"] = [entry, deepcopy(entry)]
+        with self.assertRaisesRegex(CalibrationError, "one resolution"):
+            score_calibration(ledger)
+
     def test_selected_future_closes_all_four_receipt_families(self) -> None:
         bundle = load(
             "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
@@ -44,7 +109,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(summary["closure_status"], "closed_in_simulation")
         self.assertEqual(
             summary["governance_closure_digest"],
-            "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+            "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
         )
         self.assertEqual(
             summary["environment_observed_closure"],
@@ -64,6 +129,17 @@ class ComparativeEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(
             SimulatedClosureError,
             "exact canonical closure document",
+        ):
+            validate_simulated_closure_bundle(bundle)
+
+    def test_selected_future_requires_source_result_digest(self) -> None:
+        bundle = load(
+            "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
+        )
+        bundle["source_result_digest"] = "sha256:short"
+        with self.assertRaisesRegex(
+            SimulatedClosureError,
+            "source_result_digest requires sha256",
         ):
             validate_simulated_closure_bundle(bundle)
 
@@ -176,6 +252,62 @@ class ComparativeEvidenceTests(unittest.TestCase):
         classifications = {item["classification"] for item in report["differences"]}
         self.assertEqual(classifications, {"desired_divergence", "actual_gap"})
         self.assertEqual(report["summary"]["critical_differences"], 0)
+        recovery = next(
+            item
+            for item in report["differences"]
+            if item["path"] == "$.restore.observed_recovery_seconds"
+        )
+        self.assertEqual(recovery["comparison"]["outcome"], "favorable")
+        self.assertEqual(recovery["comparison"]["delta"], -31)
+        self.assertEqual(
+            report["simulation"]["simulation_commit"],
+            TRUSTED_SOURCE_COORDINATES[0]["commit"],
+        )
+        self.assertEqual(
+            report["simulation"]["implementation_commit"],
+            TRUSTED_SOURCE_COORDINATES[1]["commit"],
+        )
+
+    def test_missing_required_path_is_a_critical_specification_violation(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = load("fixtures/pairs/actual-observation.json")
+        del simulation_value["result"]["security"]["tenant_boundary"]
+        del actual_value["result"]["security"]["tenant_boundary"]
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        difference = next(
+            item
+            for item in report["differences"]
+            if item["path"] == "$.security.tenant_boundary"
+        )
+        self.assertEqual(
+            difference["classification"],
+            "shared_specification_violation",
+        )
+        self.assertTrue(difference["critical"])
+        self.assertEqual(report["summary"]["critical_differences"], 1)
+
+    def test_directional_adjudication_distinguishes_slower_recovery(self) -> None:
+        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value["result"]["restore"]["observed_recovery_seconds"] = 1000
+        report = compare(
+            ObservationEnvelope.from_dict(
+                load("fixtures/pairs/simulation-observation.json")
+            ),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        recovery = next(
+            item
+            for item in report["differences"]
+            if item["path"] == "$.restore.observed_recovery_seconds"
+        )
+        self.assertEqual(recovery["classification"], "actual_gap")
+        self.assertEqual(recovery["comparison"]["outcome"], "unfavorable")
+        self.assertIn("slower", recovery["rationale"])
 
     def test_declared_nondeterminism_converges(self) -> None:
         report = compare(
@@ -230,6 +362,17 @@ class ComparativeEvidenceTests(unittest.TestCase):
             self.assertTrue(admitted["accepted_namespace"])
             self.assertEqual(admitted["evidence_mode"], "observed")
             self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
+
+    def test_observed_prequalification_evidence_returns_to_review(self) -> None:
+        value = load("fixtures/pairs/actual-observation.json")
+        for stage in ("specified", "verified"):
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
+                value["assurance_stage"] = stage
+                with self.assertRaisesRegex(AdmissionError, "qualified"):
+                    admit(
+                        ObservationEnvelope.from_dict(value),
+                        Path(directory),
+                    )
 
     def test_accepted_manifest_is_immutable_and_supports_supersession(self) -> None:
         envelope = ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json"))
@@ -340,6 +483,39 @@ class ComparativeEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exact comparison"):
             compare(simulation, actual, changed_profile)
 
+        changed_profile = deepcopy(profile)
+        changed_profile["unreleased_extension"] = True
+        with self.assertRaisesRegex(ValueError, "unreleased"):
+            compare(simulation, actual, changed_profile)
+
+        changed_simulation = deepcopy(
+            load("fixtures/pairs/simulation-observation.json")
+        )
+        changed_simulation["source"]["governance_closure_digest"] = (
+            "sha256:" + "0" * 64
+        )
+        with self.assertRaisesRegex(ValueError, "trusted selected-future"):
+            compare(
+                ObservationEnvelope.from_dict(changed_simulation),
+                actual,
+                profile,
+            )
+        for field in ("simulation_commit", "implementation_commit"):
+            with self.subTest(field=field):
+                changed_simulation = deepcopy(
+                    load("fixtures/pairs/simulation-observation.json")
+                )
+                changed_simulation["source"][field] = "0" * 40
+                with self.assertRaisesRegex(
+                    ValueError,
+                    f"simulation source {field} differs",
+                ):
+                    compare(
+                        ObservationEnvelope.from_dict(changed_simulation),
+                        actual,
+                        profile,
+                    )
+
     def test_json_ingress_rejects_duplicate_and_nonfinite_values(self) -> None:
         examples = (
             ('{"scenario_id":"A","scenario_id":"B"}', "single definition"),
@@ -361,17 +537,45 @@ class ComparativeEvidenceTests(unittest.TestCase):
         machine_node = load("machine-node.json")
         first_receipt = load("first-receipt.json")
         coordination_horizon = load("COORDINATION-HORIZON.json")
-        self.assertEqual(__version__, "0.3.0")
+        self.assertEqual(__version__, "0.3.1")
         self.assertEqual(manifest["repository_release"], __version__)
         self.assertEqual(manifest["repository_role"], "comparative_evidence")
-        self.assertEqual(manifest["contract_bindings"]["governance_schema"], "2.0.0")
+        self.assertEqual(manifest["contract_bindings"]["governance_schema"], "2.0.1")
         self.assertEqual(
             manifest["contract_bindings"]["simulated_closure_bundle_schema"],
-            "2.0.0",
+            "2.0.1",
         )
         self.assertEqual(
             manifest["canonical_governance_closure_digest"],
             closure_summary["governance_closure_digest"],
+        )
+        self.assertEqual(
+            manifest["source_result_digest"],
+            closure_summary["source_result_digest"],
+        )
+        self.assertEqual(
+            manifest["canonical_closure_bundle_digest"],
+            digest(bundle),
+        )
+        bundle_path = (
+            ROOT
+            / "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
+        )
+        self.assertEqual(
+            manifest["canonical_closure_bundle_file_sha256"],
+            f"sha256:{sha256(bundle_path.read_bytes()).hexdigest()}",
+        )
+        self.assertEqual(
+            manifest["contract_bindings"]["comparison_profile_schema"],
+            "1.1.0",
+        )
+        self.assertEqual(
+            manifest["contract_bindings"]["observation_envelope_schema"],
+            "1.1.0",
+        )
+        self.assertEqual(
+            manifest["contract_bindings"]["calibration_ledger_schema"],
+            "1.0.0",
         )
         trusted_binding = manifest["trusted_simulated_closure"]
         self.assertEqual(trusted_binding["closure_id"], TRUSTED_CLOSURE_ID)
@@ -432,7 +636,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             machine_node["current_provenance"],
             {
-                "release": "candidate-comparison-v0.3.0",
+                "release": "candidate-comparison-v0.3.1",
                 "commit": "0" * 40,
                 "digest": "sha256:" + ("0" * 64),
             },
@@ -444,9 +648,9 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 for item in machine_node["campaigns"]
             },
             {
-                ("LIMS-ELN-OPEN-RECEIPTS", "2.0.0"),
-                ("COMPARATIVE-LITERACY-COLLABORATION", "2.0.0"),
-                ("SITE-READING-SYSTEM", "2.0.0"),
+                ("LIMS-ELN-OPEN-RECEIPTS", "2.0.1"),
+                ("COMPARATIVE-LITERACY-COLLABORATION", "2.0.1"),
+                ("SITE-READING-SYSTEM", "2.0.1"),
             },
         )
         self.assertEqual(
@@ -496,7 +700,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             vocabulary_binding["digest"],
-            "sha256:a2752fb31914e24a025738bfc3d5bd12e035a076934be8c27c11a5df8701f9cd",
+            "sha256:0f3be9ab956877281f9261c69a5f099547b048c1c878541a7c9c47edc5e03280",
         )
         report = compare(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),

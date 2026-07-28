@@ -28,6 +28,11 @@ def validate_for_accepted(envelope: ObservationEnvelope) -> None:
         raise AdmissionError(
             "accepted evidence requires an observed execution; run the scenario in the named environment"
         )
+    if envelope.assurance_stage not in {"qualified", "validated", "accepted"}:
+        raise AdmissionError(
+            "accepted evidence requires qualified, validated, or accepted assurance; "
+            "complete independent evidence review before admission"
+        )
     source_required = {"environment_id", "implementation_commit", "configuration_digest"}
     source_missing = sorted(source_required - envelope.source.keys())
     if source_missing:

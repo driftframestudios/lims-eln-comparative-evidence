@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lims-eln/observation-envelope/1.0.0",
+  "$id": "https://example.invalid/lims-eln/observation-envelope/1.1.0",
   "title": "Comparative observation envelope",
   "type": "object",
   "required": [
@@ -16,7 +16,7 @@
     "classification"
   ],
   "properties": {
-    "envelope_version": {"const": "1.0.0"},
+    "envelope_version": {"const": "1.1.0"},
     "observation_id": {
       "type": "string",
       "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
@@ -35,7 +35,18 @@
       "properties": {
         "environment_id": {"$ref": "#/$defs/identity"},
         "implementation_commit": {"type": "string", "minLength": 1, "maxLength": 128},
-        "configuration_digest": {"$ref": "#/$defs/sha256"}
+        "simulation_commit": {"type": "string", "minLength": 1, "maxLength": 128},
+        "configuration_digest": {"$ref": "#/$defs/sha256"},
+        "future_reality_version": {
+          "type": "string",
+          "pattern": "^future-reality-[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]+$"
+        },
+        "closure_id": {
+          "type": "string",
+          "pattern": "^CLOSURE-[A-Z0-9]+(?:-[A-Z0-9]+)*$"
+        },
+        "governance_closure_digest": {"$ref": "#/$defs/sha256"},
+        "aggregate_artifact_digest": {"$ref": "#/$defs/sha256"}
       },
       "additionalProperties": false
     },
@@ -81,6 +92,36 @@
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": {"evidence_mode": {"const": "simulated"}},
+        "required": ["evidence_mode"]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "required": [
+              "environment_id",
+              "implementation_commit",
+              "simulation_commit",
+              "configuration_digest",
+              "future_reality_version",
+              "closure_id",
+              "governance_closure_digest",
+              "aggregate_artifact_digest"
+            ],
+            "properties": {
+              "implementation_commit": {
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "simulation_commit": {
+                "pattern": "^[a-f0-9]{40}$"
+              }
+            }
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {"evidence_mode": {"const": "observed"}},

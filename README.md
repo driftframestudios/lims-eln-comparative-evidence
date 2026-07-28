@@ -15,6 +15,8 @@ context changed.
 `simulated-closures/` receives a bundle after the comparator confirms:
 
 - the exact governance 2.0.0 closure document matches its release-bound digest;
+- the closure bundle's source-result digest independently reproduces the
+  aggregate artifact digest;
 - all four governance receipt projections and detailed executable receipts are
   present exactly once in the same future reality;
 - every projected artifact digest resolves to its detailed receipt;
@@ -66,6 +68,11 @@ The output contains `comparison.json` and `comparison.html`. Difference values a
 only for paths declared in the released profile's `reportable_paths`. Every other
 value becomes a classification and content digest.
 
+The released profile also declares every required comparison path and the preferred
+direction for recovery time and manual effort. A missing governed path becomes a
+shared-specification violation; a faster or lower-effort observed result can be
+recognized as a favorable divergence.
+
 Admission uses a separate command:
 
 ```bash
@@ -82,12 +89,28 @@ PYTHONPATH=src python -m comparative_evidence.cli admit-simulated \
   --accepted simulated-closures/
 ```
 
+Forecast calibration starts with an honest empty ledger and activates only when an
+independently observed outcome carries immutable resolution evidence:
+
+```bash
+PYTHONPATH=src python -m comparative_evidence.cli calibrate \
+  --ledger fixtures/calibration/observed-outcomes.json
+```
+
+The resulting Brier score ranges from zero to one, with lower values indicating
+closer probabilistic fit. Simulated results remain available for comparison and stay
+outside the observed calibration ledger.
+
+The stable `comparative-validation` workflow gate recomputes the canonical closure,
+reference report, profile, calibration posture, JSON integrity, and repository-wide
+credential-shape scan after the complete Python test matrix succeeds.
+
 ## Coordination Horizon
 
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) describes current focus,
 completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
-[`first-receipt.json`](first-receipt.json) provide governance-2.0.0-conformant,
+[`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects.
 
 ## Comparative literacy

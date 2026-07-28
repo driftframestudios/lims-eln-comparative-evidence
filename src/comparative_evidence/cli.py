@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from .calibration import score_calibration
 from .compare import compare
 from .gate import admit
 from .model import ObservationEnvelope, strict_json_loads
@@ -37,6 +38,9 @@ def parser() -> argparse.ArgumentParser:
     simulated = actions.add_parser("admit-simulated")
     simulated.add_argument("--closure-bundle", type=Path, required=True)
     simulated.add_argument("--accepted", type=Path, required=True)
+
+    calibration = actions.add_parser("calibrate")
+    calibration.add_argument("--ledger", type=Path, required=True)
     return command
 
 
@@ -57,6 +61,9 @@ def main() -> None:
             args.accepted,
         )
         print(json.dumps({"simulated_closure_manifest": str(destination)}))
+        return
+    if args.action == "calibrate":
+        print(json.dumps(score_calibration(_load(args.ledger)), sort_keys=True))
         return
     destination = admit(ObservationEnvelope.from_dict(_load(args.envelope)), args.accepted)
     print(json.dumps({"accepted_manifest": str(destination)}))
