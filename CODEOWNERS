@@ -1,0 +1,6 @@
+* @driftframestudios/solution-architecture
+/src/comparative_evidence/gate.py @driftframestudios/quality-regulatory @driftframestudios/security
+/specification/ @driftframestudios/scientific-data @driftframestudios/quality-regulatory
+/fixtures/ @driftframestudios/scientific-data
+/accepted/ @driftframestudios/quality-regulatory
+

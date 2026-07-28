@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/lims-eln/redacted-receipt/1.0.0",
+  "title": "Redacted observed receipt manifest",
+  "type": "object",
+  "required": [
+    "receipt_schema",
+    "receipt_id",
+    "receipt_family",
+    "evidence_mode",
+    "assurance_stage",
+    "claim",
+    "environment",
+    "implementation_commit",
+    "scenario_ids",
+    "result",
+    "raw_artifact_digest",
+    "governed_locator",
+    "limitations",
+    "performed_by",
+    "reviewed_by",
+    "retest_triggers"
+  ],
+  "properties": {
+    "receipt_schema": {"const": "1.0.0"},
+    "receipt_id": {"type": "string"},
+    "receipt_family": {"type": "string"},
+    "evidence_mode": {"const": "observed"},
+    "assurance_stage": {"enum": ["qualified", "validated", "accepted"]},
+    "claim": {"type": "string"},
+    "environment": {"type": "object"},
+    "implementation_commit": {"type": "string", "minLength": 12},
+    "scenario_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "result": {"type": "string"},
+    "raw_artifact_digest": {"type": "string", "pattern": "^sha256:"},
+    "governed_locator": {"type": "string", "pattern": "^[a-z][a-z0-9+.-]*://"},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "performed_by": {"type": "string"},
+    "reviewed_by": {"type": "string"},
+    "retest_triggers": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}
+
