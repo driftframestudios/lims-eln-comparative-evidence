@@ -1,0 +1,39 @@
+{
+  "envelope_version": "1.0.0",
+  "observation_id": "SIM-OBS-GOLDEN-001",
+  "evidence_mode": "simulated",
+  "assurance_stage": "specified",
+  "scenario_id": "SPEC-GOLDEN-SPECIMEN-E2E-001",
+  "source": {
+    "environment_id": "simulated-final-state",
+    "implementation_commit": "forecast-2026-Q3-r1",
+    "configuration_digest": "sha256:simulated-configuration"
+  },
+  "result": {
+    "specimen": {
+      "specimen_id": "SPM-SYN-0001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "status": "released",
+      "revision": 5,
+      "result": {"unit": "copies", "quality_flag": "pass"}
+    },
+    "migration": {"semantic_parity": true},
+    "restore": {"clean_environment": true, "observed_recovery_seconds": 72},
+    "security": {"tenant_boundary": "enforced"},
+    "telemetry": {"vendor_projection_readback": 0.999},
+    "operations": {"manual_steps": 1},
+    "execution": {"completed_at": "2026-08-17T14:31:00Z", "trace_id": "sim-trace-001"}
+  },
+  "provenance": {
+    "raw_artifact_digest": "sha256:simulated",
+    "governed_locator": "simulation://forecast-2026-Q3-r1",
+    "performed_by": "simulation-runner",
+    "reviewed_by": "simulation-reviewer"
+  },
+  "approvals": [],
+  "classification": {
+    "data_class": "synthetic",
+    "redaction_status": "generated-identities"
+  }
+}
+

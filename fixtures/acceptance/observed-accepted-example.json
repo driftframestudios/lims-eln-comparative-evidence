@@ -1,0 +1,34 @@
+{
+  "envelope_version": "1.0.0",
+  "observation_id": "OBS-ACCEPTANCE-EXAMPLE-001",
+  "evidence_mode": "observed",
+  "assurance_stage": "accepted",
+  "scenario_id": "SPEC-ACCOUNTABLE-ACCEPTANCE-001",
+  "source": {
+    "environment_id": "configured-environment-example",
+    "implementation_commit": "fedcba9876543210fedcba9876543210fedcba98",
+    "configuration_digest": "sha256:configuration-example"
+  },
+  "result": {
+    "intended_use": "bounded synthetic exemplar",
+    "scientific_fitness": "accepted",
+    "quality_disposition": "accepted",
+    "regulatory_applicability": "accepted_for_named_scope"
+  },
+  "provenance": {
+    "raw_artifact_digest": "sha256:raw-evidence-example",
+    "governed_locator": "evidence-vault://acceptance/example-001",
+    "performed_by": "validation-operator",
+    "reviewed_by": "independent-validation-reviewer"
+  },
+  "approvals": [
+    {"domain": "scientific", "decision": "accept", "approver": "accountable-scientist"},
+    {"domain": "quality", "decision": "accept", "approver": "quality-owner"},
+    {"domain": "regulatory", "decision": "accept", "approver": "regulatory-owner"}
+  ],
+  "classification": {
+    "data_class": "approved-synthetic-exemplar",
+    "redaction_status": "reviewed-redacted-manifest"
+  }
+}
+
