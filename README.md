@@ -1,14 +1,32 @@
 # LIMS/ELN Comparative Evidence
 
-This repository independently compares a released specification, a frozen simulated
-forecast, and an observed implementation result. It produces machine-readable JSON
-and a portable HTML report while preserving the original inputs and their authority.
+This repository independently compares a released specification, a frozen selected
+future, and—when useful—an observed implementation result. It produces
+machine-readable JSON and a portable HTML report while preserving the original
+inputs and their authority.
 
-The comparator treats the simulation as a hypothesis. An actual implementation can
-confirm it, reveal an actual gap, expose a simulation fault, improve upon the
-forecast, or show that context changed.
+The selected future is definitive within its declared simulation reality. An
+environment encounter is a separate evidence mode that can confirm it, reveal an
+actual gap, expose a simulation fault, improve upon the forecast, or show that
+context changed.
 
-## Authority boundary
+## Evidence namespaces
+
+`simulated-closures/` receives a bundle after the comparator confirms:
+
+- the exact governance 2.0.0 closure document matches its release-bound digest;
+- all four governance receipt projections and detailed executable receipts are
+  present exactly once in the same future reality;
+- every projected artifact digest resolves to its detailed receipt;
+- the aggregate artifact binds the evidence basis and ordered family digests;
+- configured vendor, migration and restore, security and observability, and
+  Scientific/Quality/Regulatory criteria passed;
+- distinct simulated accountable roles share one acceptance basis.
+
+This path records `closed_in_simulation`, keeps environment-observed closure in
+`separate_unasserted_state`, and grants `production_authorization_effect: none`.
+It therefore closes the receipts inside the selected future without requiring an
+external environment encounter or personal identities.
 
 Evidence enters `accepted/` only through the admission gate. The gate requires:
 
@@ -19,14 +37,19 @@ Evidence enters `accepted/` only through the admission gate. The gate requires:
 - an accountable approval for acceptance-stage records;
 - a classification and redaction statement.
 
-Planned and simulated records stay in their source namespaces and remain useful for
-comparison. The gate returns them to the comparison workflow with an explicit
-replacement path: execute the scenario in the named environment, capture an observed
-envelope, and obtain the required review.
+Observed records retain their independent admission path. Their presence extends the
+comparative surface and does not determine whether a selected future is complete.
 
 Raw vendor exports, sensitive traces, credentials, and regulated records live in
 governed evidence storage. Git contains redacted manifests, content digests, and
 protected locators.
+
+Receipt-family vocabulary is owned by program specification contract
+`RECEIPT-VOCABULARY-MAP-001` in
+`driftframestudios/lims-eln-program-specification` at repository path
+`specifications/receipt-vocabulary-map.v1.json`. Comparator schemas and redacted
+manifests use its four canonical governance-family values directly. The release
+manifest records this external repository coordinate, digest, and promotion state.
 
 ## Run it
 
@@ -50,6 +73,22 @@ PYTHONPATH=src python -m comparative_evidence.cli admit \
   --envelope fixtures/pairs/actual-observation.json \
   --accepted accepted/
 ```
+
+Selected-future closure uses:
+
+```bash
+PYTHONPATH=src python -m comparative_evidence.cli admit-simulated \
+  --closure-bundle fixtures/simulated-closures/future-reality-2028-06-30-v1.json \
+  --accepted simulated-closures/
+```
+
+## Coordination Horizon
+
+[`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) describes current focus,
+completion evidence, retained effects, and the re-entry path in a
+planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
+[`first-receipt.json`](first-receipt.json) provide governance-2.0.0-conformant,
+orientation-only entry surfaces; neither artifact authorizes runtime effects.
 
 ## Comparative literacy
 

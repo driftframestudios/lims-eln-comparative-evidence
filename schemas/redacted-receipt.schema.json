@@ -26,7 +26,14 @@
   "properties": {
     "receipt_schema": {"const": "1.0.0"},
     "receipt_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$"},
-    "receipt_family": {"type": "string", "minLength": 1, "maxLength": 128},
+    "receipt_family": {
+      "enum": [
+        "configured_vendor_environments",
+        "representative_migration_restore_rehearsals",
+        "production_security_observability",
+        "accountable_scientific_quality_regulatory_acceptance"
+      ]
+    },
     "evidence_mode": {"const": "observed"},
     "assurance_stage": {"enum": ["qualified", "validated", "accepted"]},
     "claim": {"type": "string", "minLength": 1, "maxLength": 1024},

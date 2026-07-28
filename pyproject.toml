@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lims-eln-comparative-evidence"
-version = "0.2.0"
-description = "Independent three-way comparator and observed-evidence admission gate"
+version = "0.3.0"
+description = "Independent comparator for observed and selected-future simulated evidence"
 requires-python = ">=3.11"
 dependencies = []
 

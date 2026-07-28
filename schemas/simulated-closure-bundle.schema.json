@@ -1,0 +1,455 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.driftframe.org/lims-eln-comparative-evidence/v2.0/simulated-closure-bundle.schema.json",
+  "title": "Governance-bound selected-future closure bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundle_version",
+    "future_reality_version",
+    "governance_closure_digest",
+    "governance_closure",
+    "detailed_receipts"
+  ],
+  "properties": {
+    "bundle_version": {
+      "const": "2.0.0"
+    },
+    "future_reality_version": {
+      "$ref": "#/$defs/futureRealityVersion"
+    },
+    "governance_closure_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "governance_closure": {
+      "$ref": "#/$defs/governanceClosure"
+    },
+    "detailed_receipts": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/detailedReceipt"
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "futureRealityVersion": {
+      "type": "string",
+      "pattern": "^future-reality-[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]+$"
+    },
+    "family": {
+      "type": "string",
+      "enum": [
+        "configured_vendor_environments",
+        "representative_migration_restore_rehearsals",
+        "production_security_observability",
+        "accountable_scientific_quality_regulatory_acceptance"
+      ]
+    },
+    "governanceArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "media_type",
+        "digest",
+        "locator",
+        "sensitivity"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "locator": {
+          "type": "string",
+          "pattern": "^evidence://"
+        },
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "regulated"
+          ]
+        },
+        "retention_class": {
+          "type": "string"
+        }
+      }
+    },
+    "receiptProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simulated_receipt_id",
+        "family",
+        "claim",
+        "scope",
+        "scenario_ids",
+        "test_ids",
+        "simulated_environment",
+        "outcome",
+        "closure_statement",
+        "artifacts",
+        "modeled_authority_roles",
+        "limitations"
+      ],
+      "properties": {
+        "simulated_receipt_id": {
+          "type": "string"
+        },
+        "family": {
+          "$ref": "#/$defs/family"
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 20
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 20
+        },
+        "scenario_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "test_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "simulated_environment": {
+          "type": "object",
+          "required": [
+            "environment_id",
+            "class",
+            "region",
+            "configuration_digest"
+          ],
+          "properties": {
+            "environment_id": {
+              "type": "string"
+            },
+            "class": {
+              "enum": [
+                "vendor_sandbox",
+                "qualification",
+                "production"
+              ]
+            },
+            "region": {
+              "type": "string"
+            },
+            "configuration_digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "schema_version": {
+              "type": "string"
+            },
+            "vendor_build": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "outcome": {
+          "const": "passed"
+        },
+        "closure_statement": {
+          "type": "string",
+          "minLength": 20
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/governanceArtifact"
+          }
+        },
+        "modeled_authority_roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "governanceClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "closure_id",
+        "future_reality",
+        "evidence_mode",
+        "closure_status",
+        "environment_observed_closure",
+        "production_authorization_effect",
+        "receipt_closures",
+        "executable_checks",
+        "aggregate_outcome",
+        "aggregate_artifacts",
+        "limitations",
+        "divergence_triggers",
+        "metadata"
+      ],
+      "properties": {
+        "closure_id": {
+          "type": "string"
+        },
+        "future_reality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "future_reality_id",
+            "as_of",
+            "narrative",
+            "assumption_ids",
+            "source_coordinates",
+            "modeled_authority_roles"
+          ],
+          "properties": {
+            "future_reality_id": {
+              "type": "string"
+            },
+            "as_of": {
+              "type": "string",
+              "format": "date"
+            },
+            "narrative": {
+              "type": "string",
+              "minLength": 40
+            },
+            "assumption_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "source_coordinates": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object"
+              }
+            },
+            "modeled_authority_roles": {
+              "type": "array",
+              "minItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "evidence_mode": {
+          "const": "simulated"
+        },
+        "closure_status": {
+          "const": "closed_in_simulation"
+        },
+        "environment_observed_closure": {
+          "const": "separate_unasserted_state"
+        },
+        "production_authorization_effect": {
+          "const": "none"
+        },
+        "receipt_closures": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/receiptProjection"
+          }
+        },
+        "executable_checks": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object"
+          }
+        },
+        "aggregate_outcome": {
+          "type": "object",
+          "required": [
+            "result",
+            "closed_family_count",
+            "expected_family_count",
+            "reproduction_statement"
+          ],
+          "properties": {
+            "result": {
+              "const": "passed"
+            },
+            "closed_family_count": {
+              "const": 4
+            },
+            "expected_family_count": {
+              "const": 4
+            },
+            "reproduction_statement": {
+              "type": "string",
+              "minLength": 20
+            }
+          },
+          "additionalProperties": false
+        },
+        "aggregate_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/governanceArtifact"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "divergence_triggers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "required": [
+            "schema_version",
+            "created_at",
+            "updated_at",
+            "owner"
+          ],
+          "properties": {
+            "schema_version": {
+              "const": "2.0.0"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "owner": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "detailedReceipt": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "receipt_id",
+        "receipt_family",
+        "evidence_mode",
+        "assurance_stage",
+        "closure_status",
+        "future_reality_version",
+        "reality_basis",
+        "claim_scope",
+        "outcome",
+        "closure_digest"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2.0.0"
+        },
+        "receipt_id": {
+          "type": "string"
+        },
+        "receipt_family": {
+          "$ref": "#/$defs/family"
+        },
+        "evidence_mode": {
+          "const": "simulated"
+        },
+        "assurance_stage": {
+          "const": "verified"
+        },
+        "closure_status": {
+          "const": "closed_in_simulation"
+        },
+        "future_reality_version": {
+          "$ref": "#/$defs/futureRealityVersion"
+        },
+        "reality_basis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "selection_rule",
+            "authority",
+            "environment_observed_closure",
+            "production_authorization_effect"
+          ],
+          "properties": {
+            "kind": {
+              "const": "selected_future_simulation"
+            },
+            "selection_rule": {
+              "type": "string"
+            },
+            "authority": {
+              "const": "definitive_within_selected_future_reality"
+            },
+            "environment_observed_closure": {
+              "const": "separate_unasserted_state"
+            },
+            "production_authorization_effect": {
+              "const": "none"
+            }
+          }
+        },
+        "claim_scope": {
+          "type": "string"
+        },
+        "outcome": {
+          "const": "passed"
+        },
+        "closure_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    }
+  }
+}

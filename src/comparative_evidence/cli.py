@@ -8,6 +8,7 @@ from .compare import compare
 from .gate import admit
 from .model import ObservationEnvelope, strict_json_loads
 from .report import write_reports
+from .simulated_closure import admit_simulated_closure
 
 
 def _load(path: Path) -> dict:
@@ -18,7 +19,9 @@ def _load(path: Path) -> dict:
 
 
 def parser() -> argparse.ArgumentParser:
-    command = argparse.ArgumentParser(description="Compare LIMS/ELN evidence or admit an observed envelope")
+    command = argparse.ArgumentParser(
+        description="Compare LIMS/ELN evidence or admit a released evidence envelope"
+    )
     actions = command.add_subparsers(dest="action", required=True)
 
     comparison = actions.add_parser("compare")
@@ -30,6 +33,10 @@ def parser() -> argparse.ArgumentParser:
     admission = actions.add_parser("admit")
     admission.add_argument("--envelope", type=Path, required=True)
     admission.add_argument("--accepted", type=Path, required=True)
+
+    simulated = actions.add_parser("admit-simulated")
+    simulated.add_argument("--closure-bundle", type=Path, required=True)
+    simulated.add_argument("--accepted", type=Path, required=True)
     return command
 
 
@@ -43,6 +50,13 @@ def main() -> None:
         )
         write_reports(report, args.output)
         print(json.dumps({"report_digest": report["report_digest"], "summary": report["summary"]}))
+        return
+    if args.action == "admit-simulated":
+        destination = admit_simulated_closure(
+            _load(args.closure_bundle),
+            args.accepted,
+        )
+        print(json.dumps({"simulated_closure_manifest": str(destination)}))
         return
     destination = admit(ObservationEnvelope.from_dict(_load(args.envelope)), args.accepted)
     print(json.dumps({"accepted_manifest": str(destination)}))

@@ -1,0 +1,33 @@
+name: branch-policy
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-shape:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out protected base policy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .base-policy
+          persist-credentials: false
+          sparse-checkout: tools/check_branch_flow.py
+          sparse-checkout-cone-mode: false
+
+      - name: Check pull-request coordinates with protected base policy
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: >-
+          python3 .base-policy/tools/check_branch_flow.py
+          --base "$BASE_REF"
+          --head "$HEAD_REF"
+          --author "$PR_AUTHOR"
