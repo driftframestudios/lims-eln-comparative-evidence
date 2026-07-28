@@ -1,0 +1,488 @@
+{
+  "bundle_version": "2.0.0",
+  "detailed_receipts": [
+    {
+      "assurance_stage": "verified",
+      "checks": [
+        "task-scoped authentication resolved from governed references",
+        "read and write projections converged through authoritative readback",
+        "ambiguous Sapio response converged by stable request identity",
+        "version bands and configuration digest were retained"
+      ],
+      "claim_scope": "Configured, authenticated, version-banded vendor environments in the selected future",
+      "closure_digest": "sha256:5ef6952316d627943e448ab7164c106724021f76764f8f607c7f67036ec39585",
+      "closure_status": "closed_in_simulation",
+      "environment": {
+        "configuration_provider": "aws-ssm-and-secrets-manager",
+        "configuration_receipt_digest": "sha256:9f149ebcfab994920b30e2418386a8c466770473b95cc77c52f007c234d4e017",
+        "data_class": "approved-synthetic-qualification",
+        "environment_id": "future-laboratory-integration-qualification"
+      },
+      "evidence_mode": "simulated",
+      "future_reality_version": "future-reality-2028-06-30-v1",
+      "outcome": "passed",
+      "reality_basis": {
+        "authority": "definitive_within_selected_future_reality",
+        "environment_observed_closure": "separate_unasserted_state",
+        "kind": "selected_future_simulation",
+        "production_authorization_effect": "none",
+        "selection_rule": "internally coherent final state with all released checks satisfied"
+      },
+      "receipt_family": "configured_vendor_environments",
+      "receipt_id": "SIM-CLOSED-VENDOR-001",
+      "schema_version": "2.0.0",
+      "vendor_bindings": [
+        {
+          "conformance": "passed",
+          "readback_digest": "sha256:a45164d1613b52f1fede6c14dcd9974eb3a2d373ea009d3f82246ada47d159d8",
+          "sdk_band": "sapiopylib-compatible-simulated-band",
+          "vendor": "sapio",
+          "version": "simulated-tenant-2026.3"
+        },
+        {
+          "conformance": "passed",
+          "readback_digest": "sha256:6edeceff387de0d180508cb2817add8c09782d436aaab21a976451abba7ffa32",
+          "sdk_band": "benchling-sdk-stable-simulated-band",
+          "vendor": "benchling",
+          "version": "simulated-v3-2026.3"
+        },
+        {
+          "conformance": "passed",
+          "readback_digest": "sha256:6edeceff387de0d180508cb2817add8c09782d436aaab21a976451abba7ffa32",
+          "sdk_band": "labkey-python-api-simulated-band",
+          "vendor": "labkey",
+          "version": "simulated-4.3.0"
+        }
+      ]
+    },
+    {
+      "assurance_stage": "verified",
+      "checks": {
+        "clean_environment": true,
+        "data_exit_reconstructable": true,
+        "failure_twins_detected": true,
+        "observed_recovery_seconds": 42,
+        "readback_parity": true,
+        "recovery_objective_seconds": 300,
+        "semantic_parity": true
+      },
+      "claim_scope": "Representative migration, clean restore, rollback, and data-exit rehearsal",
+      "closure_digest": "sha256:2efa82199469d42328a8a2f788ab558adccf5c30025358369f529f34415f513d",
+      "closure_status": "closed_in_simulation",
+      "corpus": {
+        "fixture_class": "representative_synthetic",
+        "source_digest": "sha256:22e619e1db4369e7ca04c10221b7977ae23b97b6b0de12750771c26a1fedf739",
+        "target_digest": "sha256:22e619e1db4369e7ca04c10221b7977ae23b97b6b0de12750771c26a1fedf739"
+      },
+      "evidence_mode": "simulated",
+      "future_reality_version": "future-reality-2028-06-30-v1",
+      "outcome": "passed",
+      "reality_basis": {
+        "authority": "definitive_within_selected_future_reality",
+        "environment_observed_closure": "separate_unasserted_state",
+        "kind": "selected_future_simulation",
+        "production_authorization_effect": "none",
+        "selection_rule": "internally coherent final state with all released checks satisfied"
+      },
+      "receipt_family": "representative_migration_restore_rehearsals",
+      "receipt_id": "SIM-CLOSED-MIGRATION-001",
+      "schema_version": "2.0.0"
+    },
+    {
+      "assurance_stage": "verified",
+      "checks": {
+        "bounded_caller": {
+          "allowed_operations": 3,
+          "bounded_scenarios": 3,
+          "broad_write_approval_bound": true
+        },
+        "credential_store_reference": "passed",
+        "migration_parity_sli": 1.0,
+        "parameter_store_reference": "passed",
+        "protected_trace_projection": "passed",
+        "rotation_posture": "refresh by version stage within the bounded cache window",
+        "tenant_boundary": "passed",
+        "vendor_readback_sli": 1.0
+      },
+      "claim_scope": "Production-shape security, secret lifecycle, observability, and recovery exercise",
+      "closure_digest": "sha256:b44870fb0aecf1f585e1f8b3c42e5b8b13a6e4481a3917f7dca4fa8ea8f7dae4",
+      "closure_status": "closed_in_simulation",
+      "evidence_mode": "simulated",
+      "failure_twins": [
+        "approval_required",
+        "cross_tenant",
+        "unreleased_operation"
+      ],
+      "future_reality_version": "future-reality-2028-06-30-v1",
+      "outcome": "passed",
+      "reality_basis": {
+        "authority": "definitive_within_selected_future_reality",
+        "environment_observed_closure": "separate_unasserted_state",
+        "kind": "selected_future_simulation",
+        "production_authorization_effect": "none",
+        "selection_rule": "internally coherent final state with all released checks satisfied"
+      },
+      "receipt_family": "production_security_observability",
+      "receipt_id": "SIM-CLOSED-SECURITY-001",
+      "schema_version": "2.0.0"
+    },
+    {
+      "assurance_stage": "verified",
+      "claim_scope": "Independent Scientific, Quality, and Regulatory acceptance in the selected future",
+      "closure_digest": "sha256:70cdf5e03a798d718f79a941b587ef3e14a3cc1f3a29b314ab59c10a54b6b550",
+      "closure_status": "closed_in_simulation",
+      "decisions": [
+        {
+          "basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "decision": "accept",
+          "domain": "scientific",
+          "scope": "selected future reality and released intended-use profile",
+          "simulated_accountable_role": "future-scientific-authority"
+        },
+        {
+          "basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "decision": "accept",
+          "domain": "quality",
+          "scope": "selected future reality and released intended-use profile",
+          "simulated_accountable_role": "future-quality-authority"
+        },
+        {
+          "basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "decision": "accept",
+          "domain": "regulatory",
+          "scope": "selected future reality and released intended-use profile",
+          "simulated_accountable_role": "future-regulatory-authority"
+        }
+      ],
+      "evidence_mode": "simulated",
+      "future_reality_version": "future-reality-2028-06-30-v1",
+      "independence": {
+        "mode": "distinct_simulated_accountable_roles",
+        "role_count": 3,
+        "shared_basis_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79"
+      },
+      "outcome": "passed",
+      "reality_basis": {
+        "authority": "definitive_within_selected_future_reality",
+        "environment_observed_closure": "separate_unasserted_state",
+        "kind": "selected_future_simulation",
+        "production_authorization_effect": "none",
+        "selection_rule": "internally coherent final state with all released checks satisfied"
+      },
+      "receipt_family": "accountable_scientific_quality_regulatory_acceptance",
+      "receipt_id": "SIM-CLOSED-ACCEPTANCE-001",
+      "residual_risk_disposition": "accepted_within_selected_future_reality",
+      "schema_version": "2.0.0"
+    }
+  ],
+  "future_reality_version": "future-reality-2028-06-30-v1",
+  "governance_closure": {
+    "aggregate_artifacts": [
+      {
+        "artifact_id": "ARTIFACT-SIM-SUBSTANTIVE-CLOSURE-2028-V1",
+        "digest": "sha256:9ca1cba1efb73cd3c0bdede1d98f995835d4a3d7eaccbc1b87b4f4188591a9ad",
+        "locator": "evidence://simulation/closures/substantive-2028-v1",
+        "media_type": "application/json",
+        "retention_class": "simulation-baseline",
+        "sensitivity": "internal"
+      }
+    ],
+    "aggregate_outcome": {
+      "closed_family_count": 4,
+      "expected_family_count": 4,
+      "reproduction_statement": "The four declared commands regenerate and verify each closure family from the pinned synthetic fixture, bounded-caller policy, and selected future-reality assumptions.",
+      "result": "passed"
+    },
+    "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
+    "closure_status": "closed_in_simulation",
+    "divergence_triggers": [
+      "A released contract, selected-future assumption, representative fixture, vendor behavior band, or modeled authority policy changes.",
+      "A regenerated family artifact differs from its retained digest or a bounded-caller failure twin produces an authorized effect."
+    ],
+    "environment_observed_closure": "separate_unasserted_state",
+    "evidence_mode": "simulated",
+    "executable_checks": [
+      {
+        "artifact_ids": [
+          "ARTIFACT-SIM-VENDOR-CONFORMANCE-2028-V1"
+        ],
+        "check_id": "CHECK-CONFIGURED-VENDORS",
+        "command": [
+          "env",
+          "PYTHONPATH=src",
+          "python3",
+          "-m",
+          "lims_eln_sim.receipt_checks",
+          "configured_vendor_environments"
+        ],
+        "expected_exit_code": 0,
+        "working_directory": "lims-eln-simulated-final-state"
+      },
+      {
+        "artifact_ids": [
+          "ARTIFACT-SIM-MIGRATION-RESTORE-2028-V1"
+        ],
+        "check_id": "CHECK-MIGRATION-RESTORE",
+        "command": [
+          "env",
+          "PYTHONPATH=src",
+          "python3",
+          "-m",
+          "lims_eln_sim.receipt_checks",
+          "representative_migration_restore_rehearsals"
+        ],
+        "expected_exit_code": 0,
+        "working_directory": "lims-eln-simulated-final-state"
+      },
+      {
+        "artifact_ids": [
+          "ARTIFACT-SIM-SECURITY-OBSERVABILITY-2028-V1"
+        ],
+        "check_id": "CHECK-SECURITY-OBSERVABILITY",
+        "command": [
+          "env",
+          "PYTHONPATH=src",
+          "python3",
+          "-m",
+          "lims_eln_sim.receipt_checks",
+          "production_security_observability"
+        ],
+        "expected_exit_code": 0,
+        "working_directory": "lims-eln-simulated-final-state"
+      },
+      {
+        "artifact_ids": [
+          "ARTIFACT-SIM-ACCOUNTABLE-ACCEPTANCE-2028-V1"
+        ],
+        "check_id": "CHECK-ACCOUNTABLE-ACCEPTANCE",
+        "command": [
+          "env",
+          "PYTHONPATH=src",
+          "python3",
+          "-m",
+          "lims_eln_sim.receipt_checks",
+          "accountable_scientific_quality_regulatory_acceptance"
+        ],
+        "expected_exit_code": 0,
+        "working_directory": "lims-eln-simulated-final-state"
+      }
+    ],
+    "future_reality": {
+      "as_of": "2028-06-30",
+      "assumption_ids": [
+        "ASSUMPTION-VENDOR-BANDS-2028",
+        "ASSUMPTION-REPRESENTATIVE-CORPUS-2028",
+        "ASSUMPTION-MODELED-AUTHORITY-2028"
+      ],
+      "future_reality_id": "FUTURE-REALITY-LIMS-2028-001",
+      "modeled_authority_roles": [
+        "Scientific authority",
+        "Quality authority",
+        "Regulatory authority",
+        "Security and privacy authority",
+        "Operational authority"
+      ],
+      "narrative": "This selected future reality models a fully configured multi-vendor LIMS and ELN service whose migration, recovery, security, observability, and role-separated acceptance paths complete through released executable contracts and representative synthetic evidence.",
+      "source_coordinates": [
+        {
+          "commit": "6194a1c3911a97aa5e29b1861819a55554019488",
+          "digest": "sha256:35b3d9bcadea3ab95b9cf6f3bb26fd95049147f7fcc771815ff71060fae0937a",
+          "release": "seed-forecast-2026-Q3-r2"
+        },
+        {
+          "commit": "c79f8727963a427164a11eacb14837d795cd757d",
+          "digest": "sha256:3e9079af08ae3c153a8eebb438fb342ffd6313c34c0a53247e9f9c6b054d0494",
+          "release": "seed-implementation-v0.2.0"
+        }
+      ]
+    },
+    "limitations": [
+      "The four families are closed inside the selected future reality; environment-observed closure remains a separate unasserted state.",
+      "Modeled authority roles establish a complete decision shape and grant no production authorization."
+    ],
+    "metadata": {
+      "created_at": "2026-07-28T18:45:00Z",
+      "owner": {
+        "actor_id": "OWNER-SIMULATION-CLOSURE",
+        "display_name": "Simulation stewardship role",
+        "role": "Future-reality closure stewardship"
+      },
+      "schema_version": "2.0.0",
+      "updated_at": "2026-07-28T18:45:00Z"
+    },
+    "production_authorization_effect": "none",
+    "receipt_closures": [
+      {
+        "artifacts": [
+          {
+            "artifact_id": "ARTIFACT-SIM-VENDOR-CONFORMANCE-2028-V1",
+            "digest": "sha256:5ef6952316d627943e448ab7164c106724021f76764f8f607c7f67036ec39585",
+            "locator": "evidence://simulation/closures/configured-vendors-2028-v1",
+            "media_type": "application/json",
+            "retention_class": "simulation-baseline",
+            "sensitivity": "internal"
+          }
+        ],
+        "claim": "Sapio, Benchling, and LabKey adapters complete released read, idempotent-write, replay, recovery, and bounded-caller scenarios.",
+        "closure_statement": "Every configured-vendor criterion is closed inside FUTURE-REALITY-LIMS-2028-001.",
+        "family": "configured_vendor_environments",
+        "limitations": [
+          "Vendor tenants, identities, and version bands are executable simulation fixtures."
+        ],
+        "modeled_authority_roles": [
+          "Vendor qualification authority",
+          "Scientific data authority"
+        ],
+        "outcome": "passed",
+        "scenario_ids": [
+          "SCENARIO-VENDOR-READ",
+          "SCENARIO-VENDOR-NARROW-WRITE",
+          "SCENARIO-AMBIGUOUS-WRITE"
+        ],
+        "scope": "Synthetic research-use specimen and evidence projections across version-banded future vendor environments.",
+        "simulated_environment": {
+          "class": "vendor_sandbox",
+          "configuration_digest": "sha256:9f149ebcfab994920b30e2418386a8c466770473b95cc77c52f007c234d4e017",
+          "environment_id": "ENV-SIM-VENDORS-2028-V1",
+          "region": "synthetic-us-east",
+          "schema_version": "vendor-contract-3.0",
+          "vendor_build": "selected-future-vendor-band-2028"
+        },
+        "simulated_receipt_id": "RECEIPT-SIM-CONFIGURED-VENDORS-2028-V1",
+        "test_ids": [
+          "TEST-SAPIO-CONFORMANCE",
+          "TEST-BENCHLING-CONFORMANCE",
+          "TEST-LABKEY-CONFORMANCE"
+        ]
+      },
+      {
+        "artifacts": [
+          {
+            "artifact_id": "ARTIFACT-SIM-MIGRATION-RESTORE-2028-V1",
+            "digest": "sha256:2efa82199469d42328a8a2f788ab558adccf5c30025358369f529f34415f513d",
+            "locator": "evidence://simulation/closures/migration-restore-2028-v1",
+            "media_type": "application/json",
+            "retention_class": "simulation-baseline",
+            "sensitivity": "internal"
+          }
+        ],
+        "claim": "Representative migration, clean restore, rollback, and data-exit rehearsals preserve meaning and satisfy the selected recovery objective.",
+        "closure_statement": "Every representative migration and restore criterion is closed inside FUTURE-REALITY-LIMS-2028-001.",
+        "family": "representative_migration_restore_rehearsals",
+        "limitations": [
+          "Recovery timing and throughput derive from deterministic future-reality models."
+        ],
+        "modeled_authority_roles": [
+          "Migration authority",
+          "Continuity authority"
+        ],
+        "outcome": "passed",
+        "scenario_ids": [
+          "SCENARIO-MIGRATION-PARITY",
+          "SCENARIO-CLEAN-RESTORE",
+          "SCENARIO-DATA-EXIT"
+        ],
+        "scope": "A representative synthetic laboratory corpus with scientific results, lineage, artifacts, and explicit failure twins.",
+        "simulated_environment": {
+          "class": "qualification",
+          "configuration_digest": "sha256:bac923f373f8c0dd276ebd9b640cbf222901e1aaeca8bad77c41fe6956603b2e",
+          "environment_id": "ENV-SIM-MIGRATION-2028-V1",
+          "region": "synthetic-us-east",
+          "schema_version": "migration-contract-3.0"
+        },
+        "simulated_receipt_id": "RECEIPT-SIM-MIGRATION-RESTORE-2028-V1",
+        "test_ids": [
+          "TEST-MIGRATION-RECONCILIATION",
+          "TEST-RESTORE-CONTINUITY",
+          "TEST-FAILURE-TWINS"
+        ]
+      },
+      {
+        "artifacts": [
+          {
+            "artifact_id": "ARTIFACT-SIM-SECURITY-OBSERVABILITY-2028-V1",
+            "digest": "sha256:b44870fb0aecf1f585e1f8b3c42e5b8b13a6e4481a3917f7dca4fa8ea8f7dae4",
+            "locator": "evidence://simulation/closures/security-observability-2028-v1",
+            "media_type": "application/json",
+            "retention_class": "simulation-baseline",
+            "sensitivity": "confidential"
+          }
+        ],
+        "claim": "Production-shaped identity, tenant isolation, AWS configuration and credential references, telemetry, and bounded-caller controls satisfy the selected future control profile.",
+        "closure_statement": "Every production-shaped security and observability criterion is closed inside FUTURE-REALITY-LIMS-2028-001.",
+        "family": "production_security_observability",
+        "limitations": [
+          "The production class describes a future-reality topology and retains simulated evidence mode."
+        ],
+        "modeled_authority_roles": [
+          "Security and privacy authority",
+          "Operational authority"
+        ],
+        "outcome": "passed",
+        "scenario_ids": [
+          "SCENARIO-CROSS-TENANT-BLOCK",
+          "SCENARIO-APPROVAL-BOUND-WRITE",
+          "SCENARIO-UNRELEASED-OPERATION"
+        ],
+        "scope": "Synthetic tenant workloads, AWS Parameter Store and Secrets Manager references, protected traces, vendor readback signals, and failure twins.",
+        "simulated_environment": {
+          "class": "production",
+          "configuration_digest": "sha256:7ae195b9cae1481a0d2cc23c27f0f6af7455331a1ec14bff4efcf677aed80e48",
+          "environment_id": "ENV-SIM-PRODUCTION-2028-V1",
+          "region": "synthetic-us-east",
+          "schema_version": "runtime-control-profile-3.0"
+        },
+        "simulated_receipt_id": "RECEIPT-SIM-SECURITY-OBSERVABILITY-2028-V1",
+        "test_ids": [
+          "TEST-SECURITY-CONTROLS",
+          "TEST-OBSERVABILITY-SIGNALS",
+          "TEST-BOUNDED-CALLER"
+        ]
+      },
+      {
+        "artifacts": [
+          {
+            "artifact_id": "ARTIFACT-SIM-ACCOUNTABLE-ACCEPTANCE-2028-V1",
+            "digest": "sha256:70cdf5e03a798d718f79a941b587ef3e14a3cc1f3a29b314ab59c10a54b6b550",
+            "locator": "evidence://simulation/closures/accountable-acceptance-2028-v1",
+            "media_type": "application/json",
+            "retention_class": "simulation-baseline",
+            "sensitivity": "internal"
+          }
+        ],
+        "claim": "Separate modeled Scientific, Quality, and Regulatory authorities accept one immutable evidence basis with explicit scope and residual-risk posture.",
+        "closure_statement": "Every modeled Scientific, Quality, and Regulatory acceptance criterion is closed inside FUTURE-REALITY-LIMS-2028-001.",
+        "family": "accountable_scientific_quality_regulatory_acceptance",
+        "limitations": [
+          "Authority resides in modeled roles inside the selected future reality and grants no production authorization."
+        ],
+        "modeled_authority_roles": [
+          "Scientific authority",
+          "Quality authority",
+          "Regulatory authority"
+        ],
+        "outcome": "passed",
+        "scenario_ids": [
+          "SCENARIO-SCIENTIFIC-ACCEPTANCE",
+          "SCENARIO-QUALITY-ACCEPTANCE",
+          "SCENARIO-REGULATORY-ACCEPTANCE"
+        ],
+        "scope": "The selected future research-use lifecycle, vendor integrations, migration, recovery, security, observability, and retained evidence.",
+        "simulated_environment": {
+          "class": "qualification",
+          "configuration_digest": "sha256:94b7301905c14df4940caa61c75c3505ac8b8638af1ee0462309db46713cdf79",
+          "environment_id": "ENV-SIM-ACCEPTANCE-2028-V1",
+          "region": "synthetic-us-east",
+          "schema_version": "acceptance-packet-3.0"
+        },
+        "simulated_receipt_id": "RECEIPT-SIM-ACCOUNTABLE-ACCEPTANCE-2028-V1",
+        "test_ids": [
+          "TEST-SCIENTIFIC-PACKET",
+          "TEST-QUALITY-PACKET",
+          "TEST-REGULATORY-PACKET"
+        ]
+      }
+    ]
+  },
+  "governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9"
+}

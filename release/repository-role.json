@@ -1,10 +1,47 @@
 {
-  "manifest_version": "1.0.0",
+  "manifest_version": "2.0.0",
   "repository_role": "comparative_evidence",
-  "repository_release": "0.2.0",
-  "external_release": "comparison-v0.2.0",
-  "reference_report_digest": "sha256:147168aea604922948480c48fa0b1088d788307a4b73a66eaf7cfc8a660ab286",
+  "repository_release": "0.3.0",
+  "external_release": "comparison-v0.3.0",
+  "reference_report_digest": "sha256:f2e8906f2f32daba1193610b0ba1391e682af5ffa38d02da3e901b0004a30f81",
+  "canonical_governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+  "simulated_closure_comparison_digest": "sha256:9c1472729260693e0fe719cc4abc71839e32de4fbfa0635057694adb2ffe301f",
+  "aggregate_closure_artifact_digest": "sha256:9ca1cba1efb73cd3c0bdede1d98f995835d4a3d7eaccbc1b87b4f4188591a9ad",
+  "trusted_simulated_closure": {
+    "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
+    "future_reality_version": "future-reality-2028-06-30-v1",
+    "future_reality_id": "FUTURE-REALITY-LIMS-2028-001",
+    "governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+    "source_coordinates": [
+      {
+        "release": "seed-forecast-2026-Q3-r2",
+        "commit": "6194a1c3911a97aa5e29b1861819a55554019488",
+        "digest": "sha256:35b3d9bcadea3ab95b9cf6f3bb26fd95049147f7fcc771815ff71060fae0937a"
+      },
+      {
+        "release": "seed-implementation-v0.2.0",
+        "commit": "c79f8727963a427164a11eacb14837d795cd757d",
+        "digest": "sha256:3e9079af08ae3c153a8eebb438fb342ffd6313c34c0a53247e9f9c6b054d0494"
+      }
+    ]
+  },
+  "first_receipt_contract": {
+    "path": "first-receipt.json",
+    "authority_mode": "orientation_only",
+    "evidence_modes": ["simulated", "observed"],
+    "simulated_closure_status": "closed_in_simulation",
+    "environment_observed_closure": "separate_unasserted_state",
+    "production_authorization_effect": "none",
+    "observed_admission_status": "available_for_independent_comparison"
+  },
+  "machine_node": "machine-node.json",
+  "coordination_horizon": "COORDINATION-HORIZON.json",
   "historical_external_releases": [
+    {
+      "repository_release": "0.2.0",
+      "external_release": "comparison-v0.2.0",
+      "status": "preserved_historical_baseline"
+    },
     {
       "repository_release": "0.1.0",
       "external_release": "comparison-v0.1.0",
@@ -12,15 +49,39 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "1.0.0",
+    "governance_schema": "2.0.0",
     "comparison_profile_schema": "1.0.0",
     "observation_envelope_schema": "1.0.0",
-    "redacted_receipt_schema": "1.0.0"
+    "redacted_receipt_schema": "1.0.0",
+    "simulated_closure_bundle_schema": "2.0.0",
+    "control_plane_profile": "0.3.0"
   },
-  "release_coordinates": {
+  "external_contract_bindings": {
+    "receipt_family_vocabulary_map": {
+      "contract_id": "RECEIPT-VOCABULARY-MAP-001",
+      "version": "1.0.0",
+      "authority": "driftframestudios/lims-eln-program-specification",
+      "coordinate_kind": "external_repository_path",
+      "path": "specifications/receipt-vocabulary-map.v1.json",
+      "status": "pending_cross_repository_promotion",
+      "digest": "sha256:a2752fb31914e24a025738bfc3d5bd12e035a076934be8c27c11a5df8701f9cd"
+    }
+  },
+  "seed_release_coordinates": {
     "governance_commit": "716d4581d723a5c1b56f16efdbcd25790549ae33",
     "program_specification_commit": "fc7707134b58ed12ad349bf649d2af1c3689bd01",
     "simulation_commit": "6194a1c3911a97aa5e29b1861819a55554019488",
     "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
+  },
+  "promotion_coordinates": {
+    "status": "pending_cross_repository_settlement",
+    "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
+    "required_roles": [
+      "site_reading_governance",
+      "program_specification",
+      "enterprise_implementation",
+      "simulated_final_state",
+      "comparative_evidence"
+    ]
   }
 }

@@ -1,9 +1,35 @@
-* @driftframestudios/solution-architecture
-/src/comparative_evidence/gate.py @driftframestudios/quality-regulatory @driftframestudios/security
-/specification/ @driftframestudios/scientific-data @driftframestudios/quality-regulatory
-/fixtures/ @driftframestudios/scientific-data
-/accepted/ @driftframestudios/quality-regulatory
-/src/comparative_evidence/safety.py @driftframestudios/quality-regulatory @driftframestudios/security
-/schemas/ @driftframestudios/quality-regulatory @driftframestudios/security
-/SECURITY.md @driftframestudios/security
-/release/ @driftframestudios/solution-architecture @driftframestudios/quality-regulatory
+# Enforceable GitHub owner: @driftframestudios.
+# Role vocabulary below preserves the intended accountability map. These
+# labels can become organization teams after an intentional ownership move.
+
+# Default role: solution-architecture
+* @driftframestudios
+
+# Roles: quality-regulatory and security
+/src/comparative_evidence/gate.py @driftframestudios
+/src/comparative_evidence/safety.py @driftframestudios
+/src/comparative_evidence/simulated_closure.py @driftframestudios
+/schemas/ @driftframestudios
+/schemas/simulated-closure-bundle.schema.json @driftframestudios
+/.github/workflows/ @driftframestudios
+/.github/dependabot.yml @driftframestudios
+/tools/check_branch_flow.py @driftframestudios
+/tools/check_artifacts.py @driftframestudios
+/tests/test_branch_flow.py @driftframestudios
+
+# Roles: scientific-data and quality-regulatory
+/specification/ @driftframestudios
+/fixtures/ @driftframestudios
+/fixtures/simulated-closures/ @driftframestudios
+
+# Role: quality-regulatory
+/accepted/ @driftframestudios
+
+# Role: security
+/SECURITY.md @driftframestudios
+
+# Roles: solution-architecture and quality-regulatory
+/release/ @driftframestudios
+/machine-node.json @driftframestudios
+/first-receipt.json @driftframestudios
+/COORDINATION-HORIZON.json @driftframestudios

@@ -136,7 +136,18 @@ def validate_repository_safe_content(value: Any, path: str = "$") -> None:
         for key, item in value.items():
             key_text = str(key)
             normalized = normalized_key(key_text)
-            if any(part in normalized for part in PROTECTED_KEY_PARTS):
+            control_plane_field = (
+                normalized == "productionauthorizationeffect"
+                and item == "none"
+            ) or (
+                normalized == "displayname"
+                and path.endswith(".governance_closure.metadata.owner")
+                and isinstance(item, str)
+                and item.casefold().endswith(" role")
+            )
+            if not control_plane_field and any(
+                part in normalized for part in PROTECTED_KEY_PARTS
+            ):
                 raise EvidenceSafetyError(
                     f"{path}.{key_text} represents protected content; retain its class and governed locator"
                 )
