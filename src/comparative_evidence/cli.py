@@ -6,12 +6,15 @@ from pathlib import Path
 
 from .compare import compare
 from .gate import admit
-from .model import ObservationEnvelope
+from .model import ObservationEnvelope, strict_json_loads
 from .report import write_reports
 
 
 def _load(path: Path) -> dict:
-    return json.loads(path.read_text())
+    value = strict_json_loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("JSON document requires an object at the repository boundary")
+    return value
 
 
 def parser() -> argparse.ArgumentParser:
@@ -47,4 +50,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
