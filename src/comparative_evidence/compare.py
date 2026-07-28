@@ -109,7 +109,7 @@ def compare(
         },
     }
     report = {
-        "comparator_release": "0.2.0",
+        "comparator_release": "0.3.0",
         "comparison_contract_version": "1.0.0",
         "scenario_id": actual.scenario_id,
         "simulation": {

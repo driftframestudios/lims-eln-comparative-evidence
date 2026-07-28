@@ -1,7 +1,7 @@
 {
   "receipt_schema": "1.0.0",
   "receipt_id": "RECEIPT-VENDOR-EXAMPLE-001",
-  "receipt_family": "configured_vendor_environment",
+  "receipt_family": "configured_vendor_environments",
   "evidence_mode": "observed",
   "assurance_stage": "qualified",
   "claim": "Stable replay and authoritative readback preserve the released canonical projection.",
