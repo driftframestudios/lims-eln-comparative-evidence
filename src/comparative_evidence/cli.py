@@ -4,7 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from .compare import compare
+from .calibration import score_calibration
+from .compare import compare, compare_synthetic_contract
 from .gate import admit
 from .model import ObservationEnvelope, strict_json_loads
 from .report import write_reports
@@ -30,6 +31,14 @@ def parser() -> argparse.ArgumentParser:
     comparison.add_argument("--actual", type=Path, required=True)
     comparison.add_argument("--output", type=Path, required=True)
 
+    synthetic_contract = actions.add_parser("compare-synthetic-contract")
+    synthetic_contract.add_argument("--profile", type=Path, required=True)
+    synthetic_contract.add_argument("--simulation", type=Path, required=True)
+    synthetic_contract.add_argument(
+        "--contract-candidate", type=Path, required=True
+    )
+    synthetic_contract.add_argument("--output", type=Path, required=True)
+
     admission = actions.add_parser("admit")
     admission.add_argument("--envelope", type=Path, required=True)
     admission.add_argument("--accepted", type=Path, required=True)
@@ -37,6 +46,9 @@ def parser() -> argparse.ArgumentParser:
     simulated = actions.add_parser("admit-simulated")
     simulated.add_argument("--closure-bundle", type=Path, required=True)
     simulated.add_argument("--accepted", type=Path, required=True)
+
+    calibration = actions.add_parser("calibrate")
+    calibration.add_argument("--ledger", type=Path, required=True)
     return command
 
 
@@ -51,12 +63,32 @@ def main() -> None:
         write_reports(report, args.output)
         print(json.dumps({"report_digest": report["report_digest"], "summary": report["summary"]}))
         return
+    if args.action == "compare-synthetic-contract":
+        report = compare_synthetic_contract(
+            ObservationEnvelope.from_dict(_load(args.simulation)),
+            ObservationEnvelope.from_dict(_load(args.contract_candidate)),
+            _load(args.profile),
+        )
+        write_reports(report, args.output)
+        print(
+            json.dumps(
+                {
+                    "comparison_mode": report["comparison_mode"],
+                    "report_digest": report["report_digest"],
+                    "summary": report["summary"],
+                }
+            )
+        )
+        return
     if args.action == "admit-simulated":
         destination = admit_simulated_closure(
             _load(args.closure_bundle),
             args.accepted,
         )
         print(json.dumps({"simulated_closure_manifest": str(destination)}))
+        return
+    if args.action == "calibrate":
+        print(json.dumps(score_calibration(_load(args.ledger)), sort_keys=True))
         return
     destination = admit(ObservationEnvelope.from_dict(_load(args.envelope)), args.accepted)
     print(json.dumps({"accepted_manifest": str(destination)}))

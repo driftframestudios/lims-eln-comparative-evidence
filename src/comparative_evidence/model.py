@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from copy import deepcopy
+from collections.abc import Mapping
 from hashlib import sha256
 import json
+from types import MappingProxyType
 from typing import Any
 
 
@@ -12,6 +15,24 @@ ASSURANCE_STAGES = {"specified", "verified", "qualified", "validated", "accepted
 
 class EnvelopeError(ValueError):
     """An envelope receives a precise correction requirement."""
+
+
+def _deep_freeze(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType(
+            {key: _deep_freeze(item) for key, item in value.items()}
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_deep_freeze(item) for item in value)
+    return deepcopy(value)
+
+
+def _deep_thaw(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _deep_thaw(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_deep_thaw(item) for item in value]
+    return deepcopy(value)
 
 
 def canonical_json(value: Any) -> str:
@@ -56,11 +77,16 @@ class ObservationEnvelope:
     evidence_mode: str
     assurance_stage: str
     scenario_id: str
-    source: dict[str, Any]
-    result: dict[str, Any]
-    provenance: dict[str, Any]
-    approvals: tuple[dict[str, Any], ...]
-    classification: dict[str, Any]
+    source: Mapping[str, Any]
+    result: Mapping[str, Any]
+    provenance: Mapping[str, Any]
+    approvals: tuple[Mapping[str, Any], ...]
+    classification: Mapping[str, Any]
+
+    def __post_init__(self) -> None:
+        for field in ("source", "result", "provenance", "classification"):
+            object.__setattr__(self, field, _deep_freeze(getattr(self, field)))
+        object.__setattr__(self, "approvals", _deep_freeze(self.approvals))
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> "ObservationEnvelope":
@@ -84,8 +110,8 @@ class ObservationEnvelope:
         extra = sorted(value.keys() - required)
         if extra:
             raise EnvelopeError(f"envelope fields require a released definition: {', '.join(extra)}")
-        if value["envelope_version"] != "1.0.0":
-            raise EnvelopeError("envelope_version requires the released 1.0.0 contract")
+        if value["envelope_version"] != "1.2.0":
+            raise EnvelopeError("envelope_version requires the released 1.2.0 contract")
         if value["evidence_mode"] not in EVIDENCE_MODES:
             raise EnvelopeError("evidence_mode requires planned, simulated, or observed")
         if value["assurance_stage"] not in ASSURANCE_STAGES:
@@ -120,11 +146,11 @@ class ObservationEnvelope:
             "evidence_mode": self.evidence_mode,
             "assurance_stage": self.assurance_stage,
             "scenario_id": self.scenario_id,
-            "source": self.source,
-            "result": self.result,
-            "provenance": self.provenance,
-            "approvals": list(self.approvals),
-            "classification": self.classification,
+            "source": _deep_thaw(self.source),
+            "result": _deep_thaw(self.result),
+            "provenance": _deep_thaw(self.provenance),
+            "approvals": _deep_thaw(self.approvals),
+            "classification": _deep_thaw(self.classification),
         }
 
     @property

@@ -103,6 +103,7 @@ class BranchFlowTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("permissions:\n  contents: read", workflow)
         self.assertIn("pull_request_target:", workflow)
+        self.assertIn("\n  branch-policy:\n", workflow)
         self.assertIn(
             "ref: ${{ github.event.pull_request.base.sha }}",
             workflow,
@@ -139,6 +140,18 @@ class BranchFlowTests(unittest.TestCase):
         ):
             with self.subTest(surface=surface):
                 self.assertIn(surface, owners)
+
+
+    def test_stable_comparative_context_fails_closed_on_matrix_result(self):
+        workflow = (ROOT / ".github" / "workflows" / "verify.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("\n  comparative-validation:\n", workflow)
+        self.assertIn("if: ${{ always() }}", workflow)
+        self.assertIn('test "$TEST_AND_REPORT_RESULT" = "success"', workflow)
+        self.assertNotIn("ubuntu-latest", workflow)
+        self.assertGreaterEqual(workflow.count("runs-on: ubuntu-24.04"), 2)
+        self.assertIn("fail-fast: false", workflow)
 
 
 if __name__ == "__main__":

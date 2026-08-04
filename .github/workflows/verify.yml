@@ -10,9 +10,10 @@ permissions:
 
 jobs:
   test-and-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
@@ -22,22 +23,46 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install released schema validation support
+        run: python -m pip install --disable-pip-version-check --editable ".[validation]"
       - name: Run comparison and admission tests
         run: python -m unittest discover -s tests -v
-      - name: Generate portable comparison
+      - name: Generate portable synthetic contract exercise
         env:
           PYTHONPATH: src
         run: >-
-          python -m comparative_evidence.cli compare
+          python -m comparative_evidence.cli compare-synthetic-contract
           --profile specification/comparison-profile.json
           --simulation fixtures/pairs/simulation-observation.json
-          --actual fixtures/pairs/actual-observation.json
+          --contract-candidate fixtures/contracts/planned-observation.json
           --output build/comparison
       - name: Check generated artifact boundary
         run: python tools/check_artifacts.py build/comparison
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: comparative-report-${{ matrix.python-version }}
           path: build/comparison/
           if-no-files-found: error
           retention-days: 7
+
+  comparative-validation:
+    if: ${{ always() }}
+    needs: test-and-report
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require the complete comparative proof matrix
+        env:
+          TEST_AND_REPORT_RESULT: ${{ needs.test-and-report.result }}
+        run: test "$TEST_AND_REPORT_RESULT" = "success"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Install released schema validation support
+        run: python -m pip install --disable-pip-version-check --editable ".[validation]"
+      - name: Validate released evidence, calibration posture, and repository safety
+        run: python tools/validate_repository.py

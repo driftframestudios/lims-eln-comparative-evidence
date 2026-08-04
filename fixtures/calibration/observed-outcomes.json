@@ -1,0 +1,9 @@
+{
+  "ledger_version": "1.0.0",
+  "forecast_family": "lims-eln-replatforming-outcomes",
+  "entries": [],
+  "empty_state": {
+    "status": "awaiting_independently_observed_outcomes",
+    "statement": "The first independently observed resolution will activate Brier scoring; selected-future results retain their simulated evidence mode."
+  }
+}

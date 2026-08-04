@@ -1,17 +1,22 @@
 {
   "manifest_version": "2.0.0",
   "repository_role": "comparative_evidence",
-  "repository_release": "0.3.0",
-  "external_release": "comparison-v0.3.0",
-  "reference_report_digest": "sha256:f2e8906f2f32daba1193610b0ba1391e682af5ffa38d02da3e901b0004a30f81",
-  "canonical_governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
-  "simulated_closure_comparison_digest": "sha256:9c1472729260693e0fe719cc4abc71839e32de4fbfa0635057694adb2ffe301f",
-  "aggregate_closure_artifact_digest": "sha256:9ca1cba1efb73cd3c0bdede1d98f995835d4a3d7eaccbc1b87b4f4188591a9ad",
+  "repository_release": "0.3.1",
+  "external_release": "comparison-v0.3.1",
+  "synthetic_contract_report_digest": "sha256:3b92a93711d454ef8fe7bf9c30a93f415bda8da75e708f2ea9eb0cdde5984d39",
+  "canonical_governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
+  "simulated_closure_comparison_digest": "sha256:fd0c8ccd99af7fe2ef75a04d9c24cece04f33d4e673f8e57468bfbe43898cd66",
+  "aggregate_closure_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
+  "source_result_digest": "sha256:9d42b972c77764c81ff32fefe8f02367a27406e9ba082a704587cc9b5a9da860",
+  "comparison_profile_digest": "sha256:837511447d2033375ed35b481ed491ae7f425d5add7753dc84dd9f3685c4e480",
+  "calibration_ledger_digest": "sha256:062ca293c0fe36ad489e9702a61f191c5bb542d1e6c50145b1334a71f41d9433",
+  "canonical_closure_bundle_digest": "sha256:04c94dff906ddb83607aa14ea4fc618cf97e040d02b427680c7512a0818be7b4",
+  "canonical_closure_bundle_file_sha256": "sha256:b868604412039c3705d4b60e649c43da2f51592ca0215d22ebe4477b75016ef4",
   "trusted_simulated_closure": {
     "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
     "future_reality_version": "future-reality-2028-06-30-v1",
     "future_reality_id": "FUTURE-REALITY-LIMS-2028-001",
-    "governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+    "governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
     "source_coordinates": [
       {
         "release": "seed-forecast-2026-Q3-r2",
@@ -25,14 +30,36 @@
       }
     ]
   },
+  "trusted_simulated_database_release": {
+    "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+    "oracle_version": "1.0.0",
+    "database_release": "database-final-state-v1",
+    "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+    "data_contract_version": "1.0.0",
+    "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+    "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+    "migration_manifest_version": "1.0.0",
+    "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
+    "migration_mechanism_id": "FLYWAY",
+    "migration_mechanism_version": "13.0.0",
+    "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+    "migration_history_relation": "public.flyway_schema_history",
+    "migration_lock_strategy": "flyway_postgresql_history_lock",
+    "migration_transaction_strategy": "one_transaction_per_migration",
+    "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+    "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
+    "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
+    "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
+    "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+  },
   "first_receipt_contract": {
     "path": "first-receipt.json",
     "authority_mode": "orientation_only",
-    "evidence_modes": ["simulated", "observed"],
+    "persisted_evidence_modes": ["simulated", "planned"],
     "simulated_closure_status": "closed_in_simulation",
     "environment_observed_closure": "separate_unasserted_state",
     "production_authorization_effect": "none",
-    "observed_admission_status": "available_for_independent_comparison"
+    "observed_admission_status": "caller_supplied_only_unexercised"
   },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
@@ -49,11 +76,13 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "2.0.0",
-    "comparison_profile_schema": "1.0.0",
-    "observation_envelope_schema": "1.0.0",
+    "governance_schema": "2.0.1",
+    "comparison_profile_schema": "1.2.0",
+    "observation_envelope_schema": "1.2.0",
+    "database_release_coordinate": "1.1.0",
     "redacted_receipt_schema": "1.0.0",
-    "simulated_closure_bundle_schema": "2.0.0",
+    "calibration_ledger_schema": "1.0.0",
+    "simulated_closure_bundle_schema": "2.0.1",
     "control_plane_profile": "0.3.0"
   },
   "external_contract_bindings": {
@@ -64,7 +93,7 @@
       "coordinate_kind": "external_repository_path",
       "path": "specifications/receipt-vocabulary-map.v1.json",
       "status": "pending_cross_repository_promotion",
-      "digest": "sha256:a2752fb31914e24a025738bfc3d5bd12e035a076934be8c27c11a5df8701f9cd"
+      "digest": "sha256:0f3be9ab956877281f9261c69a5f099547b048c1c878541a7c9c47edc5e03280"
     }
   },
   "seed_release_coordinates": {
