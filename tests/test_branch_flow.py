@@ -149,6 +149,9 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("\n  comparative-validation:\n", workflow)
         self.assertIn("if: ${{ always() }}", workflow)
         self.assertIn('test "$TEST_AND_REPORT_RESULT" = "success"', workflow)
+        self.assertNotIn("ubuntu-latest", workflow)
+        self.assertGreaterEqual(workflow.count("runs-on: ubuntu-24.04"), 2)
+        self.assertIn("fail-fast: false", workflow)
 
 
 if __name__ == "__main__":

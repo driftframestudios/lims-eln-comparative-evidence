@@ -10,9 +10,10 @@ permissions:
 
 jobs:
   test-and-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
@@ -47,7 +48,7 @@ jobs:
   comparative-validation:
     if: ${{ always() }}
     needs: test-and-report
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require the complete comparative proof matrix
