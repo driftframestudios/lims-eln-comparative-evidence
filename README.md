@@ -14,7 +14,7 @@ context changed.
 
 `simulated-closures/` receives a bundle after the comparator confirms:
 
-- the exact governance 2.0.0 closure document matches its release-bound digest;
+- the exact governance 2.0.1 closure document matches its release-bound digest;
 - the closure bundle's source-result digest independently reproduces the
   aggregate artifact digest;
 - all four governance receipt projections and detailed executable receipts are
@@ -69,8 +69,9 @@ PYTHONPATH=src python -m comparative_evidence.cli compare \
   --output build/comparison
 ```
 
-The validation extra executes the released Draft 2020-12 comparison-profile
-contract during both the test matrix and the aggregate repository gate.
+The validation extra executes the released Draft 2020-12 comparison-profile and
+observation-envelope contracts during both the test matrix and the aggregate
+repository gate.
 
 The output contains `comparison.json` and `comparison.html`. Difference values appear
 only for paths declared in the released profile's `reportable_paths`. Every other

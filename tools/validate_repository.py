@@ -115,6 +115,7 @@ def main() -> int:
     manifest = _load("release/repository-role.json")
     profile = _load("specification/comparison-profile.json")
     profile_schema = _load("schemas/comparison-profile.schema.json")
+    observation_schema = _load("schemas/observation-envelope.schema.json")
     validate_json_contract(
         schema=profile_schema,
         instance=profile,
@@ -124,13 +125,24 @@ def main() -> int:
         ],
         contract_name="comparison profile",
     )
+    simulation_observation = _load("fixtures/pairs/simulation-observation.json")
+    actual_observation = _load("fixtures/pairs/actual-observation.json")
+    for contract_name, observation in (
+        ("simulated observation envelope", simulation_observation),
+        ("observed observation envelope", actual_observation),
+    ):
+        validate_json_contract(
+            schema=observation_schema,
+            instance=observation,
+            version_property="envelope_version",
+            expected_version=manifest["contract_bindings"][
+                "observation_envelope_schema"
+            ],
+            contract_name=contract_name,
+        )
     report = compare(
-        ObservationEnvelope.from_dict(
-            _load("fixtures/pairs/simulation-observation.json")
-        ),
-        ObservationEnvelope.from_dict(
-            _load("fixtures/pairs/actual-observation.json")
-        ),
+        ObservationEnvelope.from_dict(simulation_observation),
+        ObservationEnvelope.from_dict(actual_observation),
         profile,
     )
     calibration = score_calibration(
@@ -186,6 +198,9 @@ def main() -> int:
                 "json_documents": json_count,
                 "comparison_profile_schema": manifest["contract_bindings"][
                     "comparison_profile_schema"
+                ],
+                "observation_envelope_schema": manifest["contract_bindings"][
+                    "observation_envelope_schema"
                 ],
                 "comparison_report_digest": report["report_digest"],
                 "closure_comparison_digest": bundle_summary[

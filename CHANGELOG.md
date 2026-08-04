@@ -28,8 +28,9 @@
   preserves the distinction between simulated and observed evidence.
 - Added one stable aggregate validation gate for evidence derivation, JSON
   integrity, calibration posture, and repository credential-shape safety.
-- Execute the released comparison-profile Draft 2020-12 schema in the aggregate
-  gate and bind its declared version to the repository release manifest.
+- Execute the released comparison-profile and observation-envelope Draft 2020-12
+  schemas in the aggregate gate and bind their declared versions to the repository
+  release manifest.
 - Migrated orientation and external vocabulary bindings to governance 2.0.1 and
   the exact program candidate artifact.
 - Made the stable aggregate explicitly require a successful proof matrix.

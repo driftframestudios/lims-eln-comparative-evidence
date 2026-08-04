@@ -79,6 +79,50 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 contract_name="comparison profile",
             )
 
+    def test_released_observation_envelopes_execute_their_bound_schema(
+        self,
+    ) -> None:
+        schema = load("schemas/observation-envelope.schema.json")
+        manifest = load("release/repository-role.json")
+        expected_version = manifest["contract_bindings"][
+            "observation_envelope_schema"
+        ]
+        observations = (
+            load("fixtures/pairs/simulation-observation.json"),
+            load("fixtures/pairs/actual-observation.json"),
+        )
+
+        for observation in observations:
+            validate_json_contract(
+                schema=schema,
+                instance=observation,
+                version_property="envelope_version",
+                expected_version=expected_version,
+                contract_name="observation envelope",
+            )
+
+        stale_instance = deepcopy(observations[0])
+        stale_instance["envelope_version"] = "1.1.0"
+        with self.assertRaisesRegex(ValueError, "schema conformance"):
+            validate_json_contract(
+                schema=schema,
+                instance=stale_instance,
+                version_property="envelope_version",
+                expected_version=expected_version,
+                contract_name="observation envelope",
+            )
+
+        stale_schema = deepcopy(schema)
+        stale_schema["properties"]["envelope_version"]["const"] = "1.1.0"
+        with self.assertRaisesRegex(ValueError, "release binding"):
+            validate_json_contract(
+                schema=stale_schema,
+                instance=observations[0],
+                version_property="envelope_version",
+                expected_version=expected_version,
+                contract_name="observation envelope",
+            )
+
     def test_calibration_ledger_preserves_honest_empty_state(self) -> None:
         result = score_calibration(
             load("fixtures/calibration/observed-outcomes.json")
