@@ -1,3 +1,8 @@
-"""Independent comparative-literacy engine for LIMS/ELN evidence."""
+"""Schema-validated factual comparison for LIMS and ELN evaluation records."""
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"
+
+from .compare import compare
+from .model import EvidenceRecord
+
+__all__ = ["EvidenceRecord", "compare"]

@@ -1,27 +1,14 @@
 # Security policy
 
-## Supported line
+The latest release on `main` receives security and privacy corrections. Report a
+vulnerability through GitHub private vulnerability reporting with the affected
+release, a minimal synthetic reproduction, and the observed impact.
 
-The latest release on `main` receives security and privacy corrections. A correction
-travels through `hotfix/<bounded-finding>` and returns to `develop` after release.
+Repository fixtures and reports use synthetic, deidentified, or redacted content.
+Raw vendor exports, regulated records, secrets, credentials, and sensitive traces
+remain in their designated systems. Evidence records carry protected or redacted
+locators plus the provenance needed for evaluation.
 
-## Reporting
-
-Use GitHub's private vulnerability reporting surface for credential exposure,
-repository-path escape, evidence admission, redaction, authorization, provenance, or
-artifact-disclosure findings. Include the affected release, a minimal synthetic
-reproduction, the observed boundary, and the proposed governed continuation path.
-
-## Evidence handling
-
-Repository reports carry reviewed redacted projections. Raw vendor output, regulated
-records, security finding detail, credential material, and signing material remain in
-their approved systems. A report links to raw evidence through a protected locator and
-content digest.
-
-## Response
-
-The security owner records severity, affected evidence, containment, correction,
-verification, release, supersession, and disclosure decisions. A credential-shaped
-finding enters the approved rotation workflow while repository artifacts receive a
-fresh secret-shape assessment.
+High-value review areas include schema-boundary bypass, duplicate-key handling,
+non-finite numeric input, report escaping, unintended value disclosure, dependency
+integrity, and artifact retention.

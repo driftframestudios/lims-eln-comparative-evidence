@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://driftframestudios.example/schemas/lims-eln-evidence-record-1.0.0.json",
+  "type": "object",
+  "required": ["record_version", "record_id", "scenario_id", "vendor", "product_version", "context", "observed_at", "source_refs", "result", "limitations"],
+  "additionalProperties": false,
+  "properties": {
+    "record_version": {"const": "1.0.0"},
+    "record_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$", "maxLength": 128},
+    "scenario_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$", "maxLength": 128},
+    "vendor": {"type": "string", "minLength": 1, "maxLength": 128},
+    "product_version": {"type": "string", "minLength": 1, "maxLength": 128},
+    "context": {
+      "type": "object",
+      "required": ["evidence_level", "environment_id", "data_class"],
+      "additionalProperties": false,
+      "properties": {
+        "evidence_level": {"enum": ["documented", "configured", "exercised", "observed"]},
+        "environment_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "data_class": {"enum": ["synthetic", "deidentified", "redacted"]}
+      }
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_kind", "title", "locator"],
+        "additionalProperties": false,
+        "properties": {
+          "source_kind": {"enum": ["official_documentation", "configured_result", "raw_evidence", "test_result", "export"]},
+          "title": {"type": "string", "minLength": 1, "maxLength": 256},
+          "locator": {"type": "string", "minLength": 3, "maxLength": 1024},
+          "accessed_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "result": {"type": "object", "minProperties": 1},
+    "limitations": {"type": "array", "items": {"type": "string", "minLength": 3}, "uniqueItems": true}
+  }
+}

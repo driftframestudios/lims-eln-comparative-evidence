@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from copy import deepcopy
 from collections.abc import Mapping
+from copy import deepcopy
+from dataclasses import dataclass
 from hashlib import sha256
 import json
 from types import MappingProxyType
 from typing import Any
 
-
-EVIDENCE_MODES = {"planned", "simulated", "observed"}
-ASSURANCE_STAGES = {"specified", "verified", "qualified", "validated", "accepted"}
+from .contracts import validate_document
 
 
-class EnvelopeError(ValueError):
-    """An envelope receives a precise correction requirement."""
+class RecordError(ValueError):
+    """An evidence record receives a precise contract correction."""
 
 
 def _deep_freeze(value: Any) -> Any:
@@ -45,6 +43,10 @@ def canonical_json(value: Any) -> str:
     )
 
 
+def digest(value: Any) -> str:
+    return f"sha256:{sha256(canonical_json(value).encode()).hexdigest()}"
+
+
 def strict_json_loads(content: str) -> Any:
     return json.loads(
         content,
@@ -54,103 +56,65 @@ def strict_json_loads(content: str) -> Any:
 
 
 def _reject_nonfinite(value: str) -> None:
-    raise EnvelopeError(f"JSON numeric value {value} requires a finite representation")
+    raise RecordError(f"JSON numeric value {value} requires a finite representation")
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in pairs:
         if key in result:
-            raise EnvelopeError(f"JSON object key {key!r} requires a single definition")
+            raise RecordError(f"JSON object key {key!r} requires one definition")
         result[key] = value
     return result
 
 
-def digest(value: Any) -> str:
-    return f"sha256:{sha256(canonical_json(value).encode()).hexdigest()}"
-
-
 @dataclass(frozen=True)
-class ObservationEnvelope:
-    envelope_version: str
-    observation_id: str
-    evidence_mode: str
-    assurance_stage: str
+class EvidenceRecord:
+    record_version: str
+    record_id: str
     scenario_id: str
-    source: Mapping[str, Any]
+    vendor: str
+    product_version: str
+    context: Mapping[str, Any]
+    observed_at: str
+    source_refs: tuple[Mapping[str, Any], ...]
     result: Mapping[str, Any]
-    provenance: Mapping[str, Any]
-    approvals: tuple[Mapping[str, Any], ...]
-    classification: Mapping[str, Any]
+    limitations: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        for field in ("source", "result", "provenance", "classification"):
-            object.__setattr__(self, field, _deep_freeze(getattr(self, field)))
-        object.__setattr__(self, "approvals", _deep_freeze(self.approvals))
+        object.__setattr__(self, "context", _deep_freeze(self.context))
+        object.__setattr__(self, "source_refs", _deep_freeze(self.source_refs))
+        object.__setattr__(self, "result", _deep_freeze(self.result))
+        object.__setattr__(self, "limitations", tuple(self.limitations))
 
     @classmethod
-    def from_dict(cls, value: dict[str, Any]) -> "ObservationEnvelope":
-        if not isinstance(value, dict):
-            raise EnvelopeError("envelope requires a JSON object")
-        required = {
-            "envelope_version",
-            "observation_id",
-            "evidence_mode",
-            "assurance_stage",
-            "scenario_id",
-            "source",
-            "result",
-            "provenance",
-            "approvals",
-            "classification",
-        }
-        missing = sorted(required - value.keys())
-        if missing:
-            raise EnvelopeError(f"envelope requires fields: {', '.join(missing)}")
-        extra = sorted(value.keys() - required)
-        if extra:
-            raise EnvelopeError(f"envelope fields require a released definition: {', '.join(extra)}")
-        if value["envelope_version"] != "2.0.0":
-            raise EnvelopeError("envelope_version requires the released 2.0.0 contract")
-        if value["evidence_mode"] not in EVIDENCE_MODES:
-            raise EnvelopeError("evidence_mode requires planned, simulated, or observed")
-        if value["assurance_stage"] not in ASSURANCE_STAGES:
-            raise EnvelopeError("assurance_stage requires a released assurance-stage value")
-        for field in ("observation_id", "scenario_id"):
-            if not isinstance(value[field], str) or not value[field].strip():
-                raise EnvelopeError(f"{field} requires a bounded textual identity")
-        for field in ("source", "result", "provenance", "classification"):
-            if not isinstance(value[field], dict):
-                raise EnvelopeError(f"{field} requires a JSON object")
-        if not isinstance(value["approvals"], list) or not all(
-            isinstance(item, dict) for item in value["approvals"]
-        ):
-            raise EnvelopeError("approvals requires an array of decision objects")
+    def from_dict(cls, value: dict[str, Any]) -> "EvidenceRecord":
+        validate_document(value, "evidence-record.schema.json")
         return cls(
-            envelope_version=value["envelope_version"],
-            observation_id=value["observation_id"],
-            evidence_mode=value["evidence_mode"],
-            assurance_stage=value["assurance_stage"],
+            record_version=value["record_version"],
+            record_id=value["record_id"],
             scenario_id=value["scenario_id"],
-            source=value["source"],
+            vendor=value["vendor"],
+            product_version=value["product_version"],
+            context=value["context"],
+            observed_at=value["observed_at"],
+            source_refs=tuple(value["source_refs"]),
             result=value["result"],
-            provenance=value["provenance"],
-            approvals=tuple(value["approvals"]),
-            classification=value["classification"],
+            limitations=tuple(value["limitations"]),
         )
 
     def as_dict(self) -> dict[str, Any]:
         return {
-            "envelope_version": self.envelope_version,
-            "observation_id": self.observation_id,
-            "evidence_mode": self.evidence_mode,
-            "assurance_stage": self.assurance_stage,
+            "record_version": self.record_version,
+            "record_id": self.record_id,
             "scenario_id": self.scenario_id,
-            "source": _deep_thaw(self.source),
+            "vendor": self.vendor,
+            "product_version": self.product_version,
+            "context": _deep_thaw(self.context),
+            "observed_at": self.observed_at,
+            "source_refs": _deep_thaw(self.source_refs),
             "result": _deep_thaw(self.result),
-            "provenance": _deep_thaw(self.provenance),
-            "approvals": _deep_thaw(self.approvals),
-            "classification": _deep_thaw(self.classification),
+            "limitations": list(self.limitations),
         }
 
     @property

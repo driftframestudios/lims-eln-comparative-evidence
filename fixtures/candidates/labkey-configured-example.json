@@ -1,0 +1,67 @@
+{
+  "record_version": "1.0.0",
+  "record_id": "CANDIDATE-LABKEY-GOLDEN-001",
+  "scenario_id": "SPEC-GOLDEN-SPECIMEN-E2E-001",
+  "vendor": "LabKey configured example",
+  "product_version": "evaluation-fixture-1",
+  "context": {
+    "evidence_level": "configured",
+    "environment_id": "synthetic-labkey-evaluation",
+    "data_class": "synthetic"
+  },
+  "observed_at": "2026-08-04T16:30:00Z",
+  "source_refs": [
+    {
+      "source_kind": "configured_result",
+      "title": "Synthetic LabKey adapter exercise",
+      "locator": "urn:lims-eln:candidate:labkey:golden-specimen:001"
+    }
+  ],
+  "result": {
+    "specimen": {
+      "specimen_id": "SPM-SYN-0001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "status": "released",
+      "revision": 5
+    },
+    "measurement": {
+      "raw_value": "2.000000000000",
+      "canonical_value": "2.000000000000",
+      "source_unit": "copies/uL",
+      "canonical_unit": "{copies}/uL",
+      "unit_vocabulary": "UCUM",
+      "observed_at": "2026-08-04T15:59:58Z",
+      "recorded_at": "2026-08-04T16:00:00Z"
+    },
+    "data_contract": {
+      "timezone_aware_instants": true,
+      "scoped_external_identity": true,
+      "finite_decimal": true,
+      "tenant_isolation": true
+    },
+    "migration": {
+      "tool": "Flyway Community",
+      "out_of_order": true,
+      "version_style": "UTC timestamp",
+      "clean_install": true,
+      "populated_upgrade": true,
+      "catalog_convergence": true
+    },
+    "event_delivery": {
+      "framework": "Debezium Outbox Event Router",
+      "atomic_outbox": true,
+      "idempotent_consumer": true,
+      "publication_lag_seconds": 6
+    },
+    "restore": {
+      "clean_environment": true,
+      "observed_recovery_seconds": 61
+    },
+    "operations": {"manual_steps": 3},
+    "vendor": {"normalized_readback_ratio": 0.999},
+    "execution": {"completed_at": "2026-08-04T16:31:00Z"}
+  },
+  "limitations": [
+    "This checked-in record demonstrates the configured-evidence contract with synthetic data; named vendor-release conclusions require separately sourced records."
+  ]
+}

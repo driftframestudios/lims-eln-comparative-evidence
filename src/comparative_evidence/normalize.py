@@ -14,7 +14,10 @@ def normalize(value: Any, ignored_paths: set[str], path: str = "$") -> Any:
             for key, item in sorted(value.items())
         }
     if isinstance(value, (list, tuple)):
-        return [normalize(item, ignored_paths, f"{path}[{index}]") for index, item in enumerate(value)]
+        return [
+            normalize(item, ignored_paths, f"{path}[{index}]")
+            for index, item in enumerate(value)
+        ]
     return deepcopy(value)
 
 

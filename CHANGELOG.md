@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 — 2026-08-04
+
+- Center the active repository on schema-validated, caller-supplied factual evidence
+  comparison.
+- Package the Draft 2020-12 evidence and comparison-profile schemas and use the
+  established `jsonschema` validator.
+- Add a concise immutable evidence model, strict JSON ingress, deterministic digests,
+  bounded classifications, explicit disclosure paths, and escaped portable reports.
+- Add synthetic golden-specimen and configured-candidate fixtures covering data
+  primitives, Flyway migration behavior, Debezium outbox delivery, restore evidence,
+  operational effort, and normalized vendor readback.
+- Preserve Machine Node hydration while moving admission authority, acceptance
+  receipts, simulated closure, Coordination Horizon runtime material, and custom
+  repository validators into an inactive quarantine.
+
 ## 0.3.2
 
 - Bind comparison to `ORACLE-DATABASE-FINAL-STATE-002`, data contract and migration
