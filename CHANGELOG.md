@@ -2,13 +2,16 @@
 
 ## 0.3.1
 
+- Replace the unresolved Alembic-versus-custom-runner comparison with one shared
+  Flyway Community 13.0.0 mechanism while retaining manifest, receipt, and
+  environment evidence as independently comparable release-path coordinates.
 - Advanced the comparison profile and report contract to 1.2.0, the observation
   envelope to 1.2.0, and database-release coordinate to 1.1.0 so migration
   mechanism identity, version, implementation digest, history relation, lock
   strategy, and transaction strategy are comparison dimensions.
-- Separated target-state alignment from release-path alignment. A shared target
-  reached by Alembic and the manifest-authenticated psql runner now reports
-  `aligned_target_distinct_release_path` with exact mechanism differences.
+- Separate target-state alignment from release-path alignment. A shared target
+  reached through the same Flyway mechanism can still report
+  `aligned_target_distinct_release_path` when its reviewed manifests differ.
 - Add database-release coordinates to observation admission and comparison reports,
   including explicit target-contract, migration-manifest, and schema alignment.
 - Preserve distinct simulated and observed migration and release receipt identities.

@@ -370,16 +370,16 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertFalse(
             report["database_release_alignment"]["migration_manifest_aligned"]
         )
-        self.assertFalse(
+        self.assertTrue(
             report["database_release_alignment"]["migration_mechanism_aligned"]
         )
         self.assertEqual(
             report["simulation"]["database_release"]["migration_mechanism_id"],
-            "ALEMBIC",
+            "FLYWAY",
         )
         self.assertEqual(
             report["actual"]["database_release"]["migration_mechanism_id"],
-            "MANIFEST-AUTHENTICATED-PSQL",
+            "FLYWAY",
         )
         self.assertTrue(
             report["database_release_alignment"]["schema_aligned"]

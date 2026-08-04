@@ -19,17 +19,18 @@ the release path receives an explicit architecture disposition.
 
 | Coordinate | Selected-future projection | Enterprise implementation |
 | --- | --- | --- |
-| Mechanism | Alembic 1.16.5 | Manifest-authenticated psql 1.0.0 |
-| Implementation binding | Selected-future tool implementation digest | Released runner SHA-256 digest |
-| History relation | `program_control.alembic_version` | `laboratory_migration.applied_migration` |
-| Lock strategy | PostgreSQL advisory lock | PostgreSQL transaction-level advisory lock |
-| Transaction strategy | Phase-declared transaction boundaries | One transaction per migration |
+| Mechanism | Flyway Community 13.0.0 | Flyway Community 13.0.0 |
+| Implementation binding | Selected-future tool artifact digest | Promoted Flyway artifact digest |
+| History relation | `public.flyway_schema_history` | `public.flyway_schema_history` |
+| Lock strategy | Flyway PostgreSQL history lock | Flyway PostgreSQL history lock |
+| Transaction strategy | One transaction per migration | One transaction per migration |
 | Manifest identity | `MANIFEST-DATABASE-MIGRATION-001` | `IMPLEMENTATION-DATABASE-MIGRATIONS-001` |
 
 The selected-future values come from its database oracle and program migration
 contract. The observed exemplar values come from the enterprise implementation's
-released manifest, runner binding, applied-history definition, and transaction
-contract.
+Flyway output, reviewed migration set, schema history, and release receipt. A shared
+mechanism can lead to distinct release paths because each path retains its own
+manifest, environment, and accountable evidence.
 
 ## Admission and comparison rules
 
@@ -46,16 +47,20 @@ contract.
   a distinct manifest or mechanism.
 - `target_divergence` records a difference in oracle, data contract, or schema.
 
-## Residual architecture decision
+## Settled ownership boundary
 
-The program can settle one of three coherent release postures:
+The program contract remains mechanism-neutral while its current implementation
+profile selects Flyway Community 13.0.0 for repository-owned PostgreSQL schema
+evolution. Flyway owns ordered application, schema history, checksums, deployment
+serialization, and transactional execution. Repository SQL and tests own domain
+types, constraints, tenant boundaries, scientific lineage, and upgrade preconditions.
 
-1. project the Alembic revision graph into the enterprise implementation;
-2. advance the program contract to a mechanism-neutral interface that binds the
-   same history, checksum, lock, transaction, recovery, and rehearsal semantics; or
-3. qualify both mechanisms as distinct release paths to one data contract and require
-   path-specific receipts.
+Vendor-owned LIMS and ELN databases continue through vendor-supported upgrades and
+APIs. Cross-platform data movement uses qualified exports, APIs, native database
+transport where appropriate, and checkpointed semantic reconciliation. Those paths
+produce their own receipts and remain separate from Flyway schema history.
 
-The comparison contract records current evidence while that choice remains open.
-Promotion evidence should name the selected posture and bind its exact mechanism
-coordinate.
+Promotion evidence binds the exact Flyway version and artifact digest, reviewed
+migration files, `info` and `validate` output, schema fingerprint, and environment
+receipt. Distinct manifests therefore remain visible even when the tool mechanism
+aligns.
