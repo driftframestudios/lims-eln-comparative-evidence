@@ -11,6 +11,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from comparative_evidence.calibration import score_calibration
 from comparative_evidence.compare import compare
+from comparative_evidence.database_release import (
+    TRUSTED_SIMULATED_DATABASE_RELEASE,
+)
 from comparative_evidence.model import ObservationEnvelope, digest, strict_json_loads
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
 from check_artifacts import PATTERNS
@@ -99,6 +102,14 @@ def main() -> int:
         for field, value in expected.items()
         if manifest.get(field) != value
     }
+    if (
+        manifest.get("trusted_simulated_database_release")
+        != TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict()
+    ):
+        drift["trusted_simulated_database_release"] = {
+            "manifest": manifest.get("trusted_simulated_database_release"),
+            "derived": TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict(),
+        }
     if drift:
         raise ValueError(
             "release manifest differs from derived evidence: "

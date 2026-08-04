@@ -17,6 +17,7 @@ def write_reports(report: dict[str, Any], output: Path) -> None:
 
 def render_html(report: dict[str, Any]) -> str:
     summary = report["summary"]
+    database_release = report["database_release_alignment"]
     rows = "\n".join(
         "<tr>"
         f"<td><code>{escape(item['path'])}</code></td>"
@@ -66,6 +67,13 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
   <div class="card"><span class="value">{summary['converged_paths']}</span>converged</div>
   <div class="card"><span class="value">{summary['material_differences']}</span>material differences</div>
   <div class="card"><span class="value">{summary['critical_differences']}</span>critical differences</div>
+</section>
+<h2>Database release alignment</h2>
+<section class="summary" aria-label="Database release alignment">
+  <div class="card"><strong>{escape(database_release['target_status'])}</strong><br>target status</div>
+  <div class="card"><strong>{'Aligned' if database_release['data_contract_aligned'] else 'Review'}</strong><br>data contract</div>
+  <div class="card"><strong>{'Aligned' if database_release['migration_manifest_aligned'] else 'Review'}</strong><br>migration manifest</div>
+  <div class="card"><strong>{'Aligned' if database_release['schema_aligned'] else 'Review'}</strong><br>target schema</div>
 </section>
 <h2>Adjudication surface</h2>
 <table>

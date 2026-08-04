@@ -34,6 +34,8 @@ Evidence enters `accepted/` only through the admission gate. The gate requires:
 
 - `evidence_mode: observed`;
 - a named environment and immutable implementation identity;
+- a typed database-release coordinate binding the target data contract, migration
+  manifest, observed migration and release receipts, and resulting schema digest;
 - a raw-artifact digest and governed locator;
 - performer and independent reviewer identities;
 - an accountable approval for acceptance-stage records;
@@ -67,6 +69,14 @@ PYTHONPATH=src python -m comparative_evidence.cli compare \
 The output contains `comparison.json` and `comparison.html`. Difference values appear
 only for paths declared in the released profile's `reportable_paths`. Every other
 value becomes a classification and content digest.
+
+Observation envelopes detach and recursively freeze all nested input content. JSON
+serialization returns a fresh mutable projection, preserving the envelope digest
+across caller activity. Comparison applies JSON primitive semantics: booleans remain
+distinct from numbers, and numeric tolerances apply exclusively to finite numeric
+values. Each report also records both database-release coordinates and states whether
+their oracle, data contract, migration manifest, and target schema align. Simulated
+and observed receipt identities remain separate evidence coordinates.
 
 The released profile also declares every required comparison path and the preferred
 direction for recovery time and manual effort. A missing governed path becomes a

@@ -14,6 +14,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from comparative_evidence.calibration import CalibrationError, score_calibration
 from comparative_evidence.compare import compare
+from comparative_evidence.database_release import (
+    TRUSTED_SIMULATED_DATABASE_RELEASE,
+)
 from comparative_evidence.cli import _load
 from comparative_evidence import __version__
 from comparative_evidence.gate import AdmissionError, admit
@@ -267,6 +270,94 @@ class ComparativeEvidenceTests(unittest.TestCase):
             report["simulation"]["implementation_commit"],
             TRUSTED_SOURCE_COORDINATES[1]["commit"],
         )
+        self.assertEqual(
+            report["simulation"]["database_release"],
+            TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict(),
+        )
+        self.assertEqual(
+            report["database_release_alignment"]["target_status"],
+            "aligned_target",
+        )
+        self.assertTrue(
+            report["database_release_alignment"]["schema_aligned"]
+        )
+        self.assertNotEqual(
+            report["database_release_alignment"]["simulated_receipts"],
+            report["database_release_alignment"]["observed_receipts"],
+        )
+
+    def test_boolean_and_number_are_distinct_json_primitives(self) -> None:
+        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value["result"]["migration"]["semantic_parity"] = 1
+        report = compare(
+            ObservationEnvelope.from_dict(
+                load("fixtures/pairs/simulation-observation.json")
+            ),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        difference = next(
+            item
+            for item in report["differences"]
+            if item["path"] == "$.migration.semantic_parity"
+        )
+        self.assertEqual(difference["classification"], "actual_defect")
+        self.assertTrue(difference["critical"])
+
+    def test_boolean_remains_outside_numeric_tolerance(self) -> None:
+        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value["result"]["restore"]["observed_recovery_seconds"] = True
+        report = compare(
+            ObservationEnvelope.from_dict(
+                load("fixtures/pairs/simulation-observation.json")
+            ),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        difference = next(
+            item
+            for item in report["differences"]
+            if item["path"] == "$.restore.observed_recovery_seconds"
+        )
+        self.assertEqual(
+            difference["comparison"]["outcome"],
+            "non_numeric",
+        )
+
+    def test_observation_envelope_is_deeply_immutable_and_detached(self) -> None:
+        source_value = load("fixtures/pairs/actual-observation.json")
+        envelope = ObservationEnvelope.from_dict(source_value)
+        original_digest = envelope.content_digest
+
+        source_value["result"]["specimen"]["status"] = "changed-at-source"
+        source_value["approvals"][0]["decision"] = "revise"
+        self.assertEqual(envelope.content_digest, original_digest)
+        self.assertEqual(envelope.result["specimen"]["status"], "released")
+
+        with self.assertRaises(TypeError):
+            envelope.result["specimen"]["status"] = "changed-in-envelope"
+        with self.assertRaises(TypeError):
+            envelope.approvals[0]["decision"] = "revise"
+
+        detached = envelope.as_dict()
+        detached["source"]["database_release"]["schema_digest"] = "changed"
+        detached["approvals"][0]["decision"] = "revise"
+        self.assertEqual(envelope.content_digest, original_digest)
+
+    def test_observed_admission_requires_database_release_coordinates(self) -> None:
+        value = load("fixtures/pairs/actual-observation.json")
+        del value["source"]["database_release"]
+        with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
+            AdmissionError, "database_release"
+        ):
+            admit(ObservationEnvelope.from_dict(value), Path(directory))
+
+        value = load("fixtures/pairs/actual-observation.json")
+        value["source"]["database_release"]["schema_digest"] = "sha256:short"
+        with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
+            AdmissionError, "64 lowercase"
+        ):
+            admit(ObservationEnvelope.from_dict(value), Path(directory))
 
     def test_missing_required_path_is_a_critical_specification_violation(self) -> None:
         simulation_value = load("fixtures/pairs/simulation-observation.json")
@@ -328,6 +419,8 @@ class ComparativeEvidenceTests(unittest.TestCase):
         html = render_html(report)
         self.assertIn("<!doctype html>", html)
         self.assertIn("actual_gap", html)
+        self.assertIn("Database release alignment", html)
+        self.assertIn("aligned_target", html)
         self.assertIn(report["report_digest"], html)
 
     def test_report_values_require_explicit_profile_visibility(self) -> None:
@@ -516,6 +609,19 @@ class ComparativeEvidenceTests(unittest.TestCase):
                         profile,
                     )
 
+        changed_simulation = deepcopy(
+            load("fixtures/pairs/simulation-observation.json")
+        )
+        changed_simulation["source"]["database_release"]["schema_digest"] = (
+            "sha256:" + "f" * 64
+        )
+        with self.assertRaisesRegex(ValueError, "trusted selected-future"):
+            compare(
+                ObservationEnvelope.from_dict(changed_simulation),
+                actual,
+                profile,
+            )
+
     def test_json_ingress_rejects_duplicate_and_nonfinite_values(self) -> None:
         examples = (
             ('{"scenario_id":"A","scenario_id":"B"}', "single definition"),
@@ -594,6 +700,10 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             trusted_binding["source_coordinates"],
             list(TRUSTED_SOURCE_COORDINATES),
+        )
+        self.assertEqual(
+            manifest["trusted_simulated_database_release"],
+            TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict(),
         )
         self.assertEqual(
             manifest["simulated_closure_comparison_digest"],

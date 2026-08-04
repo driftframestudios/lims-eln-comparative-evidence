@@ -7,7 +7,23 @@
   "source": {
     "environment_id": "qualification-synthetic-01",
     "implementation_commit": "0123456789abcdef0123456789abcdef01234567",
-    "configuration_digest": "sha256:2c706539624abe0b46ca8a46099cc77f7af0bd619bb2dd02e0f2c1c3650cb857"
+    "configuration_digest": "sha256:2c706539624abe0b46ca8a46099cc77f7af0bd619bb2dd02e0f2c1c3650cb857",
+    "database_release": {
+      "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+      "oracle_version": "1.0.0",
+      "database_release": "database-final-state-v1",
+      "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+      "data_contract_version": "1.0.0",
+      "data_contract_digest": "sha256:2fdaf4b5732426f68a9125ef568f0349f817b627dc4b91306e3bd6f8b22b33f0",
+      "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+      "migration_manifest_version": "1.0.0",
+      "migration_manifest_digest": "sha256:0fe882e1b11fdc0ee07c5a59313dd778cc18124ffc49ec8b145216bcb97bebb8",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-OBS-001",
+      "migration_receipt_digest": "sha256:6767676767676767676767676767676767676767676767676767676767676767",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-OBS-001",
+      "release_receipt_digest": "sha256:7878787878787878787878787878787878787878787878787878787878787878",
+      "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    }
   },
   "result": {
     "specimen": {

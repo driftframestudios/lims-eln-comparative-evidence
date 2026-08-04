@@ -6,6 +6,10 @@ from pathlib import Path
 import stat
 
 from .model import ObservationEnvelope, canonical_json, strict_json_loads
+from .database_release import (
+    DatabaseReleaseError,
+    validate_database_release_coordinate,
+)
 from .safety import (
     EvidenceSafetyError,
     normalize_identity,
@@ -33,7 +37,12 @@ def validate_for_accepted(envelope: ObservationEnvelope) -> None:
             "accepted evidence requires qualified, validated, or accepted assurance; "
             "complete independent evidence review before admission"
         )
-    source_required = {"environment_id", "implementation_commit", "configuration_digest"}
+    source_required = {
+        "environment_id",
+        "implementation_commit",
+        "configuration_digest",
+        "database_release",
+    }
     source_missing = sorted(source_required - envelope.source.keys())
     if source_missing:
         raise AdmissionError(
@@ -42,6 +51,13 @@ def validate_for_accepted(envelope: ObservationEnvelope) -> None:
     normalize_identity(envelope.source["environment_id"], "environment_id")
     validate_commit(envelope.source["implementation_commit"])
     validate_digest(envelope.source["configuration_digest"], "configuration_digest")
+    try:
+        validate_database_release_coordinate(
+            envelope.source["database_release"],
+            label="source.database_release",
+        )
+    except DatabaseReleaseError as error:
+        raise AdmissionError(str(error)) from error
     provenance_required = {"raw_artifact_digest", "governed_locator", "performed_by", "reviewed_by"}
     provenance_missing = sorted(provenance_required - envelope.provenance.keys())
     if provenance_missing:

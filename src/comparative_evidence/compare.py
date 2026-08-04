@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Mapping
 import math
 from typing import Any
 
 from .gate import validate_for_accepted
+from .database_release import (
+    TRUSTED_SIMULATED_DATABASE_RELEASE,
+    database_release_alignment,
+    validate_database_release_coordinate,
+)
 from .model import ObservationEnvelope, digest
 from .normalize import normalize, path_value
 from .safety import (
@@ -83,6 +89,14 @@ def compare(
     tolerances = profile.get("numeric_tolerances", {})
     dispositions = profile.get("adjudications", {})
     reportable_paths = set(profile.get("reportable_paths", []))
+    simulated_database_release = validate_database_release_coordinate(
+        simulation.source["database_release"],
+        label="simulation.source.database_release",
+    )
+    actual_database_release = validate_database_release_coordinate(
+        actual.source["database_release"],
+        label="actual.source.database_release",
+    )
 
     paths = sorted(
         set(_leaf_paths(expected))
@@ -190,13 +204,19 @@ def compare(
             "implementation_commit": simulation.source[
                 "implementation_commit"
             ],
+            "database_release": simulated_database_release.as_dict(),
         },
         "actual": {
             "observation_id": actual.observation_id,
             "evidence_mode": actual.evidence_mode,
             "assurance_stage": actual.assurance_stage,
             "digest": actual.content_digest,
+            "database_release": actual_database_release.as_dict(),
         },
+        "database_release_alignment": database_release_alignment(
+            simulated_database_release,
+            actual_database_release,
+        ),
         "profile_digest": digest(profile),
         "summary": summary,
         "differences": [item.as_dict() for item in differences],
@@ -337,6 +357,7 @@ def _validate_simulation_binding(simulation: ObservationEnvelope) -> None:
         "closure_id": TRUSTED_CLOSURE_ID,
         "governance_closure_digest": TRUSTED_GOVERNANCE_CLOSURE_DIGEST,
         "aggregate_artifact_digest": TRUSTED_AGGREGATE_ARTIFACT_DIGEST,
+        "database_release": TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict(),
     }
     missing = sorted(set(expected) - simulation.source.keys())
     if missing:
@@ -357,6 +378,10 @@ def _validate_simulation_binding(simulation: ObservationEnvelope) -> None:
         "aggregate_artifact_digest",
     ):
         validate_digest(simulation.source[field], field)
+    validate_database_release_coordinate(
+        simulation.source["database_release"],
+        label="simulation.source.database_release",
+    )
     if (
         simulation.provenance.get("raw_artifact_digest")
         != TRUSTED_AGGREGATE_ARTIFACT_DIGEST
@@ -376,12 +401,12 @@ def _report_value(path: str, value: Any, reportable_paths: set[str]) -> Any:
 
 
 def _leaf_paths(value: Any, path: str = "$") -> list[str]:
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         paths: list[str] = []
         for key, item in value.items():
             paths.extend(_leaf_paths(item, f"{path}.{key}"))
         return paths
-    if isinstance(value, list):
+    if isinstance(value, (list, tuple)):
         paths = []
         for index, item in enumerate(value):
             paths.extend(_leaf_paths(item, f"{path}.{index}"))
@@ -397,11 +422,21 @@ def _optional_path(value: dict[str, Any], path: str) -> tuple[bool, Any]:
 
 
 def _equivalent(expected: Any, actual: Any, tolerance: dict[str, float] | None) -> bool:
-    if tolerance and isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+    if isinstance(expected, bool) or isinstance(actual, bool):
+        return type(expected) is bool and type(actual) is bool and expected == actual
+    if _is_json_number(expected) and _is_json_number(actual):
+        if not tolerance:
+            return expected == actual
         absolute = tolerance.get("absolute", 0.0)
         relative = tolerance.get("relative", 0.0)
         return abs(actual - expected) <= max(absolute, relative * abs(expected))
+    if type(expected) is not type(actual):
+        return False
     return expected == actual
+
+
+def _is_json_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def _classify_difference(

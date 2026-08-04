@@ -12,7 +12,23 @@
     "future_reality_version": "future-reality-2028-06-30-v1",
     "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
     "governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
-    "aggregate_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61"
+    "aggregate_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
+    "database_release": {
+      "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+      "oracle_version": "1.0.0",
+      "database_release": "database-final-state-v1",
+      "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+      "data_contract_version": "1.0.0",
+      "data_contract_digest": "sha256:2fdaf4b5732426f68a9125ef568f0349f817b627dc4b91306e3bd6f8b22b33f0",
+      "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+      "migration_manifest_version": "1.0.0",
+      "migration_manifest_digest": "sha256:0fe882e1b11fdc0ee07c5a59313dd778cc18124ffc49ec8b145216bcb97bebb8",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+      "migration_receipt_digest": "sha256:2e830735b7798a9fc9e6aeb3b8021dacadd0d34a320d35e22042db1d5489a879",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
+      "release_receipt_digest": "sha256:b3ed89e363468e91e6105274ffedf4f4dac3820a4b39d6846fc0e3f8cabc7b0c",
+      "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    }
   },
   "result": {
     "specimen": {

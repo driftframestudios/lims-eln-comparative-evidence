@@ -2,6 +2,11 @@
 
 ## 0.3.1
 
+- Add database-release coordinates to observation admission and comparison reports,
+  including explicit target-contract, migration-manifest, and schema alignment.
+- Preserve distinct simulated and observed migration and release receipt identities.
+- Make observation envelopes recursively immutable with detached JSON projections.
+- Distinguish booleans from numbers before exact comparison and numeric tolerance.
 - Bound the simulated observation to the exact future-reality identity, closure,
   distinct simulation and implementation commits, source-result digest, and
   aggregate artifact.
