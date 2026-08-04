@@ -92,7 +92,7 @@ TRUSTED_SIMULATED_DATABASE_RELEASE = DatabaseReleaseCoordinate(
     migration_mechanism_id="FLYWAY",
     migration_mechanism_version="13.0.0",
     migration_mechanism_digest=(
-        "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+        "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0"
     ),
     migration_history_relation="public.flyway_schema_history",
     migration_lock_strategy="flyway_postgresql_history_lock",
@@ -188,8 +188,18 @@ def validate_database_release_coordinate(
 def database_release_alignment(
     simulation: DatabaseReleaseCoordinate,
     actual: DatabaseReleaseCoordinate,
+    *,
+    counterpart_receipts_key: str = "observed_receipts",
 ) -> dict[str, Any]:
     """Return a receipt-aware view of target-database alignment."""
+
+    if counterpart_receipts_key not in {
+        "observed_receipts",
+        "planned_receipt_shapes",
+    }:
+        raise DatabaseReleaseError(
+            "counterpart receipt label requires a released comparison mode"
+        )
 
     alignment = {
         "oracle_aligned": (
@@ -251,7 +261,7 @@ def database_release_alignment(
             "release_receipt_id": simulation.release_receipt_id,
             "release_receipt_digest": simulation.release_receipt_digest,
         },
-        "observed_receipts": {
+        counterpart_receipts_key: {
             "migration_receipt_id": actual.migration_receipt_id,
             "migration_receipt_digest": actual.migration_receipt_digest,
             "release_receipt_id": actual.release_receipt_id,

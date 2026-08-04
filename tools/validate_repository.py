@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from comparative_evidence.calibration import score_calibration
-from comparative_evidence.compare import compare
+from comparative_evidence.compare import compare_synthetic_contract
 from comparative_evidence.database_release import (
     TRUSTED_SIMULATED_DATABASE_RELEASE,
 )
@@ -54,6 +54,19 @@ def _repository_secret_shape_findings() -> list[str]:
             continue
         if any(pattern.search(content) for pattern in PATTERNS):
             findings.append(str(path.relative_to(ROOT)))
+    return findings
+
+
+def _persisted_environment_claims() -> list[str]:
+    findings: list[str] = []
+    for relative_root in ("fixtures", "receipts/redacted"):
+        for path in sorted((ROOT / relative_root).rglob("*.json")):
+            document = strict_json_loads(path.read_text(encoding="utf-8"))
+            if isinstance(document, dict) and (
+                document.get("evidence_mode") == "observed"
+                or document.get("assurance_stage") == "accepted"
+            ):
+                findings.append(str(path.relative_to(ROOT)))
     return findings
 
 
@@ -126,10 +139,14 @@ def main() -> int:
         contract_name="comparison profile",
     )
     simulation_observation = _load("fixtures/pairs/simulation-observation.json")
-    actual_observation = _load("fixtures/pairs/actual-observation.json")
+    planned_observation = _load("fixtures/contracts/planned-observation.json")
+    planned_acceptance = _load(
+        "fixtures/contracts/planned-acceptance-envelope.json"
+    )
     for contract_name, observation in (
         ("simulated observation envelope", simulation_observation),
-        ("observed observation envelope", actual_observation),
+        ("planned synthetic contract envelope", planned_observation),
+        ("planned acceptance contract envelope", planned_acceptance),
     ):
         validate_json_contract(
             schema=observation_schema,
@@ -140,16 +157,27 @@ def main() -> int:
             ],
             contract_name=contract_name,
         )
-    report = compare(
+    report = compare_synthetic_contract(
         ObservationEnvelope.from_dict(simulation_observation),
-        ObservationEnvelope.from_dict(actual_observation),
+        ObservationEnvelope.from_dict(planned_observation),
         profile,
     )
+    if report.get("comparison_mode") != "synthetic_contract" or report.get(
+        "authority_posture"
+    ) != {
+        "evidence_claim": "synthetic_contract_shape_only",
+        "environment_observed_closure": "separate_unasserted_state",
+        "production_authorization_effect": "none",
+    }:
+        raise ValueError(
+            "reference report requires the released non-authorizing synthetic "
+            "contract posture"
+        )
     calibration = score_calibration(
         _load("fixtures/calibration/observed-outcomes.json")
     )
     expected = {
-        "reference_report_digest": report["report_digest"],
+        "synthetic_contract_report_digest": report["report_digest"],
         "canonical_governance_closure_digest": bundle_summary[
             "governance_closure_digest"
         ],
@@ -185,6 +213,12 @@ def main() -> int:
             "release manifest differs from derived evidence: "
             + json.dumps(drift, sort_keys=True)
         )
+    environment_claims = _persisted_environment_claims()
+    if environment_claims:
+        raise ValueError(
+            "repository fixtures require planned or simulated authority: "
+            + ", ".join(environment_claims)
+        )
     findings = _repository_secret_shape_findings()
     if findings:
         raise ValueError(
@@ -202,7 +236,7 @@ def main() -> int:
                 "observation_envelope_schema": manifest["contract_bindings"][
                     "observation_envelope_schema"
                 ],
-                "comparison_report_digest": report["report_digest"],
+                "synthetic_contract_report_digest": report["report_digest"],
                 "closure_comparison_digest": bundle_summary[
                     "comparison_digest"
                 ],

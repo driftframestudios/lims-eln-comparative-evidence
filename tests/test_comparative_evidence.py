@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
 from comparative_evidence.calibration import CalibrationError, score_calibration
-from comparative_evidence.compare import compare
+from comparative_evidence.compare import compare, compare_synthetic_contract
 from comparative_evidence.database_release import (
     TRUSTED_SIMULATED_DATABASE_RELEASE,
 )
@@ -39,6 +39,101 @@ from validate_repository import validate_json_contract
 
 def load(path: str) -> dict:
     return json.loads((ROOT / path).read_text())
+
+
+def planned_contract_value() -> dict:
+    return load("fixtures/contracts/planned-observation.json")
+
+
+def observed_envelope_value() -> dict:
+    """Create qualified observed evidence inside the test boundary."""
+
+    value = planned_contract_value()
+    value.update(
+        {
+            "observation_id": "OBS-TEST-GOLDEN-001",
+            "evidence_mode": "observed",
+            "assurance_stage": "qualified",
+        }
+    )
+    value["source"].update(
+        {
+            "environment_id": "test-qualification-environment",
+            "implementation_commit": "a" * 40,
+            "configuration_digest": "sha256:" + "b" * 64,
+        }
+    )
+    value["source"]["database_release"] = (
+        TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict()
+    )
+    value["source"]["database_release"].update(
+        {
+            "migration_manifest_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-TEST-001",
+            "migration_manifest_digest": "sha256:" + "c" * 64,
+            "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-TEST-001",
+            "migration_receipt_digest": "sha256:" + "d" * 64,
+            "release_receipt_id": "RECEIPT-DATABASE-RELEASE-TEST-001",
+            "release_receipt_digest": "sha256:" + "e" * 64,
+        }
+    )
+    value["provenance"] = {
+        "raw_artifact_digest": "sha256:" + "f" * 64,
+        "governed_locator": "evidence-vault://qualification/OBS-TEST-GOLDEN-001",
+        "performed_by": "test-qualification-operator",
+        "reviewed_by": "test-independent-reviewer",
+    }
+    value["approvals"] = [
+        {
+            "domain": "engineering",
+            "decision": "accept",
+            "approver": "test-engineering-owner",
+        }
+    ]
+    value["classification"] = {
+        "data_class": "approved-synthetic-qualification",
+        "redaction_status": "reviewed-redacted-manifest",
+    }
+    return value
+
+
+def accepted_envelope_value() -> dict:
+    """Create accountable acceptance evidence inside the test boundary."""
+
+    value = load("fixtures/contracts/planned-acceptance-envelope.json")
+    value.update(
+        {
+            "observation_id": "OBS-TEST-ACCEPTANCE-001",
+            "evidence_mode": "observed",
+            "assurance_stage": "accepted",
+        }
+    )
+    observed_source = observed_envelope_value()["source"]
+    value["source"] = deepcopy(observed_source)
+    value["result"] = {
+        "intended_use": "bounded generated test",
+        "scientific_fitness": "accepted",
+        "quality_disposition": "accepted",
+        "regulatory_applicability": "accepted_for_named_test_scope",
+    }
+    value["provenance"] = {
+        "raw_artifact_digest": "sha256:" + "1" * 64,
+        "governed_locator": "evidence-vault://acceptance/OBS-TEST-ACCEPTANCE-001",
+        "performed_by": "test-validation-operator",
+        "reviewed_by": "test-independent-validation-reviewer",
+    }
+    value["approvals"] = [
+        {
+            "domain": domain,
+            "decision": "accept",
+            "approver": f"test-{domain}-owner",
+        }
+        for domain in ("scientific", "quality", "regulatory")
+    ]
+    value["classification"] = {
+        "data_class": "approved-synthetic-exemplar",
+        "redaction_status": "reviewed-redacted-manifest",
+    }
+    return value
 
 
 class ComparativeEvidenceTests(unittest.TestCase):
@@ -89,7 +184,8 @@ class ComparativeEvidenceTests(unittest.TestCase):
         ]
         observations = (
             load("fixtures/pairs/simulation-observation.json"),
-            load("fixtures/pairs/actual-observation.json"),
+            planned_contract_value(),
+            load("fixtures/contracts/planned-acceptance-envelope.json"),
         )
 
         for observation in observations:
@@ -329,10 +425,67 @@ class ComparativeEvidenceTests(unittest.TestCase):
             ):
                 admit_simulated_closure(changed, Path(directory))
 
+    def test_persisted_contract_inputs_make_no_observed_evidence_claim(self) -> None:
+        claimed_modes = []
+        for root in (ROOT / "fixtures", ROOT / "receipts" / "redacted"):
+            for path in root.rglob("*.json"):
+                document = load(str(path.relative_to(ROOT)))
+                if "evidence_mode" in document:
+                    claimed_modes.append((path.name, document["evidence_mode"]))
+        self.assertTrue(claimed_modes)
+        self.assertTrue(
+            all(mode in {"planned", "simulated"} for _, mode in claimed_modes)
+        )
+
+    def test_synthetic_contract_mode_is_explicit_and_non_authorizing(self) -> None:
+        simulation = ObservationEnvelope.from_dict(
+            load("fixtures/pairs/simulation-observation.json")
+        )
+        candidate = ObservationEnvelope.from_dict(planned_contract_value())
+        profile = load("specification/comparison-profile.json")
+
+        with self.assertRaisesRegex(ValueError, "requires observed evidence"):
+            compare(simulation, candidate, profile)
+
+        report = compare_synthetic_contract(simulation, candidate, profile)
+        self.assertEqual(report["comparison_mode"], "synthetic_contract")
+        self.assertEqual(
+            report["authority_posture"]["environment_observed_closure"],
+            "separate_unasserted_state",
+        )
+        self.assertEqual(
+            report["authority_posture"]["production_authorization_effect"],
+            "none",
+        )
+        self.assertEqual(
+            report["synthetic_contract"]["evidence_mode"], "planned"
+        )
+        self.assertIn(
+            "planned_receipt_shapes", report["database_release_alignment"]
+        )
+        self.assertTrue(
+            all("candidate" in item and "actual" not in item for item in report["differences"])
+        )
+        self.assertEqual(
+            {item["classification"] for item in report["differences"]},
+            {"comparison_inconclusive"},
+        )
+        self.assertEqual(
+            {
+                item["contract_exercise_classification"]
+                for item in report["differences"]
+            },
+            {"actual_gap", "desired_divergence"},
+        )
+        html = render_html(report)
+        self.assertIn("Synthetic contract exercise", html)
+        self.assertIn("Planned contract shape", html)
+        self.assertNotIn("Observed evidence comparison", html)
+
     def test_pair_comparison_classifies_material_differences(self) -> None:
         report = compare(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
-            ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json")),
+            ObservationEnvelope.from_dict(observed_envelope_value()),
             load("specification/comparison-profile.json"),
         )
         classifications = {item["classification"] for item in report["differences"]}
@@ -390,7 +543,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
 
     def test_boolean_and_number_are_distinct_json_primitives(self) -> None:
-        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value = observed_envelope_value()
         actual_value["result"]["migration"]["semantic_parity"] = 1
         report = compare(
             ObservationEnvelope.from_dict(
@@ -409,7 +562,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
 
     def test_exact_release_path_alignment_preserves_distinct_receipts(self) -> None:
         simulation_value = load("fixtures/pairs/simulation-observation.json")
-        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value = observed_envelope_value()
         release_path_fields = (
             "migration_manifest_id",
             "migration_manifest_version",
@@ -438,7 +591,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
 
     def test_boolean_remains_outside_numeric_tolerance(self) -> None:
-        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value = observed_envelope_value()
         actual_value["result"]["restore"]["observed_recovery_seconds"] = True
         report = compare(
             ObservationEnvelope.from_dict(
@@ -458,7 +611,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
 
     def test_observation_envelope_is_deeply_immutable_and_detached(self) -> None:
-        source_value = load("fixtures/pairs/actual-observation.json")
+        source_value = observed_envelope_value()
         envelope = ObservationEnvelope.from_dict(source_value)
         original_digest = envelope.content_digest
 
@@ -478,21 +631,21 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(envelope.content_digest, original_digest)
 
     def test_observed_admission_requires_database_release_coordinates(self) -> None:
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         del value["source"]["database_release"]
         with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
             AdmissionError, "database_release"
         ):
             admit(ObservationEnvelope.from_dict(value), Path(directory))
 
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         value["source"]["database_release"]["schema_digest"] = "sha256:short"
         with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
             AdmissionError, "64 lowercase"
         ):
             admit(ObservationEnvelope.from_dict(value), Path(directory))
 
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         del value["source"]["database_release"]["migration_mechanism_id"]
         with (
             tempfile.TemporaryDirectory(
@@ -504,7 +657,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         ):
             admit(ObservationEnvelope.from_dict(value), Path(directory))
 
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         value["source"]["database_release"]["migration_history_relation"] = (
             "unqualified_history"
         )
@@ -520,7 +673,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
 
     def test_missing_required_path_is_a_critical_specification_violation(self) -> None:
         simulation_value = load("fixtures/pairs/simulation-observation.json")
-        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value = observed_envelope_value()
         del simulation_value["result"]["security"]["tenant_boundary"]
         del actual_value["result"]["security"]["tenant_boundary"]
         report = compare(
@@ -541,7 +694,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(report["summary"]["critical_differences"], 1)
 
     def test_directional_adjudication_distinguishes_slower_recovery(self) -> None:
-        actual_value = load("fixtures/pairs/actual-observation.json")
+        actual_value = observed_envelope_value()
         actual_value["result"]["restore"]["observed_recovery_seconds"] = 1000
         report = compare(
             ObservationEnvelope.from_dict(
@@ -562,7 +715,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
     def test_declared_nondeterminism_converges(self) -> None:
         report = compare(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
-            ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json")),
+            ObservationEnvelope.from_dict(observed_envelope_value()),
             load("specification/comparison-profile.json"),
         )
         paths = {item["path"] for item in report["differences"]}
@@ -572,7 +725,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
     def test_html_contains_portable_adjudication_surface(self) -> None:
         report = compare(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
-            ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json")),
+            ObservationEnvelope.from_dict(observed_envelope_value()),
             load("specification/comparison-profile.json"),
         )
         html = render_html(report)
@@ -588,7 +741,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         profile["reportable_paths"] = []
         report = compare(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
-            ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json")),
+            ObservationEnvelope.from_dict(observed_envelope_value()),
             profile,
         )
         self.assertTrue(
@@ -608,7 +761,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 admit(envelope, Path(directory))
 
     def test_observed_qualified_evidence_enters_accepted_namespace(self) -> None:
-        envelope = ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json"))
+        envelope = ObservationEnvelope.from_dict(observed_envelope_value())
         with tempfile.TemporaryDirectory() as directory:
             destination = admit(envelope, Path(directory))
             admitted = json.loads(destination.read_text())
@@ -617,7 +770,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
             self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
 
     def test_observed_prequalification_evidence_returns_to_review(self) -> None:
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         for stage in ("specified", "verified"):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
                 value["assurance_stage"] = stage
@@ -628,7 +781,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                     )
 
     def test_accepted_manifest_is_immutable_and_supports_supersession(self) -> None:
-        envelope = ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json"))
+        envelope = ObservationEnvelope.from_dict(observed_envelope_value())
         with tempfile.TemporaryDirectory() as directory:
             destination = admit(envelope, Path(directory))
             existing = json.loads(destination.read_text())
@@ -638,7 +791,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 admit(envelope, Path(directory))
 
     def test_acceptance_requires_separate_accountable_domains(self) -> None:
-        value = load("fixtures/acceptance/observed-accepted-example.json")
+        value = accepted_envelope_value()
         value["approvals"] = value["approvals"][:1]
         envelope = ObservationEnvelope.from_dict(value)
         with tempfile.TemporaryDirectory() as directory:
@@ -647,7 +800,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
 
     def test_acceptance_example_enters_with_three_accountable_decisions(self) -> None:
         envelope = ObservationEnvelope.from_dict(
-            load("fixtures/acceptance/observed-accepted-example.json")
+            accepted_envelope_value()
         )
         with tempfile.TemporaryDirectory() as directory:
             destination = admit(envelope, Path(directory))
@@ -655,7 +808,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
             self.assertEqual(len(admitted["approvals"]), 3)
 
     def test_admission_confines_repository_safe_identity(self) -> None:
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         value["observation_id"] = "../ESCAPED"
         envelope = ObservationEnvelope.from_dict(value)
         with tempfile.TemporaryDirectory() as directory:
@@ -664,7 +817,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
             self.assertEqual(list(Path(directory).glob("*.json")), [])
 
     def test_admission_returns_protected_keys_to_governed_projection(self) -> None:
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         value["result"]["api_key"] = "SYNTHETIC-CREDENTIAL-SHAPE"
         envelope = ObservationEnvelope.from_dict(value)
         with tempfile.TemporaryDirectory() as directory:
@@ -684,7 +837,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         for field, value, message in cases:
             with self.subTest(field=field):
-                document = load("fixtures/pairs/actual-observation.json")
+                document = observed_envelope_value()
                 target = document["source"] if field in document["source"] else document["provenance"]
                 target[field] = value
                 with tempfile.TemporaryDirectory() as directory:
@@ -697,14 +850,14 @@ class ComparativeEvidenceTests(unittest.TestCase):
             "evidence-vault://acceptance/%0Aobject",
         ):
             with self.subTest(locator=locator):
-                value = load("fixtures/pairs/actual-observation.json")
+                value = observed_envelope_value()
                 value["provenance"]["governed_locator"] = locator
                 with tempfile.TemporaryDirectory() as directory:
                     with self.assertRaisesRegex(AdmissionError, "object path"):
                         admit(ObservationEnvelope.from_dict(value), Path(directory))
 
     def test_reviewer_independence_uses_normalized_identity(self) -> None:
-        value = load("fixtures/pairs/actual-observation.json")
+        value = observed_envelope_value()
         value["provenance"]["performed_by"] = "Validation-Operator"
         value["provenance"]["reviewed_by"] = " validation-operator "
         with tempfile.TemporaryDirectory() as directory:
@@ -715,7 +868,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         simulation = ObservationEnvelope.from_dict(
             load("fixtures/pairs/simulation-observation.json")
         )
-        actual = ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json"))
+        actual = ObservationEnvelope.from_dict(observed_envelope_value())
         profile = load("specification/comparison-profile.json")
 
         with self.assertRaisesRegex(ValueError, "simulated evidence"):
@@ -907,6 +1060,23 @@ class ComparativeEvidenceTests(unittest.TestCase):
             },
             closure_contracts,
         )
+        expected_profile_contract = {
+            "contract_id": "CONTRACT-COMPARISON-PROFILE-001",
+            "version": manifest["contract_bindings"][
+                "comparison_profile_schema"
+            ],
+            "digest": manifest["comparison_profile_digest"],
+        }
+        self.assertIn(expected_profile_contract, machine_node["contracts"])
+        self.assertIn(expected_profile_contract, first_receipt["contract_state"])
+        self.assertEqual(
+            manifest["first_receipt_contract"]["persisted_evidence_modes"],
+            ["simulated", "planned"],
+        )
+        self.assertEqual(
+            manifest["first_receipt_contract"]["observed_admission_status"],
+            "caller_supplied_only_unexercised",
+        )
         self.assertEqual(
             machine_node["current_provenance"],
             {
@@ -976,12 +1146,15 @@ class ComparativeEvidenceTests(unittest.TestCase):
             vocabulary_binding["digest"],
             "sha256:0f3be9ab956877281f9261c69a5f099547b048c1c878541a7c9c47edc5e03280",
         )
-        report = compare(
+        report = compare_synthetic_contract(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
-            ObservationEnvelope.from_dict(load("fixtures/pairs/actual-observation.json")),
+            ObservationEnvelope.from_dict(planned_contract_value()),
             load("specification/comparison-profile.json"),
         )
-        self.assertEqual(manifest["reference_report_digest"], report["report_digest"])
+        self.assertEqual(
+            manifest["synthetic_contract_report_digest"],
+            report["report_digest"],
+        )
         self.assertEqual(
             {
                 item["external_release"]
@@ -991,8 +1164,43 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
 
     def test_redacted_receipt_uses_canonical_family_vocabulary(self) -> None:
-        receipt = load("receipts/redacted/qualified-vendor-example.json")
+        receipt = {
+            "receipt_schema": "1.0.0",
+            "receipt_id": "RECEIPT-VENDOR-TEST-001",
+            "receipt_family": "configured_vendor_environments",
+            "evidence_mode": "observed",
+            "assurance_stage": "qualified",
+            "claim": "Generated test receipt exercises the redacted contract.",
+            "environment": {"environment_id": "test-vendor-environment"},
+            "implementation_commit": "a" * 40,
+            "scenario_ids": ["SPEC-VENDOR-TEST-001"],
+            "result": "qualified_in_test_boundary",
+            "raw_artifact_digest": "sha256:" + "b" * 64,
+            "governed_locator": "evidence-vault://test/RECEIPT-VENDOR-TEST-001",
+            "limitations": ["generated test data"],
+            "performed_by": "test-operator",
+            "reviewed_by": "test-independent-reviewer",
+            "approvals": [
+                {
+                    "domain": "engineering",
+                    "decision": "accept",
+                    "approver": "test-platform-owner",
+                }
+            ],
+            "classification": {
+                "data_class": "approved-synthetic-qualification",
+                "redaction_status": "reviewed-redacted-manifest",
+            },
+            "retest_triggers": ["vendor build"],
+        }
         schema = load("schemas/redacted-receipt.schema.json")
+        validate_json_contract(
+            schema=schema,
+            instance=receipt,
+            version_property="receipt_schema",
+            expected_version="1.0.0",
+            contract_name="redacted receipt",
+        )
         canonical_families = set(schema["properties"]["receipt_family"]["enum"])
         self.assertEqual(
             canonical_families,

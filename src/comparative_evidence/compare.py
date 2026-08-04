@@ -59,11 +59,15 @@ class Difference:
     value_visibility: str
     comparison: dict[str, Any]
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(
+        self,
+        *,
+        counterpart_key: str = "actual",
+    ) -> dict[str, Any]:
         return {
             "path": self.path,
             "expected": self.expected,
-            "actual": self.actual,
+            counterpart_key: self.actual,
             "classification": self.classification,
             "rationale": self.rationale,
             "critical": self.critical,
@@ -77,7 +81,60 @@ def compare(
     actual: ObservationEnvelope,
     profile: dict[str, Any],
 ) -> dict[str, Any]:
-    _validate_authority(simulation, actual, profile)
+    """Compare a trusted simulation with caller-supplied observed evidence."""
+
+    return _compare(
+        simulation,
+        actual,
+        profile,
+        comparison_mode="observed_evidence",
+    )
+
+
+def compare_synthetic_contract(
+    simulation: ObservationEnvelope,
+    contract_candidate: ObservationEnvelope,
+    profile: dict[str, Any],
+) -> dict[str, Any]:
+    """Exercise report contracts without asserting an environment encounter."""
+
+    return _compare(
+        simulation,
+        contract_candidate,
+        profile,
+        comparison_mode="synthetic_contract",
+    )
+
+
+def _compare(
+    simulation: ObservationEnvelope,
+    actual: ObservationEnvelope,
+    profile: dict[str, Any],
+    *,
+    comparison_mode: str,
+) -> dict[str, Any]:
+    if comparison_mode == "observed_evidence":
+        _validate_authority(simulation, actual, profile)
+        counterpart_key = "actual"
+        counterpart_receipts_key = "observed_receipts"
+        counterpart_side = "observed"
+        authority_posture = {
+            "evidence_claim": "caller_supplied_observed_evidence",
+            "environment_observed_closure": "caller_supplied",
+            "production_authorization_effect": "none",
+        }
+    elif comparison_mode == "synthetic_contract":
+        _validate_synthetic_contract_authority(simulation, actual, profile)
+        counterpart_key = "synthetic_contract"
+        counterpart_receipts_key = "planned_receipt_shapes"
+        counterpart_side = "planned contract"
+        authority_posture = {
+            "evidence_claim": "synthetic_contract_shape_only",
+            "environment_observed_closure": "separate_unasserted_state",
+            "production_authorization_effect": "none",
+        }
+    else:
+        raise ValueError("comparison_mode requires an explicitly released mode")
     if simulation.scenario_id != actual.scenario_id:
         raise ValueError("paired observations require the same scenario_id")
 
@@ -113,7 +170,7 @@ def compare(
                 side
                 for side, present in (
                     ("simulation", expected_present),
-                    ("observed", actual_present),
+                    (counterpart_side, actual_present),
                 )
                 if not present
             ]
@@ -184,9 +241,42 @@ def compare(
             if any(item.classification == name for item in differences)
         },
     }
+    difference_documents = [
+        item.as_dict(
+            counterpart_key=(
+                "actual" if comparison_mode == "observed_evidence" else "candidate"
+            ),
+        )
+        for item in differences
+    ]
+    if comparison_mode == "synthetic_contract":
+        summary["contract_exercise_classification_counts"] = summary[
+            "classification_counts"
+        ]
+        summary["classification_counts"] = (
+            {"comparison_inconclusive": len(difference_documents)}
+            if difference_documents
+            else {}
+        )
+        for document in difference_documents:
+            planned_rationale = document["rationale"].replace(
+                "Observed ", "Planned contract-shape "
+            ).replace("observed ", "planned contract-shape ")
+            document["rationale"] = (
+                "Synthetic contract exercise; environment-observed closure remains "
+                "a separate unasserted state. " + planned_rationale
+            )
+            document["contract_exercise_classification"] = document[
+                "classification"
+            ]
+            document["classification"] = "comparison_inconclusive"
+            document["comparison"]["authority"] = "synthetic_contract_shape"
+
     report = {
         "comparator_release": COMPARATOR_RELEASE,
         "comparison_contract_version": COMPARISON_CONTRACT_VERSION,
+        "comparison_mode": comparison_mode,
+        "authority_posture": authority_posture,
         "scenario_id": actual.scenario_id,
         "simulation": {
             "observation_id": simulation.observation_id,
@@ -206,7 +296,7 @@ def compare(
             ],
             "database_release": simulated_database_release.as_dict(),
         },
-        "actual": {
+        counterpart_key: {
             "observation_id": actual.observation_id,
             "evidence_mode": actual.evidence_mode,
             "assurance_stage": actual.assurance_stage,
@@ -216,10 +306,11 @@ def compare(
         "database_release_alignment": database_release_alignment(
             simulated_database_release,
             actual_database_release,
+            counterpart_receipts_key=counterpart_receipts_key,
         ),
         "profile_digest": digest(profile),
         "summary": summary,
-        "differences": [item.as_dict() for item in differences],
+        "differences": difference_documents,
     }
     report["report_digest"] = digest(report)
     return report
@@ -230,14 +321,54 @@ def _validate_authority(
     actual: ObservationEnvelope,
     profile: dict[str, Any],
 ) -> None:
-    if simulation.evidence_mode != "simulated" or simulation.assurance_stage != "specified":
-        raise ValueError("forecast input requires simulated evidence at the specified assurance stage")
+    _validate_pair_contract(simulation, actual, profile)
     if actual.evidence_mode != "observed":
         raise ValueError("actual input requires observed evidence")
     if actual.assurance_stage not in {"verified", "qualified", "validated", "accepted"}:
         raise ValueError("actual input requires an observed assurance stage")
+    try:
+        validate_for_accepted(actual)
+    except EvidenceSafetyError as error:
+        raise ValueError(str(error)) from error
+
+
+def _validate_synthetic_contract_authority(
+    simulation: ObservationEnvelope,
+    contract_candidate: ObservationEnvelope,
+    profile: dict[str, Any],
+) -> None:
+    _validate_pair_contract(simulation, contract_candidate, profile)
+    if (
+        contract_candidate.evidence_mode != "planned"
+        or contract_candidate.assurance_stage != "specified"
+    ):
+        raise ValueError(
+            "synthetic contract input requires planned evidence at the specified "
+            "assurance stage"
+        )
+    try:
+        validate_observation_id(contract_candidate.observation_id)
+        validate_repository_safe_content(contract_candidate.as_dict())
+        validate_database_release_coordinate(
+            contract_candidate.source["database_release"],
+            label="contract_candidate.source.database_release",
+        )
+    except EvidenceSafetyError as error:
+        raise ValueError(str(error)) from error
+
+
+def _validate_pair_contract(
+    simulation: ObservationEnvelope,
+    counterpart: ObservationEnvelope,
+    profile: dict[str, Any],
+) -> None:
+    if simulation.evidence_mode != "simulated" or simulation.assurance_stage != "specified":
+        raise ValueError("forecast input requires simulated evidence at the specified assurance stage")
     _validate_profile(profile)
-    if profile.get("scenario_id") != simulation.scenario_id or profile.get("scenario_id") != actual.scenario_id:
+    if (
+        profile.get("scenario_id") != simulation.scenario_id
+        or profile.get("scenario_id") != counterpart.scenario_id
+    ):
         raise ValueError("comparison profile requires the paired scenario_id")
 
     critical = set(profile.get("critical_exact_paths", []))
@@ -259,7 +390,6 @@ def _validate_authority(
     try:
         validate_observation_id(simulation.observation_id)
         validate_repository_safe_content(simulation.as_dict())
-        validate_for_accepted(actual)
     except EvidenceSafetyError as error:
         raise ValueError(str(error)) from error
     _validate_simulation_binding(simulation)

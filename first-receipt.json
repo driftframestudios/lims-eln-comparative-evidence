@@ -15,8 +15,8 @@
     },
     {
       "contract_id": "CONTRACT-COMPARISON-PROFILE-001",
-      "version": "1.1.0",
-      "digest": "sha256:549e7cd0ca211b9e2dca0df9c584023fb649a32ada1847b1518e652735d0ea83"
+      "version": "1.2.0",
+      "digest": "sha256:837511447d2033375ed35b481ed491ae7f425d5add7753dc84dd9f3685c4e480"
     }
   ],
   "evidence_posture": [

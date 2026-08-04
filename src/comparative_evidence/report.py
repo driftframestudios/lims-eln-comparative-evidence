@@ -18,6 +18,17 @@ def write_reports(report: dict[str, Any], output: Path) -> None:
 def render_html(report: dict[str, Any]) -> str:
     summary = report["summary"]
     database_release = report["database_release_alignment"]
+    synthetic_contract = report.get("comparison_mode") == "synthetic_contract"
+    counterpart_key = "candidate" if synthetic_contract else "actual"
+    counterpart_heading = "Planned contract shape" if synthetic_contract else "Observed"
+    kicker = "Synthetic contract exercise" if synthetic_contract else "Observed evidence comparison"
+    evidence_note = (
+        "This portable report exercises released comparison contracts. Its authority "
+        "is synthetic contract shape; environment-observed closure remains separate "
+        "and unasserted, and production authorization effect is none."
+        if synthetic_contract
+        else "This report compares caller-supplied observed evidence under the released admission contract."
+    )
     rows = "\n".join(
         "<tr>"
         f"<td><code>{escape(item['path'])}</code></td>"
@@ -26,7 +37,7 @@ def render_html(report: dict[str, Any]) -> str:
         f"<td>{escape(item['value_visibility'])}</td>"
         f"<td>{escape(item['rationale'])}</td>"
         f"<td><pre>{escape(json.dumps(item['expected'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
-        f"<td><pre>{escape(json.dumps(item['actual'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
+        f"<td><pre>{escape(json.dumps(item[counterpart_key], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
         "</tr>"
         for item in report["differences"]
     )
@@ -60,8 +71,9 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
 </head>
 <body>
 <main>
-<p class="kicker">Three-way comparative receipt</p>
+<p class="kicker">{escape(kicker)}</p>
 <h1>{escape(report['scenario_id'])}</h1>
+<p>{escape(evidence_note)}</p>
 <section class="summary" aria-label="Comparison summary">
   <div class="card"><span class="value">{summary['leaf_paths_compared']}</span>paths compared</div>
   <div class="card"><span class="value">{summary['converged_paths']}</span>converged</div>
@@ -78,7 +90,7 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
 </section>
 <h2>Adjudication surface</h2>
 <table>
-<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>Observed</th></tr></thead>
+<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>{escape(counterpart_heading)}</th></tr></thead>
 <tbody>{rows or '<tr><td colspan="7">All compared paths converged.</td></tr>'}</tbody>
 </table>
 <footer>

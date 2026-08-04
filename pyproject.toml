@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lims-eln-comparative-evidence"
 version = "0.3.1"
-description = "Independent comparator for observed and selected-future simulated evidence"
+description = "Independent comparator for caller-supplied observed evidence, planned contract shapes, and selected-future simulations"
 requires-python = ">=3.11"
 dependencies = []
 

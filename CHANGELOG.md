@@ -2,6 +2,13 @@
 
 ## 0.3.1
 
+- Recast checked-in counterpart fixtures as planned synthetic contract shapes and
+  reserve observed and accepted envelopes for caller input or temporary test data.
+- Add an explicit `compare-synthetic-contract` path for CI and the portable reference
+  artifact while the default comparator and admission gate remain observed-only.
+- Rename the release binding to `synthetic_contract_report_digest`, remove the fake
+  redacted observed receipt, and preserve environment-observed closure as a separate
+  unasserted state with zero production authorization effect.
 - Replace the unresolved Alembic-versus-custom-runner comparison with one shared
   Flyway Community 13.0.0 mechanism while retaining manifest, receipt, and
   environment evidence as independently comparable release-path coordinates.

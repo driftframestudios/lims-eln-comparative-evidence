@@ -1,14 +1,21 @@
 # LIMS/ELN Comparative Evidence
 
-This repository independently compares a released specification, a frozen selected
-future, and—when useful—an observed implementation result. It produces
-machine-readable JSON and a portable HTML report while preserving the original
-inputs and their authority.
+This repository independently compares a released specification and frozen selected
+future with either caller-supplied observed evidence or a planned synthetic contract
+shape. It produces machine-readable JSON and a portable HTML report while preserving
+the original inputs and their authority.
 
 The selected future is definitive within its declared simulation reality. An
 environment encounter is a separate evidence mode that can confirm it, reveal an
 actual gap, expose a simulation fault, improve upon the forecast, or show that
 context changed.
+
+The repository persists the selected-future simulation and planned synthetic
+contract shapes. Environment-observed and accepted envelopes enter at runtime from
+governed evidence storage. The checked-in portable report uses
+`comparison_mode: synthetic_contract`, preserves
+`environment_observed_closure: separate_unasserted_state`, and records
+`production_authorization_effect: none`.
 
 ## Evidence namespaces
 
@@ -44,11 +51,12 @@ Evidence enters `accepted/` only through the admission gate. The gate requires:
 - a classification and redaction statement.
 
 Observed records retain their independent admission path. Their presence extends the
-comparative surface and does not determine whether a selected future is complete.
+comparative surface while the selected future retains its declared simulation scope.
 
-Raw vendor exports, sensitive traces, credentials, and regulated records live in
-governed evidence storage. Git contains redacted manifests, content digests, and
-protected locators.
+Raw vendor exports, sensitive traces, credentials, regulated records, and observed
+envelopes live in governed evidence storage. This release includes the schemas and
+admission path; its `accepted/` and `receipts/redacted/` namespaces contain guidance
+and reserved locations rather than environment-evidence examples.
 
 Receipt-family vocabulary is owned by program specification contract
 `RECEIPT-VOCABULARY-MAP-001` in
@@ -62,10 +70,10 @@ manifest records this external repository coordinate, digest, and promotion stat
 ```bash
 python -m pip install --editable ".[validation]"
 python -m unittest discover -s tests -v
-PYTHONPATH=src python -m comparative_evidence.cli compare \
+PYTHONPATH=src python -m comparative_evidence.cli compare-synthetic-contract \
   --profile specification/comparison-profile.json \
   --simulation fixtures/pairs/simulation-observation.json \
-  --actual fixtures/pairs/actual-observation.json \
+  --contract-candidate fixtures/contracts/planned-observation.json \
   --output build/comparison
 ```
 
@@ -86,20 +94,34 @@ their oracle, data contract, migration manifest, migration mechanism, history
 relation, lock strategy, transaction strategy, and target schema align. Target-state
 alignment and release-path alignment remain separate machine-readable judgments, so
 equivalent schemas reached through distinct migration systems retain visible
-provenance. Simulated and observed receipt identities remain separate evidence
-coordinates. [`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
+provenance. Simulated, planned, and caller-supplied observed receipt identities remain
+separate evidence coordinates.
+[`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
 defines this comparison boundary and its residual architecture decision.
 
 The released profile also declares every required comparison path and the preferred
 direction for recovery time and manual effort. A missing governed path becomes a
 shared-specification violation; a faster or lower-effort observed result can be
-recognized as a favorable divergence.
+recognized as a favorable divergence. The synthetic-contract report prefixes each
+rationale with its contract-exercise authority so classifications remain distinct
+from environment conclusions.
+
+Observed comparison uses the default, observed-only command with a caller-provided
+governed envelope:
+
+```bash
+PYTHONPATH=src python -m comparative_evidence.cli compare \
+  --profile specification/comparison-profile.json \
+  --simulation fixtures/pairs/simulation-observation.json \
+  --actual "${OBSERVED_ENVELOPE}" \
+  --output "${COMPARISON_OUTPUT}"
+```
 
 Admission uses a separate command:
 
 ```bash
 PYTHONPATH=src python -m comparative_evidence.cli admit \
-  --envelope fixtures/pairs/actual-observation.json \
+  --envelope "${OBSERVED_ENVELOPE}" \
   --accepted accepted/
 ```
 
@@ -124,8 +146,8 @@ closer probabilistic fit. Simulated results remain available for comparison and 
 outside the observed calibration ledger.
 
 The stable `comparative-validation` workflow gate recomputes the canonical closure,
-reference report, profile, calibration posture, JSON integrity, and repository-wide
-credential-shape scan after the complete Python test matrix succeeds.
+synthetic contract report, profile, calibration posture, JSON integrity, and
+repository-wide credential-shape scan after the complete Python test matrix succeeds.
 
 ## Coordination Horizon
 
