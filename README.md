@@ -27,8 +27,9 @@ context changed.
 
 This path records `closed_in_simulation`, keeps environment-observed closure in
 `separate_unasserted_state`, and grants `production_authorization_effect: none`.
-It therefore closes the receipts inside the selected future without requiring an
-external environment encounter or personal identities.
+It closes the receipts inside the selected future using simulated accountable roles
+and declared reference-environment coordinates; external environment encounters and
+personal identities remain in `separate_unasserted_state`.
 
 Evidence enters `accepted/` only through the admission gate. The gate requires:
 
