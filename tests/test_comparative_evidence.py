@@ -537,10 +537,43 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertTrue(
             report["database_release_alignment"]["schema_aligned"]
         )
+        self.assertTrue(
+            report["database_release_alignment"]["semantic_policy_aligned"]
+        )
+        self.assertEqual(
+            set(
+                report["database_release_alignment"][
+                    "semantic_policy_alignment"
+                ]
+            ),
+            {"tenant", "temporal", "identity", "digest", "measurement", "unit"},
+        )
+        self.assertTrue(
+            all(
+                report["database_release_alignment"][
+                    "semantic_policy_alignment"
+                ].values()
+            )
+        )
         self.assertNotEqual(
             report["database_release_alignment"]["simulated_receipts"],
             report["database_release_alignment"]["observed_receipts"],
         )
+
+    def test_golden_specimen_content_digest_covers_declared_semantic_scope(self) -> None:
+        for relative in (
+            "fixtures/pairs/simulation-observation.json",
+            "fixtures/contracts/planned-observation.json",
+        ):
+            with self.subTest(relative=relative):
+                specimen = deepcopy(load(relative)["result"]["specimen"])
+                content_digest = specimen["result"].pop("content_digest")
+                self.assertEqual(content_digest["algorithm"], "sha256")
+                self.assertEqual(content_digest["encoding"], "hex")
+                self.assertEqual(
+                    content_digest["value"],
+                    digest(specimen).removeprefix("sha256:"),
+                )
 
     def test_boolean_and_number_are_distinct_json_primitives(self) -> None:
         actual_value = observed_envelope_value()
@@ -671,6 +704,59 @@ class ComparativeEvidenceTests(unittest.TestCase):
         ):
             admit(ObservationEnvelope.from_dict(value), Path(directory))
 
+        value = observed_envelope_value()
+        del value["source"]["database_release"]["semantic_policy_coverage"][
+            "unit"
+        ]
+        with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
+            AdmissionError,
+            "tenant, temporal, identity, digest, measurement, and unit",
+        ):
+            admit(ObservationEnvelope.from_dict(value), Path(directory))
+
+        value = observed_envelope_value()
+        value["source"]["database_release"]["semantic_policy_coverage"][
+            "measurement"
+        ]["required_semantics"].pop()
+        with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
+            AdmissionError,
+            "released semantic capabilities",
+        ):
+            admit(ObservationEnvelope.from_dict(value), Path(directory))
+
+    def test_semantic_policy_difference_prevents_false_target_alignment(self) -> None:
+        actual_value = observed_envelope_value()
+        coordinate = actual_value["source"]["database_release"]
+        coordinate["semantic_policy_coverage"]["unit"][
+            "representation_digest"
+        ] = "sha256:" + "9" * 64
+        coordinate["semantic_policy_profile_digest"] = digest(
+            {
+                "semantic_policy_profile_id": coordinate[
+                    "semantic_policy_profile_id"
+                ],
+                "semantic_policy_profile_version": coordinate[
+                    "semantic_policy_profile_version"
+                ],
+                "semantic_policy_coverage": coordinate[
+                    "semantic_policy_coverage"
+                ],
+            }
+        )
+        report = compare(
+            ObservationEnvelope.from_dict(
+                load("fixtures/pairs/simulation-observation.json")
+            ),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        alignment = report["database_release_alignment"]
+        self.assertFalse(alignment["semantic_policy_alignment"]["unit"])
+        self.assertFalse(alignment["semantic_policy_profile_aligned"])
+        self.assertFalse(alignment["semantic_policy_aligned"])
+        self.assertFalse(alignment["target_state_aligned"])
+        self.assertEqual(alignment["target_status"], "target_divergence")
+
     def test_missing_required_path_is_a_critical_specification_violation(self) -> None:
         simulation_value = load("fixtures/pairs/simulation-observation.json")
         actual_value = observed_envelope_value()
@@ -692,6 +778,27 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertTrue(difference["critical"])
         self.assertEqual(report["summary"]["critical_differences"], 1)
+
+    def test_missing_canonical_unit_is_a_critical_specification_violation(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = observed_envelope_value()
+        del simulation_value["result"]["specimen"]["result"]["canonical_unit"]
+        del actual_value["result"]["specimen"]["result"]["canonical_unit"]
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        difference = next(
+            item
+            for item in report["differences"]
+            if item["path"] == "$.specimen.result.canonical_unit"
+        )
+        self.assertEqual(
+            difference["classification"],
+            "shared_specification_violation",
+        )
+        self.assertTrue(difference["critical"])
 
     def test_directional_adjudication_distinguishes_slower_recovery(self) -> None:
         actual_value = observed_envelope_value()
@@ -956,10 +1063,10 @@ class ComparativeEvidenceTests(unittest.TestCase):
         machine_node = load("machine-node.json")
         first_receipt = load("first-receipt.json")
         coordination_horizon = load("COORDINATION-HORIZON.json")
-        self.assertEqual(__version__, "0.3.1")
+        self.assertEqual(__version__, "0.3.2")
         self.assertEqual(manifest["repository_release"], __version__)
         self.assertEqual(manifest["repository_role"], "comparative_evidence")
-        self.assertEqual(manifest["contract_bindings"]["governance_schema"], "2.0.1")
+        self.assertEqual(manifest["contract_bindings"]["governance_schema"], "2.0.2")
         self.assertEqual(
             manifest["contract_bindings"]["simulated_closure_bundle_schema"],
             "2.0.1",
@@ -986,15 +1093,15 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["contract_bindings"]["comparison_profile_schema"],
-            "1.2.0",
+            "2.0.0",
         )
         self.assertEqual(
             manifest["contract_bindings"]["observation_envelope_schema"],
-            "1.2.0",
+            "2.0.0",
         )
         self.assertEqual(
             manifest["contract_bindings"]["database_release_coordinate"],
-            "1.1.0",
+            "2.0.0",
         )
         self.assertEqual(
             manifest["contract_bindings"]["calibration_ledger_schema"],
@@ -1080,7 +1187,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             machine_node["current_provenance"],
             {
-                "release": "candidate-comparison-v0.3.1",
+                "release": "candidate-comparison-v0.3.2",
                 "commit": "0" * 40,
                 "digest": "sha256:" + ("0" * 64),
             },
@@ -1092,9 +1199,9 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 for item in machine_node["campaigns"]
             },
             {
-                ("LIMS-ELN-OPEN-RECEIPTS", "2.0.1"),
-                ("COMPARATIVE-LITERACY-COLLABORATION", "2.0.1"),
-                ("SITE-READING-SYSTEM", "2.0.1"),
+                ("LIMS-ELN-OPEN-RECEIPTS", "2.0.2"),
+                ("COMPARATIVE-LITERACY-COLLABORATION", "2.0.2"),
+                ("SITE-READING-SYSTEM", "2.0.2"),
             },
         )
         self.assertEqual(

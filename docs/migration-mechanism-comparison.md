@@ -4,8 +4,9 @@
 
 Database release coordinates carry two independently reviewable axes:
 
-1. **Target state** binds the selected oracle, semantic data contract, and schema
-   digest.
+1. **Target state** binds the selected oracle, semantic data contract, schema
+   digest, and explicit tenant, temporal, identity, digest, measurement, and unit
+   policy coverage.
 2. **Release path** binds the migration manifest plus the mechanism identity,
    version, implementation digest, history relation, lock strategy, and transaction
    strategy.
@@ -24,14 +25,15 @@ the release path receives an explicit architecture disposition.
 | History relation | `public.flyway_schema_history` | `public.flyway_schema_history` |
 | Lock strategy | Flyway PostgreSQL history lock | Flyway PostgreSQL history lock |
 | Transaction strategy | One transaction per migration | One transaction per migration |
-| Manifest identity | `MANIFEST-DATABASE-MIGRATION-001` | `PLAN-DATABASE-MIGRATIONS-001` contract shape |
+| Manifest identity | `MANIFEST-DATABASE-MIGRATION-002` | `PLAN-DATABASE-MIGRATIONS-002` contract shape |
 
 The selected-future values come from its database oracle and program migration
 contract. Both mechanism coordinates bind the independently verifiable
 `flyway/flyway:13.0.0-alpine` OCI index digest. The planned counterpart exists to
 exercise the released envelope, report, and migration-coordinate contracts. Its
-manifest, receipt, and schema coordinates are synthetic shapes whose authority stays
-inside the contract exercise. The generated report
+manifest and receipt coordinates are synthetic shapes whose authority stays inside
+the contract exercise; its target schema and semantic policy coverage identify the
+same selected destination. The generated report
 therefore records `comparison_mode: synthetic_contract`,
 `environment_observed_closure: separate_unasserted_state`, and
 `production_authorization_effect: none`.
@@ -54,10 +56,15 @@ evidence.
   comparison.
 - Receipt identities remain evidence coordinates and stay outside target-state
   equality.
+- Semantic policy coverage requires all six released dimensions, their exact
+  capability lists, and a canonical profile digest.
+- Each dimension compares independently, making a tenant, temporal, identity,
+  digest, measurement, or unit divergence visible in the report.
 - `aligned_target` requires agreement across target state and release path.
 - `aligned_target_distinct_release_path` requires target-state agreement and records
   a distinct manifest or mechanism.
-- `target_divergence` records a difference in oracle, data contract, or schema.
+- `target_divergence` records a difference in oracle, data contract, schema, or
+  semantic policy coverage.
 
 ## Settled ownership boundary
 

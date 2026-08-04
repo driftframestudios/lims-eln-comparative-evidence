@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.2
+
+- Bind comparison to `ORACLE-DATABASE-FINAL-STATE-002`, data contract and migration
+  manifest 2.0.0, the simulated migration and release receipts, and the v2 schema
+  digest.
+- Advance the observation envelope and comparison profile to 2.0.0 and the
+  orientation metadata to governance 2.0.2.
+- Add explicit tenant, temporal, identity, digest, measurement, and unit policy
+  coverage to database-release coordinates. Each dimension carries its policy,
+  representation digest, and exact required capabilities under one canonical
+  semantic-profile digest.
+- Include semantic-policy agreement in target-state alignment and surface every
+  dimension in JSON and portable HTML reports.
+- Expand the golden specimen comparison from a generic unit label to internal and
+  external identity provenance, raw and canonical decimal values, UCUM units,
+  assay and conversion revisions, temporal roles, intervals, detection limits, and
+  content-digest provenance.
+- Add regression coverage for incomplete semantic profiles, altered semantic
+  representations, and missing canonical units.
+
 ## 0.3.1
 
 - Recast checked-in counterpart fixtures as planned synthetic contract shapes and

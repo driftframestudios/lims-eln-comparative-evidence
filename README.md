@@ -21,7 +21,7 @@ governed evidence storage. The checked-in portable report uses
 
 `simulated-closures/` receives a bundle after the comparator confirms:
 
-- the exact governance 2.0.1 closure document matches its release-bound digest;
+- the exact released governance closure document matches its release-bound digest;
 - the closure bundle's source-result digest independently reproduces the
   aggregate artifact digest;
 - all four governance receipt projections and detailed executable receipts are
@@ -44,7 +44,8 @@ Evidence enters `accepted/` only through the admission gate. The gate requires:
 - a named environment and immutable implementation identity;
 - a typed database-release coordinate binding the target data contract, migration
   manifest, mechanism identity and execution semantics, observed migration and
-  release receipts, and resulting schema digest;
+  release receipts, resulting schema digest, and six explicit semantic-policy
+  dimensions for tenant, temporal, identity, digest, measurement, and unit behavior;
 - a raw-artifact digest and governed locator;
 - performer and independent reviewer identities;
 - an accountable approval for acceptance-stage records;
@@ -91,7 +92,10 @@ across caller activity. Comparison applies JSON primitive semantics: booleans re
 distinct from numbers, and numeric tolerances apply exclusively to finite numeric
 values. Each report also records both database-release coordinates and states whether
 their oracle, data contract, migration manifest, migration mechanism, history
-relation, lock strategy, transaction strategy, and target schema align. Target-state
+relation, lock strategy, transaction strategy, target schema, and semantic-policy
+coverage align. Each semantic dimension carries its governed policy, representation
+digest, and required capabilities. Target-state alignment therefore requires the
+six dimensions as well as the oracle, data contract, and schema. Target-state
 alignment and release-path alignment remain separate machine-readable judgments, so
 equivalent schemas reached through distinct migration systems retain visible
 provenance. Simulated, planned, and caller-supplied observed receipt identities remain
@@ -154,7 +158,7 @@ repository-wide credential-shape scan after the complete Python test matrix succ
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) describes current focus,
 completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
-[`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
+[`first-receipt.json`](first-receipt.json) provide governance-2.0.2-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects.
 
 ## Comparative literacy

@@ -29,6 +29,15 @@ def render_html(report: dict[str, Any]) -> str:
         if synthetic_contract
         else "This report compares caller-supplied observed evidence under the released admission contract."
     )
+    semantic_rows = "".join(
+        "<li>"
+        f"<strong>{escape(dimension)}</strong>: "
+        f"{'aligned' if aligned else 'review'}"
+        "</li>"
+        for dimension, aligned in database_release[
+            "semantic_policy_alignment"
+        ].items()
+    )
     rows = "\n".join(
         "<tr>"
         f"<td><code>{escape(item['path'])}</code></td>"
@@ -87,7 +96,10 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
   <div class="card"><strong>{'Aligned' if database_release['migration_manifest_aligned'] else 'Review'}</strong><br>migration manifest</div>
   <div class="card"><strong>{'Aligned' if database_release['migration_mechanism_aligned'] else 'Distinct'}</strong><br>migration mechanism</div>
   <div class="card"><strong>{'Aligned' if database_release['schema_aligned'] else 'Review'}</strong><br>target schema</div>
+  <div class="card"><strong>{'Aligned' if database_release['semantic_policy_aligned'] else 'Review'}</strong><br>semantic policy</div>
 </section>
+<h3>Semantic policy dimensions</h3>
+<div class="card"><ul>{semantic_rows}</ul></div>
 <h2>Adjudication surface</h2>
 <table>
 <thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>{escape(counterpart_heading)}</th></tr></thead>

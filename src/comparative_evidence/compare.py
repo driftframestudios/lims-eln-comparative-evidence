@@ -28,8 +28,8 @@ from .simulated_closure import (
 )
 
 
-COMPARATOR_RELEASE = "0.3.1"
-COMPARISON_CONTRACT_VERSION = "1.2.0"
+COMPARATOR_RELEASE = "0.3.2"
+COMPARISON_CONTRACT_VERSION = "2.0.0"
 TRUSTED_AGGREGATE_ARTIFACT_DIGEST = (
     "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61"
 )
@@ -496,6 +496,18 @@ def _validate_simulation_binding(simulation: ObservationEnvelope) -> None:
             + ", ".join(missing)
         )
     for field, value in expected.items():
+        if field == "database_release":
+            if (
+                validate_database_release_coordinate(
+                    simulation.source[field],
+                    label="simulation.source.database_release",
+                )
+                != TRUSTED_SIMULATED_DATABASE_RELEASE
+            ):
+                raise ValueError(
+                    "simulation source database_release differs from the trusted selected-future release"
+                )
+            continue
         if simulation.source.get(field) != value:
             raise ValueError(
                 f"simulation source {field} differs from the trusted selected-future release"

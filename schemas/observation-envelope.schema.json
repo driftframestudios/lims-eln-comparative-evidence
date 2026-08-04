@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lims-eln/observation-envelope/1.2.0",
+  "$id": "https://example.invalid/lims-eln/observation-envelope/2.0.0",
   "title": "Comparative observation envelope",
   "type": "object",
   "required": [
@@ -16,7 +16,7 @@
     "classification"
   ],
   "properties": {
-    "envelope_version": {"const": "1.2.0"},
+    "envelope_version": {"const": "2.0.0"},
     "observation_id": {
       "type": "string",
       "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
@@ -195,7 +195,11 @@
         "migration_receipt_digest",
         "release_receipt_id",
         "release_receipt_digest",
-        "schema_digest"
+        "schema_digest",
+        "semantic_policy_profile_id",
+        "semantic_policy_profile_version",
+        "semantic_policy_profile_digest",
+        "semantic_policy_coverage"
       ],
       "properties": {
         "oracle_id": {"$ref": "#/$defs/governed_identity"},
@@ -223,7 +227,86 @@
         "migration_receipt_digest": {"$ref": "#/$defs/sha256"},
         "release_receipt_id": {"$ref": "#/$defs/governed_identity"},
         "release_receipt_digest": {"$ref": "#/$defs/sha256"},
-        "schema_digest": {"$ref": "#/$defs/sha256"}
+        "schema_digest": {"$ref": "#/$defs/sha256"},
+        "semantic_policy_profile_id": {"$ref": "#/$defs/governed_identity"},
+        "semantic_policy_profile_version": {"$ref": "#/$defs/semantic_version"},
+        "semantic_policy_profile_digest": {"$ref": "#/$defs/sha256"},
+        "semantic_policy_coverage": {"$ref": "#/$defs/semantic_policy_coverage"}
+      },
+      "additionalProperties": false
+    },
+    "semantic_policy_binding": {
+      "type": "object",
+      "required": ["policy_id", "representation_digest", "required_semantics"],
+      "properties": {
+        "policy_id": {"$ref": "#/$defs/governed_identity"},
+        "representation_digest": {"$ref": "#/$defs/sha256"},
+        "required_semantics": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/mechanism_strategy"},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_policy_coverage": {
+      "type": "object",
+      "required": ["tenant", "temporal", "identity", "digest", "measurement", "unit"],
+      "properties": {
+        "tenant": {
+          "allOf": [
+            {"$ref": "#/$defs/semantic_policy_binding"},
+            {"properties": {
+              "policy_id": {"const": "DATA-TENANT-001"},
+              "required_semantics": {"const": ["tenant_leading_composite_keys", "forced_row_level_security"]}
+            }}
+          ]
+        },
+        "temporal": {
+          "allOf": [
+            {"$ref": "#/$defs/semantic_policy_binding"},
+            {"properties": {
+              "policy_id": {"const": "DATA-TIME-001"},
+              "required_semantics": {"const": ["occurrence_recording_distinct", "timezone_aware_instants", "finite_instants"]}
+            }}
+          ]
+        },
+        "identity": {
+          "allOf": [
+            {"$ref": "#/$defs/semantic_policy_binding"},
+            {"properties": {
+              "policy_id": {"const": "DATA-ID-001"},
+              "required_semantics": {"const": ["internal_uuid", "external_constrained_source_scoped"]}
+            }}
+          ]
+        },
+        "digest": {
+          "allOf": [
+            {"$ref": "#/$defs/semantic_policy_binding"},
+            {"properties": {
+              "policy_id": {"const": "DATA-DIGEST-001"},
+              "required_semantics": {"const": ["sha256_32_byte", "canonicalization_profile", "content_scope"]}
+            }}
+          ]
+        },
+        "measurement": {
+          "allOf": [
+            {"$ref": "#/$defs/semantic_policy_binding"},
+            {"properties": {
+              "policy_id": {"const": "DATA-MEASURE-001"},
+              "required_semantics": {"const": ["raw_numeric_lexeme", "raw_value", "canonical_value", "assay_method_numeric_profile", "qualifier_reference_and_detection_limits"]}
+            }}
+          ]
+        },
+        "unit": {
+          "allOf": [
+            {"$ref": "#/$defs/semantic_policy_binding"},
+            {"properties": {
+              "policy_id": {"const": "DATA-UNIT-001"},
+              "required_semantics": {"const": ["source_unit", "canonical_ucum", "vocabulary_version", "mapping_revision", "conversion_and_rounding_provenance"]}
+            }}
+          ]
+        }
       },
       "additionalProperties": false
     },

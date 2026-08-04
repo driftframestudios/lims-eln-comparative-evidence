@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lims-eln/comparison-profile/1.2.0",
+  "$id": "https://example.invalid/lims-eln/comparison-profile/2.0.0",
   "title": "Comparative evidence profile",
   "type": "object",
   "required": [
@@ -14,7 +14,7 @@
     "adjudications"
   ],
   "properties": {
-    "profile_version": {"const": "1.2.0"},
+    "profile_version": {"const": "2.0.0"},
     "scenario_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$"},
     "required_paths": {"$ref": "#/$defs/paths"},
     "critical_exact_paths": {"$ref": "#/$defs/paths"},

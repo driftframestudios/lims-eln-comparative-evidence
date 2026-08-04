@@ -110,8 +110,8 @@ class ObservationEnvelope:
         extra = sorted(value.keys() - required)
         if extra:
             raise EnvelopeError(f"envelope fields require a released definition: {', '.join(extra)}")
-        if value["envelope_version"] != "1.2.0":
-            raise EnvelopeError("envelope_version requires the released 1.2.0 contract")
+        if value["envelope_version"] != "2.0.0":
+            raise EnvelopeError("envelope_version requires the released 2.0.0 contract")
         if value["evidence_mode"] not in EVIDENCE_MODES:
             raise EnvelopeError("evidence_mode requires planned, simulated, or observed")
         if value["assurance_stage"] not in ASSURANCE_STAGES:

@@ -1,14 +1,14 @@
 {
   "manifest_version": "2.0.0",
   "repository_role": "comparative_evidence",
-  "repository_release": "0.3.1",
-  "external_release": "comparison-v0.3.1",
-  "synthetic_contract_report_digest": "sha256:3b92a93711d454ef8fe7bf9c30a93f415bda8da75e708f2ea9eb0cdde5984d39",
+  "repository_release": "0.3.2",
+  "external_release": "comparison-v0.3.2",
+  "synthetic_contract_report_digest": "sha256:82a8702f9c34c45822f6b17346599c3c0bd069a3a9f2bfd46bb91ad7b795e272",
   "canonical_governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "simulated_closure_comparison_digest": "sha256:fd0c8ccd99af7fe2ef75a04d9c24cece04f33d4e673f8e57468bfbe43898cd66",
   "aggregate_closure_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
   "source_result_digest": "sha256:9d42b972c77764c81ff32fefe8f02367a27406e9ba082a704587cc9b5a9da860",
-  "comparison_profile_digest": "sha256:837511447d2033375ed35b481ed491ae7f425d5add7753dc84dd9f3685c4e480",
+  "comparison_profile_digest": "sha256:154d60c8dd489215d4dbad3ebdee9535d836f50598ff1e67258feffd6b560442",
   "calibration_ledger_digest": "sha256:062ca293c0fe36ad489e9702a61f191c5bb542d1e6c50145b1334a71f41d9433",
   "canonical_closure_bundle_digest": "sha256:04c94dff906ddb83607aa14ea4fc618cf97e040d02b427680c7512a0818be7b4",
   "canonical_closure_bundle_file_sha256": "sha256:b868604412039c3705d4b60e649c43da2f51592ca0215d22ebe4477b75016ef4",
@@ -31,26 +31,61 @@
     ]
   },
   "trusted_simulated_database_release": {
-    "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
-    "oracle_version": "1.0.0",
-    "database_release": "database-final-state-v1",
-    "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
-    "data_contract_version": "1.0.0",
-    "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
-    "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
-    "migration_manifest_version": "1.0.0",
-    "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
+    "oracle_id": "ORACLE-DATABASE-FINAL-STATE-002",
+    "oracle_version": "2.0.0",
+    "database_release": "database-final-state-v2",
+    "data_contract_id": "CONTRACT-LABORATORY-CORE-002",
+    "data_contract_version": "2.0.0",
+    "data_contract_digest": "sha256:9b88582b00ba65f96f8feddc42ab2da6a569d22e85ca8220b50494689c13f691",
+    "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-002",
+    "migration_manifest_version": "2.0.0",
+    "migration_manifest_digest": "sha256:804195a301d3509965555c057d4dc3b5fca6c5b043ab31455e7102330b0322f2",
     "migration_mechanism_id": "FLYWAY",
     "migration_mechanism_version": "13.0.0",
-    "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+    "migration_mechanism_digest": "sha256:031722729a3c47c61bc7a22db507975dfaa9c31138815977f82adb408b60563e",
     "migration_history_relation": "public.flyway_schema_history",
     "migration_lock_strategy": "flyway_postgresql_history_lock",
     "migration_transaction_strategy": "one_transaction_per_migration",
-    "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
-    "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
-    "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
-    "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
-    "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-002",
+    "migration_receipt_digest": "sha256:c22c64d9aa03f1a31dcc88c764b46df7850597d09b35c445c7ce63532c854564",
+    "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-002",
+    "release_receipt_digest": "sha256:d8b4db48094584f926c391e04365c27db4ecbad96b95bbd43418a0304eb23d12",
+    "schema_digest": "sha256:1f9f23687a349876079f21063b9904b275933519eb442936056e780fa07101bd",
+    "semantic_policy_profile_id": "PROFILE-DATABASE-SEMANTICS-002",
+    "semantic_policy_profile_version": "2.0.0",
+    "semantic_policy_profile_digest": "sha256:b76d71c7a99d2ba22ea3d55cbd9befa52c19574bdea6f0ff4c842e3d5f2b2542",
+    "semantic_policy_coverage": {
+      "tenant": {
+        "policy_id": "DATA-TENANT-001",
+        "representation_digest": "sha256:69c64005a1b7c2830c71e66abb88697093139c683f17d249b5d42ff17bab3299",
+        "required_semantics": ["tenant_leading_composite_keys", "forced_row_level_security"]
+      },
+      "temporal": {
+        "policy_id": "DATA-TIME-001",
+        "representation_digest": "sha256:75e9ee7535e924601426f2adb7106afea294fac5904cfe09f76d3aeb17bf4eef",
+        "required_semantics": ["occurrence_recording_distinct", "timezone_aware_instants", "finite_instants"]
+      },
+      "identity": {
+        "policy_id": "DATA-ID-001",
+        "representation_digest": "sha256:7985cd19c439751508761383d8211901137fe4feb31bd9e794b4fde7d4b5b680",
+        "required_semantics": ["internal_uuid", "external_constrained_source_scoped"]
+      },
+      "digest": {
+        "policy_id": "DATA-DIGEST-001",
+        "representation_digest": "sha256:74986404c294bf80a96f98390137ef1ab43b6c3fdb6a35d714baed9c5906f653",
+        "required_semantics": ["sha256_32_byte", "canonicalization_profile", "content_scope"]
+      },
+      "measurement": {
+        "policy_id": "DATA-MEASURE-001",
+        "representation_digest": "sha256:141e3240521a68ad6c597683eb9fd7f31e0192f7750740c5fac5c30fafeb82df",
+        "required_semantics": ["raw_numeric_lexeme", "raw_value", "canonical_value", "assay_method_numeric_profile", "qualifier_reference_and_detection_limits"]
+      },
+      "unit": {
+        "policy_id": "DATA-UNIT-001",
+        "representation_digest": "sha256:eb4746bcb3f62453ff9eef406e5805860850c0c770df975953beb458e73fdc7b",
+        "required_semantics": ["source_unit", "canonical_ucum", "vocabulary_version", "mapping_revision", "conversion_and_rounding_provenance"]
+      }
+    }
   },
   "first_receipt_contract": {
     "path": "first-receipt.json",
@@ -76,10 +111,10 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "2.0.1",
-    "comparison_profile_schema": "1.2.0",
-    "observation_envelope_schema": "1.2.0",
-    "database_release_coordinate": "1.1.0",
+    "governance_schema": "2.0.2",
+    "comparison_profile_schema": "2.0.0",
+    "observation_envelope_schema": "2.0.0",
+    "database_release_coordinate": "2.0.0",
     "redacted_receipt_schema": "1.0.0",
     "calibration_ledger_schema": "1.0.0",
     "simulated_closure_bundle_schema": "2.0.1",

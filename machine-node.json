@@ -4,7 +4,7 @@
   "title": "LIMS and ELN comparative evidence control plane",
   "purpose": "Orient collaborators to the canonical selected-future closure, independent observed-evidence path, released comparison rules, and authority boundaries.",
   "control_plane_profile": "0.3.0",
-  "schema_release": "2.0.1",
+  "schema_release": "2.0.2",
   "repository_role": "comparative_evidence",
   "authority": {
     "mode": "orientation_only",
@@ -25,24 +25,24 @@
     },
     {
       "contract_id": "CONTRACT-COMPARISON-PROFILE-001",
-      "version": "1.2.0",
-      "digest": "sha256:837511447d2033375ed35b481ed491ae7f425d5add7753dc84dd9f3685c4e480"
+      "version": "2.0.0",
+      "digest": "sha256:154d60c8dd489215d4dbad3ebdee9535d836f50598ff1e67258feffd6b560442"
     }
   ],
   "campaigns": [
     {
       "campaign_id": "LIMS-ELN-OPEN-RECEIPTS",
-      "marking_schema_version": "2.0.1",
+      "marking_schema_version": "2.0.2",
       "status": "settling"
     },
     {
       "campaign_id": "COMPARATIVE-LITERACY-COLLABORATION",
-      "marking_schema_version": "2.0.1",
+      "marking_schema_version": "2.0.2",
       "status": "active"
     },
     {
       "campaign_id": "SITE-READING-SYSTEM",
-      "marking_schema_version": "2.0.1",
+      "marking_schema_version": "2.0.2",
       "status": "active"
     }
   ],
@@ -52,7 +52,7 @@
     "digest": "sha256:f8d79224b74ba45c5160ee9447fca77585ade6bbeb7eda5d6a3b173e1295b6d7"
   },
   "current_provenance": {
-    "release": "candidate-comparison-v0.3.1",
+    "release": "candidate-comparison-v0.3.2",
     "commit": "0000000000000000000000000000000000000000",
     "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
@@ -89,7 +89,7 @@
     }
   ],
   "metadata": {
-    "schema_version": "2.0.1",
+    "schema_version": "2.0.2",
     "created_at": "2026-07-28T20:30:00Z",
     "updated_at": "2026-07-28T20:30:00Z",
     "owner": {
