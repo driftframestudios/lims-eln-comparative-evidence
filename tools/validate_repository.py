@@ -5,6 +5,9 @@ from hashlib import sha256
 from pathlib import Path
 import sys
 
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
+
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -54,6 +57,51 @@ def _repository_secret_shape_findings() -> list[str]:
     return findings
 
 
+def validate_json_contract(
+    *,
+    schema: dict,
+    instance: dict,
+    version_property: str,
+    expected_version: str,
+    contract_name: str,
+) -> None:
+    try:
+        Draft202012Validator.check_schema(schema)
+    except SchemaError as exc:
+        raise ValueError(
+            f"{contract_name} schema requires a valid Draft 2020-12 contract: "
+            f"{exc.message}"
+        ) from exc
+
+    declared_version = (
+        schema.get("properties", {})
+        .get(version_property, {})
+        .get("const")
+    )
+    if declared_version != expected_version:
+        raise ValueError(
+            f"{contract_name} schema release binding requires "
+            f"{expected_version!r}; schema declares {declared_version!r}"
+        )
+
+    errors = sorted(
+        Draft202012Validator(schema).iter_errors(instance),
+        key=lambda error: tuple(str(part) for part in error.absolute_path),
+    )
+    if errors:
+        details = []
+        for error in errors:
+            location = "$" + "".join(
+                f"[{part}]" if isinstance(part, int) else f".{part}"
+                for part in error.absolute_path
+            )
+            details.append(f"{location}: {error.message}")
+        raise ValueError(
+            f"{contract_name} instance requires schema conformance: "
+            + "; ".join(details)
+        )
+
+
 def main() -> int:
     json_count = _repository_json_documents()
     bundle_path = (
@@ -64,7 +112,18 @@ def main() -> int:
         "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
     )
     bundle_summary = validate_simulated_closure_bundle(bundle)
+    manifest = _load("release/repository-role.json")
     profile = _load("specification/comparison-profile.json")
+    profile_schema = _load("schemas/comparison-profile.schema.json")
+    validate_json_contract(
+        schema=profile_schema,
+        instance=profile,
+        version_property="profile_version",
+        expected_version=manifest["contract_bindings"][
+            "comparison_profile_schema"
+        ],
+        contract_name="comparison profile",
+    )
     report = compare(
         ObservationEnvelope.from_dict(
             _load("fixtures/pairs/simulation-observation.json")
@@ -77,7 +136,6 @@ def main() -> int:
     calibration = score_calibration(
         _load("fixtures/calibration/observed-outcomes.json")
     )
-    manifest = _load("release/repository-role.json")
     expected = {
         "reference_report_digest": report["report_digest"],
         "canonical_governance_closure_digest": bundle_summary[
@@ -126,6 +184,9 @@ def main() -> int:
             {
                 "status": "passed",
                 "json_documents": json_count,
+                "comparison_profile_schema": manifest["contract_bindings"][
+                    "comparison_profile_schema"
+                ],
                 "comparison_report_digest": report["report_digest"],
                 "closure_comparison_digest": bundle_summary[
                     "comparison_digest"

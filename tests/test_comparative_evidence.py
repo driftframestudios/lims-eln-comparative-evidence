@@ -11,6 +11,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "tools"))
 
 from comparative_evidence.calibration import CalibrationError, score_calibration
 from comparative_evidence.compare import compare
@@ -33,6 +34,7 @@ from comparative_evidence.simulated_closure import (
     admit_simulated_closure,
     validate_simulated_closure_bundle,
 )
+from validate_repository import validate_json_contract
 
 
 def load(path: str) -> dict:
@@ -40,6 +42,43 @@ def load(path: str) -> dict:
 
 
 class ComparativeEvidenceTests(unittest.TestCase):
+    def test_released_comparison_profile_executes_its_bound_schema(self) -> None:
+        schema = load("schemas/comparison-profile.schema.json")
+        profile = load("specification/comparison-profile.json")
+        expected_version = load("release/repository-role.json")[
+            "contract_bindings"
+        ]["comparison_profile_schema"]
+
+        validate_json_contract(
+            schema=schema,
+            instance=profile,
+            version_property="profile_version",
+            expected_version=expected_version,
+            contract_name="comparison profile",
+        )
+
+        stale_instance = deepcopy(profile)
+        stale_instance["profile_version"] = "1.1.0"
+        with self.assertRaisesRegex(ValueError, "schema conformance"):
+            validate_json_contract(
+                schema=schema,
+                instance=stale_instance,
+                version_property="profile_version",
+                expected_version=expected_version,
+                contract_name="comparison profile",
+            )
+
+        stale_schema = deepcopy(schema)
+        stale_schema["properties"]["profile_version"]["const"] = "1.1.0"
+        with self.assertRaisesRegex(ValueError, "release binding"):
+            validate_json_contract(
+                schema=stale_schema,
+                instance=profile,
+                version_property="profile_version",
+                expected_version=expected_version,
+                contract_name="comparison profile",
+            )
+
     def test_calibration_ledger_preserves_honest_empty_state(self) -> None:
         result = score_calibration(
             load("fixtures/calibration/observed-outcomes.json")

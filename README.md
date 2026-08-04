@@ -60,6 +60,7 @@ manifest records this external repository coordinate, digest, and promotion stat
 ## Run it
 
 ```bash
+python -m pip install --editable ".[validation]"
 python -m unittest discover -s tests -v
 PYTHONPATH=src python -m comparative_evidence.cli compare \
   --profile specification/comparison-profile.json \
@@ -67,6 +68,9 @@ PYTHONPATH=src python -m comparative_evidence.cli compare \
   --actual fixtures/pairs/actual-observation.json \
   --output build/comparison
 ```
+
+The validation extra executes the released Draft 2020-12 comparison-profile
+contract during both the test matrix and the aggregate repository gate.
 
 The output contains `comparison.json` and `comparison.html`. Difference values appear
 only for paths declared in the released profile's `reportable_paths`. Every other
