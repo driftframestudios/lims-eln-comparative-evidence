@@ -35,7 +35,8 @@ Evidence enters `accepted/` only through the admission gate. The gate requires:
 - `evidence_mode: observed`;
 - a named environment and immutable implementation identity;
 - a typed database-release coordinate binding the target data contract, migration
-  manifest, observed migration and release receipts, and resulting schema digest;
+  manifest, mechanism identity and execution semantics, observed migration and
+  release receipts, and resulting schema digest;
 - a raw-artifact digest and governed locator;
 - performer and independent reviewer identities;
 - an accountable approval for acceptance-stage records;
@@ -75,8 +76,13 @@ serialization returns a fresh mutable projection, preserving the envelope digest
 across caller activity. Comparison applies JSON primitive semantics: booleans remain
 distinct from numbers, and numeric tolerances apply exclusively to finite numeric
 values. Each report also records both database-release coordinates and states whether
-their oracle, data contract, migration manifest, and target schema align. Simulated
-and observed receipt identities remain separate evidence coordinates.
+their oracle, data contract, migration manifest, migration mechanism, history
+relation, lock strategy, transaction strategy, and target schema align. Target-state
+alignment and release-path alignment remain separate machine-readable judgments, so
+equivalent schemas reached through distinct migration systems retain visible
+provenance. Simulated and observed receipt identities remain separate evidence
+coordinates. [`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
+defines this comparison boundary and its residual architecture decision.
 
 The released profile also declares every required comparison path and the preferred
 direction for recovery time and manual effort. A missing governed path becomes a

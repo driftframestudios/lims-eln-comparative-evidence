@@ -276,7 +276,27 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             report["database_release_alignment"]["target_status"],
-            "aligned_target",
+            "aligned_target_distinct_release_path",
+        )
+        self.assertTrue(
+            report["database_release_alignment"]["target_state_aligned"]
+        )
+        self.assertFalse(
+            report["database_release_alignment"]["release_path_aligned"]
+        )
+        self.assertFalse(
+            report["database_release_alignment"]["migration_manifest_aligned"]
+        )
+        self.assertFalse(
+            report["database_release_alignment"]["migration_mechanism_aligned"]
+        )
+        self.assertEqual(
+            report["simulation"]["database_release"]["migration_mechanism_id"],
+            "ALEMBIC",
+        )
+        self.assertEqual(
+            report["actual"]["database_release"]["migration_mechanism_id"],
+            "MANIFEST-AUTHENTICATED-PSQL",
         )
         self.assertTrue(
             report["database_release_alignment"]["schema_aligned"]
@@ -303,6 +323,36 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(difference["classification"], "actual_defect")
         self.assertTrue(difference["critical"])
+
+    def test_exact_release_path_alignment_preserves_distinct_receipts(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = load("fixtures/pairs/actual-observation.json")
+        release_path_fields = (
+            "migration_manifest_id",
+            "migration_manifest_version",
+            "migration_manifest_digest",
+            "migration_mechanism_id",
+            "migration_mechanism_version",
+            "migration_mechanism_digest",
+            "migration_history_relation",
+            "migration_lock_strategy",
+            "migration_transaction_strategy",
+        )
+        for field in release_path_fields:
+            actual_value["source"]["database_release"][field] = (
+                simulation_value["source"]["database_release"][field]
+            )
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+        alignment = report["database_release_alignment"]
+        self.assertEqual(alignment["target_status"], "aligned_target")
+        self.assertTrue(alignment["release_path_aligned"])
+        self.assertNotEqual(
+            alignment["simulated_receipts"], alignment["observed_receipts"]
+        )
 
     def test_boolean_remains_outside_numeric_tolerance(self) -> None:
         actual_value = load("fixtures/pairs/actual-observation.json")
@@ -356,6 +406,32 @@ class ComparativeEvidenceTests(unittest.TestCase):
         value["source"]["database_release"]["schema_digest"] = "sha256:short"
         with tempfile.TemporaryDirectory() as directory, self.assertRaisesRegex(
             AdmissionError, "64 lowercase"
+        ):
+            admit(ObservationEnvelope.from_dict(value), Path(directory))
+
+        value = load("fixtures/pairs/actual-observation.json")
+        del value["source"]["database_release"]["migration_mechanism_id"]
+        with (
+            tempfile.TemporaryDirectory(
+                prefix="mechanism-coordinate-"
+            ) as directory,
+            self.assertRaisesRegex(
+                AdmissionError, "released database coordinate fields"
+            ),
+        ):
+            admit(ObservationEnvelope.from_dict(value), Path(directory))
+
+        value = load("fixtures/pairs/actual-observation.json")
+        value["source"]["database_release"]["migration_history_relation"] = (
+            "unqualified_history"
+        )
+        with (
+            tempfile.TemporaryDirectory(
+                prefix="mechanism-coordinate-"
+            ) as directory,
+            self.assertRaisesRegex(
+                AdmissionError, "qualified PostgreSQL relation"
+            ),
         ):
             admit(ObservationEnvelope.from_dict(value), Path(directory))
 
@@ -420,6 +496,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertIn("<!doctype html>", html)
         self.assertIn("actual_gap", html)
         self.assertIn("Database release alignment", html)
+        self.assertIn("migration mechanism", html)
         self.assertIn("aligned_target", html)
         self.assertIn(report["report_digest"], html)
 
@@ -673,10 +750,14 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["contract_bindings"]["comparison_profile_schema"],
-            "1.1.0",
+            "1.2.0",
         )
         self.assertEqual(
             manifest["contract_bindings"]["observation_envelope_schema"],
+            "1.2.0",
+        )
+        self.assertEqual(
+            manifest["contract_bindings"]["database_release_coordinate"],
             "1.1.0",
         )
         self.assertEqual(

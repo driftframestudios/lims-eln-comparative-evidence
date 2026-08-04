@@ -73,6 +73,7 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
   <div class="card"><strong>{escape(database_release['target_status'])}</strong><br>target status</div>
   <div class="card"><strong>{'Aligned' if database_release['data_contract_aligned'] else 'Review'}</strong><br>data contract</div>
   <div class="card"><strong>{'Aligned' if database_release['migration_manifest_aligned'] else 'Review'}</strong><br>migration manifest</div>
+  <div class="card"><strong>{'Aligned' if database_release['migration_mechanism_aligned'] else 'Distinct'}</strong><br>migration mechanism</div>
   <div class="card"><strong>{'Aligned' if database_release['schema_aligned'] else 'Review'}</strong><br>target schema</div>
 </section>
 <h2>Adjudication surface</h2>

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lims-eln/observation-envelope/1.1.0",
+  "$id": "https://example.invalid/lims-eln/observation-envelope/1.2.0",
   "title": "Comparative observation envelope",
   "type": "object",
   "required": [
@@ -16,7 +16,7 @@
     "classification"
   ],
   "properties": {
-    "envelope_version": {"const": "1.1.0"},
+    "envelope_version": {"const": "1.2.0"},
     "observation_id": {
       "type": "string",
       "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
@@ -185,6 +185,12 @@
         "migration_manifest_id",
         "migration_manifest_version",
         "migration_manifest_digest",
+        "migration_mechanism_id",
+        "migration_mechanism_version",
+        "migration_mechanism_digest",
+        "migration_history_relation",
+        "migration_lock_strategy",
+        "migration_transaction_strategy",
         "migration_receipt_id",
         "migration_receipt_digest",
         "release_receipt_id",
@@ -204,6 +210,15 @@
         "migration_manifest_id": {"$ref": "#/$defs/governed_identity"},
         "migration_manifest_version": {"$ref": "#/$defs/semantic_version"},
         "migration_manifest_digest": {"$ref": "#/$defs/sha256"},
+        "migration_mechanism_id": {"$ref": "#/$defs/governed_identity"},
+        "migration_mechanism_version": {"$ref": "#/$defs/semantic_version"},
+        "migration_mechanism_digest": {"$ref": "#/$defs/sha256"},
+        "migration_history_relation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,62}\\.[a-z][a-z0-9_]{0,62}$"
+        },
+        "migration_lock_strategy": {"$ref": "#/$defs/mechanism_strategy"},
+        "migration_transaction_strategy": {"$ref": "#/$defs/mechanism_strategy"},
         "migration_receipt_id": {"$ref": "#/$defs/governed_identity"},
         "migration_receipt_digest": {"$ref": "#/$defs/sha256"},
         "release_receipt_id": {"$ref": "#/$defs/governed_identity"},
@@ -211,6 +226,11 @@
         "schema_digest": {"$ref": "#/$defs/sha256"}
       },
       "additionalProperties": false
+    },
+    "mechanism_strategy": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "maxLength": 96
     },
     "approval": {
       "type": "object",
