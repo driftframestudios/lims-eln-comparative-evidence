@@ -22,7 +22,7 @@
       "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
       "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
       "migration_manifest_version": "1.0.0",
-      "migration_manifest_digest": "sha256:16332ce910082fed9a2905711af382aa0f506ae7dfaec8e085b1d441d9a7c15f",
+      "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
       "migration_mechanism_id": "FLYWAY",
       "migration_mechanism_version": "13.0.0",
       "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
@@ -30,9 +30,9 @@
       "migration_lock_strategy": "flyway_postgresql_history_lock",
       "migration_transaction_strategy": "one_transaction_per_migration",
       "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
-      "migration_receipt_digest": "sha256:a25d17f9765948e83852f45b88b4a8d2ad94350fa180a91844a8c0abde04462c",
+      "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
       "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
-      "release_receipt_digest": "sha256:272c4dbae13f59bfe89926beef2f9d75bd4f417822c6d9115a05d63111d1d2a1",
+      "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
       "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
     }
   },
