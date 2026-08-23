@@ -3,7 +3,7 @@
   "observation_id": "PLAN-CONTRACT-GOLDEN-001",
   "evidence_mode": "planned",
   "assurance_stage": "specified",
-  "scenario_id": "SPEC-GOLDEN-SPECIMEN-E2E-001",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
   "source": {
     "environment_id": "synthetic-contract-surface",
     "implementation_commit": "planned-at-runtime",

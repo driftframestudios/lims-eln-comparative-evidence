@@ -58,6 +58,33 @@ envelopes live in governed evidence storage. This release includes the schemas a
 admission path; its `accepted/` and `receipts/redacted/` namespaces contain guidance
 and reserved locations rather than environment-evidence examples.
 
+## Shared contract boundary
+
+Each local 1.2 envelope also passes through a contract-v1 compatibility projection
+before admission or comparison. The projection validates the shared envelope fields,
+evidence vocabulary, provenance shape, approval limits, observed-evidence posture,
+and finite JSON boundary while the local envelope retains its database-release and
+selected-future coordinates. The comparison profile, persisted simulation, and
+planned contract shape use `SCN-GOLDEN-SPECIMEN-001`; specimen revision and
+scientific-result expectations come from the same golden scenario that drives the
+simulator.
+
+The repository packages byte-identical scenario and schema snapshots with explicit
+version and digest bindings, so normal comparison and admission remain independently
+runnable. When the private package or sibling source is available, this focused check
+proves snapshot identity and validates both observations through the authoritative
+Pydantic model:
+
+```bash
+python tools/check_contract_conformance.py \
+  --contract-source ../lims-eln-program-specification/src
+```
+
+The optional `contract-conformance` extra is ready for the version-pinned private
+distribution on Python 3.12+. Publishing that distribution, then choosing whether to
+raise this repository's current Python 3.11+ floor, is the remaining seam. That
+settlement can replace the standalone compatibility adapter in a later bounded change.
+
 Receipt-family vocabulary is owned by program specification contract
 `RECEIPT-VOCABULARY-MAP-001` in
 `driftframestudios/lims-eln-program-specification` at repository path
@@ -83,7 +110,10 @@ repository gate.
 
 The output contains `comparison.json` and `comparison.html`. Difference values appear
 only for paths declared in the released profile's `reportable_paths`. Every other
-value becomes a classification and content digest.
+value becomes a classification and content digest. Profile paths use `$.field` and
+`[index]`; nested named projections carry source keys that contain path delimiters.
+Empty objects and arrays remain material values, and numeric tolerances apply to
+numbers while boolean states retain exact meaning.
 
 Observation envelopes detach and recursively freeze all nested input content. JSON
 serialization returns a fresh mutable projection, preserving the envelope digest

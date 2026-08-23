@@ -1,0 +1,126 @@
+{
+  "scenario_version": "1.0.0",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "title": "Golden specimen reaches a released, evidence-linked state",
+  "source_scenario_ids": [
+    "SCN-LIFE-001",
+    "SCN-CUST-001",
+    "SCN-INST-001",
+    "SCN-CALL-NARROW-001"
+  ],
+  "fixture_class": "synthetic",
+  "clock": "2026-08-17T14:30:00Z",
+  "specimen": {
+    "tenant_id": "TENANT-SYN-GENOMICS",
+    "specimen_id": "SPM-SYN-0001",
+    "specimen_type": "synthetic_plasma",
+    "initial_location": "SYN-LAB-A/RECEIVING"
+  },
+  "commands": [
+    {
+      "schema_version": "1.0.0",
+      "command_id": "CMD-GOLDEN-REGISTER-001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "specimen_id": "SPM-SYN-0001",
+      "actor_id": "ACTOR-SYN-TECH-01",
+      "action": "register",
+      "expected_version": 0,
+      "occurred_at": "2026-08-17T14:30:00Z",
+      "payload": {
+        "specimen_type": "synthetic_plasma"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "command_id": "CMD-GOLDEN-ACCESSION-001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "specimen_id": "SPM-SYN-0001",
+      "actor_id": "ACTOR-SYN-TECH-01",
+      "action": "accession",
+      "expected_version": 1,
+      "occurred_at": "2026-08-17T14:31:00Z",
+      "payload": {
+        "accession_id": "ACCESSION-SYN-2048"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "command_id": "CMD-GOLDEN-PROCESS-001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "specimen_id": "SPM-SYN-0001",
+      "actor_id": "ACTOR-SYN-TECH-01",
+      "action": "start_processing",
+      "expected_version": 2,
+      "occurred_at": "2026-08-17T14:32:00Z",
+      "payload": {
+        "assay_id": "ASSAY-SYN-CNV-01"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "command_id": "CMD-GOLDEN-REVIEW-001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "specimen_id": "SPM-SYN-0001",
+      "actor_id": "ACTOR-SYN-SCIENTIST-01",
+      "action": "submit_review",
+      "expected_version": 3,
+      "occurred_at": "2026-08-17T14:34:00Z",
+      "payload": {
+        "review_id": "REVIEW-SYN-001"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "command_id": "CMD-GOLDEN-RELEASE-001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "specimen_id": "SPM-SYN-0001",
+      "actor_id": "ACTOR-SYN-QUALITY-01",
+      "action": "release",
+      "expected_version": 4,
+      "occurred_at": "2026-08-17T14:35:00Z",
+      "payload": {
+        "approval_receipt_id": "APPROVAL-SYN-QUALITY-001"
+      }
+    }
+  ],
+  "instrument_message": {
+    "message_id": "MSG-SYN-INSTRUMENT-001",
+    "tenant_id": "TENANT-SYN-GENOMICS",
+    "specimen_id": "SPM-SYN-0001",
+    "instrument_id": "INSTRUMENT-SYN-01",
+    "captured_at": "2026-08-17T14:33:00Z",
+    "media_type": "application/json",
+    "raw_document": {
+      "run_id": "RUN-SYN-0042",
+      "result": {
+        "analyte": "synthetic-copy-number-marker",
+        "value": 2.0,
+        "unit": "copies",
+        "quality_flag": "pass"
+      }
+    }
+  },
+  "expected_state": {
+    "lifecycle_state": "released",
+    "aggregate_version": 5,
+    "custody_location": "SYN-LAB-A/RECEIVING",
+    "instrument_disposition": "accepted",
+    "result": {
+      "analyte": "synthetic-copy-number-marker",
+      "value": 2.0,
+      "unit": "copies",
+      "quality_flag": "pass"
+    },
+    "outbox_topics": [
+      "lims.specimen.registered.v1",
+      "lims.specimen.accessioned.v1",
+      "lims.instrument.observation-accepted.v1",
+      "lims.specimen.released.v1"
+    ]
+  },
+  "recovery_route": {
+    "trigger": "Instrument content diverges from its stable message identity or expected scientific shape.",
+    "replacement_state": "Original bytes and digest remain linked in quarantine while a complete transfer and accountable review restore a converged observation.",
+    "owner_role": "instrument_integration_owner"
+  }
+}

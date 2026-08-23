@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import math
 from typing import Any
 
+from .contract_v1 import contract_reference
 from .gate import validate_for_accepted
 from .database_release import (
     TRUSTED_SIMULATED_DATABASE_RELEASE,
@@ -275,6 +276,7 @@ def _compare(
     report = {
         "comparator_release": COMPARATOR_RELEASE,
         "comparison_contract_version": COMPARISON_CONTRACT_VERSION,
+        "observation_contract": contract_reference(),
         "comparison_mode": comparison_mode,
         "authority_posture": authority_posture,
         "scenario_id": actual.scenario_id,
@@ -532,14 +534,23 @@ def _report_value(path: str, value: Any, reportable_paths: set[str]) -> Any:
 
 def _leaf_paths(value: Any, path: str = "$") -> list[str]:
     if isinstance(value, Mapping):
+        if not value:
+            return [path]
         paths: list[str] = []
         for key, item in value.items():
+            if not key or any(delimiter in key for delimiter in ".[]"):
+                raise ValueError(
+                    f"result key {key!r} uses the released comparison path grammar; "
+                    "represent delimiter-bearing names through a nested, named projection"
+                )
             paths.extend(_leaf_paths(item, f"{path}.{key}"))
         return paths
     if isinstance(value, (list, tuple)):
+        if not value:
+            return [path]
         paths = []
         for index, item in enumerate(value):
-            paths.extend(_leaf_paths(item, f"{path}.{index}"))
+            paths.extend(_leaf_paths(item, f"{path}[{index}]"))
         return paths
     return [path]
 
@@ -547,7 +558,7 @@ def _leaf_paths(value: Any, path: str = "$") -> list[str]:
 def _optional_path(value: dict[str, Any], path: str) -> tuple[bool, Any]:
     try:
         return True, path_value(value, path)
-    except (KeyError, IndexError, TypeError):
+    except (KeyError, IndexError, TypeError, ValueError):
         return False, {"comparison_disposition": "value_absent"}
 
 

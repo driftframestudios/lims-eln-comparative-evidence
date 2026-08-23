@@ -13,20 +13,24 @@ Release branches freeze profile, fixtures, and schemas. A released comparison de
 uses `hotfix/<defect>`, targets `main`, and returns to `develop`. Reports retain the
 comparator version and profile digest.
 
-Dependabot maintains immutable GitHub Action references on a monthly cadence.
-Minor and patch updates may share one bounded pull request; major updates retain
+Local comparator and admission tests are the standing proof path. GitHub Actions
+rests disabled in repository settings at a **$0** budget. The manual
+`verify-comparative-evidence` workflow becomes available only when a named human
+enables Actions, sets `ENABLE_GITHUB_ACTIONS=true`, selects `confirm_run`, and
+dispatches it. After the proof is read, set `ENABLE_GITHUB_ACTIONS=false` and
+disable Actions in repository settings to restore the resting state.
+
+Dependency scheduling rests in `.github/dependabot.manual.yml`. A reviewed
+rename to `.github/dependabot.yml` activates its monthly cadence. When active,
+minor and patch updates may share one bounded pull request; major updates retain
 separate review and rollback coordinates. Dependabot uses the complete
 `dependabot/github_actions/<dependency-update>` grammar with
 `dependabot[bot]`; Renovate uses `renovate/<dependency-update>` with
 `renovate[bot]`. Either flow targets `main` or `develop`, and all three
-coordinates must agree. Each update runs comparator and admission tests and
-receives human review. A security update accepted on `main` is reconciled into
-`develop`.
-
-The branch-policy workflow receives pull-request metadata through a read-only
-event, checks out the exact protected base SHA into `.base-policy`, and executes
-only that base-controlled checker. Contributor code remains evidence input for
-the ordinary verification workflow.
+coordinates must agree. Each update receives the local comparator and admission
+tests plus human review. A security update accepted on `main` is reconciled into
+`develop`. The repository-local branch checker remains available to reviewers;
+the resting state has no automatic branch-policy workflow.
 
 Code and documentation state affirmative target behavior. Security and privacy
 boundaries identify the governed continuation path: protected values become

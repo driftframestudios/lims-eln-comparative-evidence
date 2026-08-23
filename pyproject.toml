@@ -11,6 +11,9 @@ dependencies = []
 
 [project.optional-dependencies]
 validation = ["jsonschema==4.26.0"]
+contract-conformance = [
+  "lims-eln-program-specification==0.3.1",
+]
 
 [project.scripts]
 lims-eln-compare = "comparative_evidence.cli:main"
@@ -20,3 +23,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+comparative_evidence = ["contract_resources/*.json"]
