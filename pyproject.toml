@@ -12,7 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 validation = ["jsonschema==4.26.0"]
 contract-conformance = [
-  "lims-eln-program-specification==0.3.0",
+  "lims-eln-program-specification==0.3.1",
 ]
 
 [project.scripts]

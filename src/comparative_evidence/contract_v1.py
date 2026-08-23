@@ -13,7 +13,7 @@ from typing import Any
 
 
 CONTRACT_VERSION = "1.0.0"
-CONTRACT_DISTRIBUTION_VERSION = "0.3.0"
+CONTRACT_DISTRIBUTION_VERSION = "0.3.1"
 GOLDEN_SCENARIO_RESOURCE = "golden-specimen.v1.json"
 OBSERVATION_SCHEMA_RESOURCE = "observation-envelope.v1.schema.json"
 
@@ -118,7 +118,8 @@ def load_contract_binding() -> dict[str, Any]:
         CONTRACT_DISTRIBUTION_VERSION
     ):
         raise ContractBoundaryError(
-            "contract binding names distribution version 0.3.0; restore that source boundary"
+            "contract binding names distribution version "
+            f"{CONTRACT_DISTRIBUTION_VERSION}; restore that source boundary"
         )
     _verify_local_resource(document, "golden_scenario", GOLDEN_SCENARIO_RESOURCE)
     _verify_local_resource(
@@ -360,7 +361,8 @@ def verify_shared_package() -> dict[str, Any]:
     shared = importlib.import_module("lims_eln_contracts")
     if getattr(shared, "__version__", None) != CONTRACT_DISTRIBUTION_VERSION:
         raise ContractBoundaryError(
-            "installed contract distribution matches version 0.3.0"
+            "installed contract distribution matches version "
+            f"{CONTRACT_DISTRIBUTION_VERSION}"
         )
     if getattr(shared, "CONTRACT_VERSION", None) != CONTRACT_VERSION:
         raise ContractBoundaryError("installed contract API matches version 1.0.0")

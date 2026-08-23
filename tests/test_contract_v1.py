@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from hashlib import sha256
 import json
 from pathlib import Path
 import sys
+import tomllib
 import unittest
 
 
@@ -12,6 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from comparative_evidence.compare import compare
 from comparative_evidence.contract_v1 import (
+    CONTRACT_DISTRIBUTION_VERSION,
     canonical_digest,
     contract_reference,
     load_contract_binding,
@@ -102,6 +105,42 @@ class ContractV1Tests(unittest.TestCase):
             "1.2.0",
         )
         self.assertEqual(schema["$id"], "urn:driftframe:lims-eln:observation-envelope:1.0.0")
+
+    def test_shared_distribution_coordinates_remain_aligned(self) -> None:
+        binding = load_contract_binding()
+        release = load("release/repository-role.json")
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
+        distribution = binding["distribution"]
+        pinned_distribution = (
+            f"{distribution['name']}=={CONTRACT_DISTRIBUTION_VERSION}"
+        )
+
+        self.assertEqual(distribution["version"], CONTRACT_DISTRIBUTION_VERSION)
+        self.assertEqual(
+            project["optional-dependencies"]["contract-conformance"],
+            [pinned_distribution],
+        )
+        self.assertEqual(
+            release["external_contract_bindings"]["shared_contract_nucleus"][
+                "distribution"
+            ],
+            pinned_distribution,
+        )
+
+        scenario_path = (
+            ROOT
+            / "src"
+            / "comparative_evidence"
+            / "contract_resources"
+            / "golden-specimen.v1.json"
+        )
+        scenario_bytes = scenario_path.read_bytes()
+        self.assertTrue(scenario_bytes.endswith(b"}\n"))
+        self.assertFalse(scenario_bytes.endswith(b"}\n\n"))
+        self.assertEqual(
+            binding["resources"]["golden_scenario"]["sha256"],
+            f"sha256:{sha256(scenario_bytes).hexdigest()}",
+        )
 
     def test_golden_scenario_drives_existing_comparison_slice(self) -> None:
         scenario = load_golden_specimen_scenario()

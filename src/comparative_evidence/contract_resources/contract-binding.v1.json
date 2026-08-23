@@ -4,7 +4,7 @@
   "authority": "driftframestudios/lims-eln-program-specification",
   "distribution": {
     "name": "lims-eln-program-specification",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "python_package": "lims_eln_contracts",
     "state": "source_bound_awaiting_private_distribution"
   },
@@ -14,7 +14,7 @@
     "golden_scenario": {
       "package_path": "resources/scenarios/golden-specimen.v1.json",
       "local_path": "contract_resources/golden-specimen.v1.json",
-      "sha256": "sha256:2820e9f9fc59964712abe3c6f26ab4fb71ec15769475a8455f0cd5e34eadb27f",
+      "sha256": "sha256:fc2b37ffa0ecd5e45c73a7c949bb13dcc9d69cf728c750d5bd900944836b9149",
       "canonical_digest": "sha256:d383578b8c55facd4613a8915f3f2137f8dfa14b2530ad9829e879c0db3a7261",
       "validated_model_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9"
     },
