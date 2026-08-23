@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from copy import deepcopy
 from collections.abc import Mapping
-from hashlib import sha256
-import json
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
+from .contract_v1 import (
+    ASSURANCE_STAGES,
+    ContractBoundaryError,
+    EVIDENCE_MODES,
+    canonical_digest,
+    canonical_json_bytes,
+    strict_json_loads,
+    validate_observation_compatibility,
+)
 
-EVIDENCE_MODES = {"planned", "simulated", "observed"}
-ASSURANCE_STAGES = {"specified", "verified", "qualified", "validated", "accepted"}
 
-
-class EnvelopeError(ValueError):
+class EnvelopeError(ContractBoundaryError):
     """An envelope receives a precise correction requirement."""
 
 
@@ -36,38 +40,11 @@ def _deep_thaw(value: Any) -> Any:
 
 
 def canonical_json(value: Any) -> str:
-    return json.dumps(
-        value,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-        allow_nan=False,
-    )
-
-
-def strict_json_loads(content: str) -> Any:
-    return json.loads(
-        content,
-        parse_constant=_reject_nonfinite,
-        object_pairs_hook=_unique_object,
-    )
-
-
-def _reject_nonfinite(value: str) -> None:
-    raise EnvelopeError(f"JSON numeric value {value} requires a finite representation")
-
-
-def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise EnvelopeError(f"JSON object key {key!r} requires a single definition")
-        result[key] = value
-    return result
+    return canonical_json_bytes(value).decode("utf-8")
 
 
 def digest(value: Any) -> str:
-    return f"sha256:{sha256(canonical_json(value).encode()).hexdigest()}"
+    return canonical_digest(value)
 
 
 @dataclass(frozen=True)
@@ -122,21 +99,42 @@ class ObservationEnvelope:
         for field in ("source", "result", "provenance", "classification"):
             if not isinstance(value[field], dict):
                 raise EnvelopeError(f"{field} requires a JSON object")
+        source_fields = {
+            "environment_id",
+            "implementation_commit",
+            "simulation_commit",
+            "configuration_digest",
+            "database_release",
+            "future_reality_version",
+            "closure_id",
+            "governance_closure_digest",
+            "aggregate_artifact_digest",
+        }
+        extra_source_fields = sorted(value["source"].keys() - source_fields)
+        if extra_source_fields:
+            raise EnvelopeError(
+                "source fields use the released contract: "
+                + ", ".join(extra_source_fields)
+            )
         if not isinstance(value["approvals"], list) or not all(
             isinstance(item, dict) for item in value["approvals"]
         ):
             raise EnvelopeError("approvals requires an array of decision objects")
+        try:
+            document = validate_observation_compatibility(value)
+        except ContractBoundaryError as error:
+            raise EnvelopeError(str(error)) from error
         return cls(
-            envelope_version=value["envelope_version"],
-            observation_id=value["observation_id"],
-            evidence_mode=value["evidence_mode"],
-            assurance_stage=value["assurance_stage"],
-            scenario_id=value["scenario_id"],
-            source=value["source"],
-            result=value["result"],
-            provenance=value["provenance"],
-            approvals=tuple(value["approvals"]),
-            classification=value["classification"],
+            envelope_version=document["envelope_version"],
+            observation_id=document["observation_id"],
+            evidence_mode=document["evidence_mode"],
+            assurance_stage=document["assurance_stage"],
+            scenario_id=document["scenario_id"],
+            source=document["source"],
+            result=document["result"],
+            provenance=document["provenance"],
+            approvals=tuple(document["approvals"]),
+            classification=document["classification"],
         )
 
     def as_dict(self) -> dict[str, Any]:

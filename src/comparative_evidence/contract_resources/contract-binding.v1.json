@@ -1,0 +1,28 @@
+{
+  "binding_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "authority": "driftframestudios/lims-eln-program-specification",
+  "distribution": {
+    "name": "lims-eln-program-specification",
+    "version": "0.3.0",
+    "python_package": "lims_eln_contracts",
+    "state": "source_bound_awaiting_private_distribution"
+  },
+  "runtime_posture": "standalone_bound_snapshot",
+  "next_distribution_state": "installed_version_pinned_package",
+  "resources": {
+    "golden_scenario": {
+      "package_path": "resources/scenarios/golden-specimen.v1.json",
+      "local_path": "contract_resources/golden-specimen.v1.json",
+      "sha256": "sha256:2820e9f9fc59964712abe3c6f26ab4fb71ec15769475a8455f0cd5e34eadb27f",
+      "canonical_digest": "sha256:d383578b8c55facd4613a8915f3f2137f8dfa14b2530ad9829e879c0db3a7261",
+      "validated_model_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9"
+    },
+    "observation_schema": {
+      "package_path": "resources/schemas/observation-envelope.v1.schema.json",
+      "local_path": "contract_resources/observation-envelope.v1.schema.json",
+      "sha256": "sha256:88de7f800a1b705c46a95cc5b5c7ef74092ce31abf02642c23e0701071856282",
+      "canonical_digest": "sha256:954e5a3643a7a139ec1e7bf40d1d356ba49c0be98953310ffce1b24043a4d47f"
+    }
+  }
+}

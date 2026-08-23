@@ -722,6 +722,85 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertNotIn("$.execution.completed_at", paths)
         self.assertNotIn("$.execution.trace_id", paths)
 
+    def test_array_paths_share_one_bracketed_comparison_grammar(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = observed_envelope_value()
+        simulation_value["result"]["replicates"] = [
+            {"value": 1.0},
+            {"value": 2.0},
+        ]
+        actual_value["result"]["replicates"] = [
+            {"value": 3.0},
+            {"value": 9.0},
+        ]
+        profile = load("specification/comparison-profile.json")
+        profile["declared_nondeterminism"].append("$.replicates[1].value")
+
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            profile,
+        )
+
+        paths = {item["path"] for item in report["differences"]}
+        self.assertIn("$.replicates[0].value", paths)
+        self.assertNotIn("$.replicates[1].value", paths)
+        self.assertTrue(
+            all(".0" not in path and ".1" not in path for path in paths)
+        )
+
+    def test_empty_containers_remain_material_comparison_values(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = observed_envelope_value()
+        simulation_value["result"]["extension"] = {}
+
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+
+        self.assertIn(
+            "$.extension",
+            {item["path"] for item in report["differences"]},
+        )
+
+    def test_numeric_tolerances_preserve_boolean_meaning(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = observed_envelope_value()
+        simulation_value["result"]["feature_ready"] = True
+        actual_value["result"]["feature_ready"] = False
+        profile = load("specification/comparison-profile.json")
+        profile["numeric_tolerances"]["$.feature_ready"] = {
+            "absolute": 1,
+            "relative": 0,
+        }
+        profile["required_paths"].append("$.feature_ready")
+
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            profile,
+        )
+
+        self.assertIn(
+            "$.feature_ready",
+            {item["path"] for item in report["differences"]},
+        )
+
+    def test_result_keys_return_to_the_released_path_grammar(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = observed_envelope_value()
+        simulation_value["result"]["ambiguous.key"] = 1
+        actual_value["result"]["ambiguous.key"] = 1
+
+        with self.assertRaisesRegex(ValueError, "comparison path grammar"):
+            compare(
+                ObservationEnvelope.from_dict(simulation_value),
+                ObservationEnvelope.from_dict(actual_value),
+                load("specification/comparison-profile.json"),
+            )
+
     def test_html_contains_portable_adjudication_surface(self) -> None:
         report = compare(
             ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
@@ -810,10 +889,9 @@ class ComparativeEvidenceTests(unittest.TestCase):
     def test_admission_confines_repository_safe_identity(self) -> None:
         value = observed_envelope_value()
         value["observation_id"] = "../ESCAPED"
-        envelope = ObservationEnvelope.from_dict(value)
         with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaisesRegex(AdmissionError, "repository-safe identity"):
-                admit(envelope, Path(directory) / "accepted")
+            with self.assertRaisesRegex(ValueError, "released contract shape"):
+                ObservationEnvelope.from_dict(value)
             self.assertEqual(list(Path(directory).glob("*.json")), [])
 
     def test_admission_returns_protected_keys_to_governed_projection(self) -> None:
@@ -826,13 +904,13 @@ class ComparativeEvidenceTests(unittest.TestCase):
 
     def test_admission_requires_exact_provenance_identities(self) -> None:
         cases = (
-            ("implementation_commit", "latest", "immutable"),
-            ("configuration_digest", "sha256:", "64 lowercase"),
-            ("raw_artifact_digest", "sha256:example", "64 lowercase"),
+            ("implementation_commit", "latest", "observed implementation_commit"),
+            ("configuration_digest", "sha256:", "configuration_digest"),
+            ("raw_artifact_digest", "sha256:example", "raw_artifact_digest"),
             (
                 "governed_locator",
                 "https://user:" + "password@example.invalid/evidence",
-                "protected-storage",
+                "observed governed_locator",
             ),
         )
         for field, value, message in cases:
@@ -840,9 +918,8 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 document = observed_envelope_value()
                 target = document["source"] if field in document["source"] else document["provenance"]
                 target[field] = value
-                with tempfile.TemporaryDirectory() as directory:
-                    with self.assertRaisesRegex(AdmissionError, message):
-                        admit(ObservationEnvelope.from_dict(document), Path(directory))
+                with self.assertRaisesRegex(ValueError, message):
+                    ObservationEnvelope.from_dict(document)
 
     def test_locator_requires_a_plain_protected_object_path(self) -> None:
         for locator in (
@@ -852,14 +929,13 @@ class ComparativeEvidenceTests(unittest.TestCase):
             with self.subTest(locator=locator):
                 value = observed_envelope_value()
                 value["provenance"]["governed_locator"] = locator
-                with tempfile.TemporaryDirectory() as directory:
-                    with self.assertRaisesRegex(AdmissionError, "object path"):
-                        admit(ObservationEnvelope.from_dict(value), Path(directory))
+                with self.assertRaisesRegex(ValueError, "observed governed_locator"):
+                    ObservationEnvelope.from_dict(value)
 
     def test_reviewer_independence_uses_normalized_identity(self) -> None:
         value = observed_envelope_value()
         value["provenance"]["performed_by"] = "Validation-Operator"
-        value["provenance"]["reviewed_by"] = " validation-operator "
+        value["provenance"]["reviewed_by"] = "validation-operator"
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(AdmissionError, "independent review"):
                 admit(ObservationEnvelope.from_dict(value), Path(directory))

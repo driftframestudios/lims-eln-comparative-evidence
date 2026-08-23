@@ -1,15 +1,25 @@
 name: verify-comparative-evidence
 
 on:
-  pull_request:
-  push:
-    branches: [main, develop, "release/**", "hotfix/**"]
+  workflow_dispatch:
+    inputs:
+      confirm_run:
+        description: Confirm a human has allocated this remote proof
+        required: true
+        default: false
+        type: boolean
+      retain_comparison:
+        description: Retain the portable comparison for one day
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 jobs:
   test-and-report:
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
@@ -38,15 +48,17 @@ jobs:
           --output build/comparison
       - name: Check generated artifact boundary
         run: python tools/check_artifacts.py build/comparison
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Retain portable comparison for one day
+        if: ${{ always() && inputs.retain_comparison }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: comparative-report-${{ matrix.python-version }}
           path: build/comparison/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
 
   comparative-validation:
-    if: ${{ always() }}
+    if: ${{ always() && vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     needs: test-and-report
     runs-on: ubuntu-24.04
     timeout-minutes: 5

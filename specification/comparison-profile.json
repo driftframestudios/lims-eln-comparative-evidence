@@ -1,6 +1,6 @@
 {
   "profile_version": "1.2.0",
-  "scenario_id": "SPEC-GOLDEN-SPECIMEN-E2E-001",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
   "required_paths": [
     "$.specimen.specimen_id",
     "$.specimen.tenant_id",
