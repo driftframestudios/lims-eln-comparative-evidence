@@ -22,6 +22,7 @@ from comparative_evidence.database_release import (
 from comparative_evidence.model import ObservationEnvelope, digest, strict_json_loads
 from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
+from check_automation_contract import validate_automation_contract
 from check_artifacts import PATTERNS
 
 
@@ -129,6 +130,30 @@ def main() -> int:
     )
     bundle_summary = validate_simulated_closure_bundle(bundle)
     manifest = _load("release/repository-role.json")
+    if manifest.get("automation_controls") != {
+        "pull_request_workflow": ".github/workflows/pull-request.yml",
+        "pull_request_targets": ["develop", "main"],
+        "pull_request_runner": "ubuntu-24.04",
+        "pull_request_python": "3.12",
+        "pull_request_timeout_minutes": 10,
+        "pull_request_permissions": {"contents": "read"},
+        "pull_request_concurrency_cancellation": True,
+        "manual_full_proof_workflow": ".github/workflows/verify.yml",
+        "dependabot_configuration": ".github/dependabot.yml",
+        "dependabot_target": "develop",
+        "dependabot_interval": "monthly",
+        "dependabot_open_pull_requests_per_ecosystem": 2,
+        "dependabot_grouped_update_types": ["minor", "patch"],
+        "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
+        "settings_state": "pending_source_acceptance_and_observed_check_name",
+    }:
+        raise ValueError(
+            "release automation controls require the bounded hosted source contract"
+        )
+    validate_automation_contract(
+        ROOT,
+        declared_controls=manifest["automation_controls"],
+    )
     profile = _load("specification/comparison-profile.json")
     profile_schema = _load("schemas/comparison-profile.schema.json")
     observation_schema = _load("schemas/observation-envelope.schema.json")
