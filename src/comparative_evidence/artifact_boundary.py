@@ -13,6 +13,7 @@ from .report import render_html
 
 
 REPORT_ARTIFACTS = frozenset({"comparison.json", "comparison.html"})
+O_NOFOLLOW = getattr(os, "O_NOFOLLOW", None)
 BYTE_ORDER_MARKS = (
     b"\x00\x00\xfe\xff",
     b"\xff\xfe\x00\x00",
@@ -137,9 +138,11 @@ def verify_reproducible_reports(first: Path, replay: Path) -> dict[str, str]:
 
 
 def _read_regular_file(path: Path, relative: str) -> bytes:
-    flags = os.O_RDONLY
-    if hasattr(os, "O_NOFOLLOW"):
-        flags |= os.O_NOFOLLOW
+    if O_NOFOLLOW is None:
+        raise ReportArtifactError(
+            "report artifact verification requires operating-system O_NOFOLLOW support"
+        )
+    flags = os.O_RDONLY | O_NOFOLLOW
     try:
         descriptor = os.open(path, flags)
     except OSError as error:

@@ -138,6 +138,12 @@ both outputs. Comparison-profile paths use one canonical object-and-array format
 so a malformed or ambiguous path returns to profile correction before it can be
 treated as missing evidence.
 
+Report artifact verification requires an operating system with `O_NOFOLLOW` support
+and opens each leaf through that descriptor boundary. The report root and its parent
+directory remain deployment-owned coordinates; a deployment that permits concurrent
+directory replacement supplies an additional directory-descriptor or isolation
+boundary before verification begins.
+
 [`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
 defines this comparison boundary and its residual architecture decision.
 

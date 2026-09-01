@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -931,6 +932,16 @@ class ComparativeEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ReportArtifactError, "regular file"):
                 verify_reproducible_reports(first_path, replay_path)
 
+            write_reports(reference_report(), replay_path)
+            with (
+                patch(
+                    "comparative_evidence.artifact_boundary.O_NOFOLLOW",
+                    None,
+                ),
+                self.assertRaisesRegex(ReportArtifactError, "O_NOFOLLOW"),
+            ):
+                verify_reproducible_reports(first_path, replay_path)
+
     def test_profile_rejects_noncanonical_comparison_paths(self) -> None:
         for malformed_path in (
             "$.specimen..status",
@@ -1134,6 +1145,8 @@ class ComparativeEvidenceTests(unittest.TestCase):
         examples = (
             ('{"scenario_id":"A","scenario_id":"B"}', "single definition"),
             ('{"value":Infinity}', "finite representation"),
+            ('{"value":1e400}', "finite representation"),
+            ('{"value":-1e400}', "finite representation"),
         )
         for content, message in examples:
             with self.subTest(message=message), tempfile.TemporaryDirectory() as directory:

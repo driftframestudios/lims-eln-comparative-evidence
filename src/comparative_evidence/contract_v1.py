@@ -60,6 +60,7 @@ def strict_json_loads(content: str | bytes) -> Any:
     return json.loads(
         content,
         parse_constant=_reject_nonfinite,
+        parse_float=_finite_float,
         object_pairs_hook=_unique_object,
     )
 
@@ -68,6 +69,13 @@ def _reject_nonfinite(value: str) -> None:
     raise ContractBoundaryError(
         f"JSON numeric value {value} requires a finite representation"
     )
+
+
+def _finite_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        _reject_nonfinite(value)
+    return parsed
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
