@@ -2,6 +2,8 @@
 
 ## 0.3.1
 
+- Verify isolated JSON and HTML report runs byte for byte, bind source and
+  provenance by digest, and reject ambiguous profile paths before comparison.
 - Recast checked-in counterpart fixtures as planned synthetic contract shapes and
   reserve observed and accepted envelopes for caller input or temporary test data.
 - Add an explicit `compare-synthetic-contract` path for CI and the portable reference

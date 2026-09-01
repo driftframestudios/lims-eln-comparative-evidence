@@ -126,6 +126,14 @@ alignment and release-path alignment remain separate machine-readable judgments,
 equivalent schemas reached through distinct migration systems retain visible
 provenance. Simulated, planned, and caller-supplied observed receipt identities remain
 separate evidence coordinates.
+
+The aggregate repository check creates the JSON and HTML reports twice in isolated
+directories and compares their exact bytes. The report binds each input's source and
+provenance by digest while governed locators and non-reportable values remain outside
+both outputs. Comparison-profile paths use one canonical object-and-array format,
+so a malformed or ambiguous path returns to profile correction before it can be
+treated as missing evidence.
+
 [`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
 defines this comparison boundary and its residual architecture decision.
 

@@ -13,7 +13,7 @@ from .database_release import (
     validate_database_release_coordinate,
 )
 from .model import ObservationEnvelope, digest
-from .normalize import normalize, path_value
+from .normalize import comparison_path_tokens, normalize, path_value
 from .safety import (
     EvidenceSafetyError,
     validate_commit,
@@ -273,6 +273,8 @@ def _compare(
             document["classification"] = "comparison_inconclusive"
             document["comparison"]["authority"] = "synthetic_contract_shape"
 
+    simulation_document = simulation.as_dict()
+    actual_document = actual.as_dict()
     report = {
         "comparator_release": COMPARATOR_RELEASE,
         "comparison_contract_version": COMPARISON_CONTRACT_VERSION,
@@ -284,6 +286,8 @@ def _compare(
             "observation_id": simulation.observation_id,
             "evidence_mode": simulation.evidence_mode,
             "digest": simulation.content_digest,
+            "source_digest": digest(simulation_document["source"]),
+            "provenance_digest": digest(simulation_document["provenance"]),
             "future_reality_version": simulation.source["future_reality_version"],
             "closure_id": simulation.source["closure_id"],
             "governance_closure_digest": simulation.source[
@@ -303,6 +307,8 @@ def _compare(
             "evidence_mode": actual.evidence_mode,
             "assurance_stage": actual.assurance_stage,
             "digest": actual.content_digest,
+            "source_digest": digest(actual_document["source"]),
+            "provenance_digest": digest(actual_document["provenance"]),
             "database_release": actual_database_release.as_dict(),
         },
         "database_release_alignment": database_release_alignment(
@@ -434,6 +440,13 @@ def _validate_profile(profile: dict[str, Any]) -> None:
             or not all(isinstance(path, str) and path.startswith("$.") for path in paths)
         ):
             raise ValueError(f"{field} requires unique released result paths")
+        for path in paths:
+            try:
+                comparison_path_tokens(path)
+            except ValueError as error:
+                raise ValueError(
+                    f"{field} uses the released comparison path grammar: {path!r}"
+                ) from error
     if not isinstance(profile["numeric_tolerances"], dict):
         raise ValueError("numeric_tolerances requires an object")
     if not isinstance(profile["adjudications"], dict):

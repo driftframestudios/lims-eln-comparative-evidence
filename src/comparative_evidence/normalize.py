@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 
-_PATH_TOKEN = re.compile(r"\.([^.[\]]+)|\[([0-9]+)\]")
+_PATH_TOKEN = re.compile(r"\.([^.[\]]+)|\[(0|[1-9][0-9]*)\]")
 
 
 def normalize(value: Any, ignored_paths: set[str], path: str = "$") -> Any:
@@ -26,16 +26,9 @@ def normalize(value: Any, ignored_paths: set[str], path: str = "$") -> Any:
 
 
 def path_value(value: dict[str, Any], path: str) -> Any:
-    if path == "$":
-        return value
-    if not path.startswith("$"):
-        raise ValueError(f"comparison path {path!r} starts at $")
+    tokens = comparison_path_tokens(path)
     current: Any = value
-    position = 1
-    for match in _PATH_TOKEN.finditer(path, position):
-        if match.start() != position:
-            raise ValueError(f"comparison path {path!r} uses the released path grammar")
-        field, index = match.groups()
+    for field, index in tokens:
         if field is not None:
             if not isinstance(current, Mapping):
                 raise TypeError(f"comparison path {path!r} expected an object")
@@ -43,8 +36,36 @@ def path_value(value: dict[str, Any], path: str) -> Any:
         else:
             if not isinstance(current, (list, tuple)):
                 raise TypeError(f"comparison path {path!r} expected an array")
-            current = current[int(index)]
+            if index is None:
+                raise ValueError(
+                    f"comparison path {path!r} uses the released path grammar"
+                )
+            current = current[index]
+    return current
+
+
+def comparison_path_tokens(
+    path: str,
+) -> tuple[tuple[str | None, int | None], ...]:
+    """Parse the released, canonical comparison-path subset."""
+
+    if not isinstance(path, str):
+        raise ValueError("comparison path requires text")
+    if path == "$":
+        return ()
+    if not path.startswith("$"):
+        raise ValueError(f"comparison path {path!r} starts at $")
+    position = 1
+    tokens: list[tuple[str | None, int | None]] = []
+    for match in _PATH_TOKEN.finditer(path, position):
+        if match.start() != position:
+            raise ValueError(f"comparison path {path!r} uses the released path grammar")
+        field, index = match.groups()
+        if field is not None:
+            tokens.append((field, None))
+        else:
+            tokens.append((None, int(index)))
         position = match.end()
     if position != len(path):
         raise ValueError(f"comparison path {path!r} uses the released path grammar")
-    return current
+    return tuple(tokens)
