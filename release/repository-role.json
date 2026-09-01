@@ -114,6 +114,23 @@
     "simulation_commit": "6194a1c3911a97aa5e29b1861819a55554019488",
     "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
   },
+  "automation_controls": {
+    "pull_request_workflow": ".github/workflows/pull-request.yml",
+    "pull_request_targets": ["develop", "main"],
+    "pull_request_runner": "ubuntu-24.04",
+    "pull_request_python": "3.12",
+    "pull_request_timeout_minutes": 10,
+    "pull_request_permissions": {"contents": "read"},
+    "pull_request_concurrency_cancellation": true,
+    "manual_full_proof_workflow": ".github/workflows/verify.yml",
+    "dependabot_configuration": ".github/dependabot.yml",
+    "dependabot_target": "develop",
+    "dependabot_interval": "monthly",
+    "dependabot_open_pull_requests_per_ecosystem": 2,
+    "dependabot_grouped_update_types": ["minor", "patch"],
+    "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
+    "settings_state": "pending_source_acceptance_and_observed_check_name"
+  },
   "promotion_coordinates": {
     "status": "pending_cross_repository_settlement",
     "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",

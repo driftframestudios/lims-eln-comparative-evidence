@@ -2,6 +2,11 @@
 
 ## 0.3.1
 
+- Add one read-only, cancellable Python 3.12 pull-request proof and a monthly,
+  bounded GitHub Actions update stream into `develop`; retain the three-version
+  and portable-report evidence as a confirmed manual proof. Parse those
+  automation sources through a dependency-free semantic contract and bind
+  their effective controls to the release manifest.
 - Verify isolated JSON and HTML report runs byte for byte, bind source and
   provenance by digest, and reject ambiguous profile paths before comparison.
 - Recast checked-in counterpart fixtures as planned synthetic contract shapes and

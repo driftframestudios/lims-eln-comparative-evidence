@@ -1,12 +1,12 @@
-# Activation template: review this schedule, then rename the file to `dependabot.yml`.
-# The manual filename keeps scheduled dependency updates at rest.
+# Monthly version updates enter develop through one small review stream.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: monthly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     groups:
       github-actions-minor-patch:
         patterns:

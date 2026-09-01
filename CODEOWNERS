@@ -12,7 +12,8 @@
 /schemas/ @driftframestudios
 /schemas/simulated-closure-bundle.schema.json @driftframestudios
 /.github/workflows/ @driftframestudios
-/.github/dependabot.manual.yml @driftframestudios
+/.github/dependabot.yml @driftframestudios
+/tools/check_automation_contract.py @driftframestudios
 /tools/check_branch_flow.py @driftframestudios
 /tools/check_artifacts.py @driftframestudios
 /tests/test_branch_flow.py @driftframestudios
