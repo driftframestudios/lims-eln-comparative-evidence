@@ -7,6 +7,10 @@
   source links, the approved benchmark-marker stack, and a complete SHA-256
   projection inventory. Keep canonical origin and CNAME selection with the receiving
   publication route.
+- Bind publication to the claimed GitHub origin and exact regular-file `HEAD` tree,
+  materialize report inputs from committed blobs, run the committed Python source in
+  an isolated worker, and recheck the source before the candidate reaches its fresh
+  destination outside the worktree and Git administration directories.
 - Record the organization as package author metadata while `AUTHORS` retains the
   repository's detailed provenance authority.
 - Add one read-only, cancellable Python 3.12 pull-request proof and a monthly,

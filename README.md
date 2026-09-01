@@ -142,21 +142,26 @@ with byte counts and SHA-256 identities.
 Run the builder from a clean checkout at the exact revision being inspected:
 
 ```bash
-python tools/build_pages.py \
+python -I -S -B tools/build_pages.py \
   --source-revision <40-character-source-revision> \
-  --output .artifacts/pages
+  --output ../lims-eln-comparative-pages
 ```
 
 The default canonical location is the repository's GitHub Pages project path. A
 receiver can supply a verified HTTPS origin and matching CNAME explicitly when the
-publication route is selected. A fresh output directory keeps retained files visible
-and gives each build one complete inventory.
+publication route is selected. The fresh output directory lives outside the source
+worktree, keeps retained files visible, and gives each build one complete inventory.
 
-Immediately before it reads the source fixtures, the builder rechecks the same
-resolved Git worktree and Git directory, exact HEAD, and tracked and untracked state
-that produced the clean-source proof. An isolated, read-only checkout supplies a
-transactional source boundary; a shared writable worktree retains a small scheduling
-interval between that final observation and the subsequent local reads.
+The isolated Python invocation keeps caller package paths, site customization, and
+cached project bytecode outside the publication runtime. The builder clears
+caller-supplied Git redirection and configuration variables, then
+confirms the repository root, origin, private Git directory, exact `HEAD`, index, and
+worktree. Every tracked path must resolve to a regular `HEAD` blob with the same bytes
+and executable bit in the index and worktree. Report inputs and contract resources are
+materialized from those blobs into a temporary source tree outside the checkout. A
+fresh isolated worker loads the committed Python source from that tree. The same source
+identity is rechecked immediately before the complete candidate is moved into its
+destination.
 
 The candidate contains:
 
