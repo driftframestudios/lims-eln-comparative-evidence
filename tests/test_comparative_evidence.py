@@ -8,11 +8,16 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
+from comparative_evidence.artifact_boundary import (
+    ReportArtifactError,
+    verify_reproducible_reports,
+)
 from comparative_evidence.calibration import CalibrationError, score_calibration
 from comparative_evidence.compare import compare, compare_synthetic_contract
 from comparative_evidence.database_release import (
@@ -21,8 +26,8 @@ from comparative_evidence.database_release import (
 from comparative_evidence.cli import _load
 from comparative_evidence import __version__
 from comparative_evidence.gate import AdmissionError, admit
-from comparative_evidence.model import ObservationEnvelope, digest
-from comparative_evidence.report import render_html
+from comparative_evidence.model import ObservationEnvelope, canonical_json, digest
+from comparative_evidence.report import render_html, write_reports
 from comparative_evidence.safety import EvidenceSafetyError
 from comparative_evidence.simulated_closure import (
     SimulatedClosureError,
@@ -833,6 +838,131 @@ class ComparativeEvidenceTests(unittest.TestCase):
             )
         )
 
+    def test_nonreportable_values_remain_digest_bound_in_json_and_html(self) -> None:
+        simulation_value = load("fixtures/pairs/simulation-observation.json")
+        actual_value = observed_envelope_value()
+        simulation_marker = "forecast-only-synthetic-detail"
+        observed_marker = "governed-observed-detail"
+        simulation_value["result"]["unlisted_detail"] = simulation_marker
+        actual_value["result"]["unlisted_detail"] = observed_marker
+        report = compare(
+            ObservationEnvelope.from_dict(simulation_value),
+            ObservationEnvelope.from_dict(actual_value),
+            load("specification/comparison-profile.json"),
+        )
+
+        report_json = canonical_json(report)
+        html = render_html(report)
+        for protected_value in (
+            simulation_marker,
+            observed_marker,
+            actual_value["provenance"]["governed_locator"],
+        ):
+            self.assertNotIn(protected_value, report_json)
+            self.assertNotIn(protected_value, html)
+        self.assertIn(digest(simulation_marker), report_json)
+        self.assertIn(digest(observed_marker), report_json)
+        self.assertEqual(
+            report["actual"]["provenance_digest"],
+            digest(actual_value["provenance"]),
+        )
+
+    def test_isolated_report_runs_are_byte_identical(self) -> None:
+        def reference_report() -> dict:
+            return compare_synthetic_contract(
+                ObservationEnvelope.from_dict(
+                    load("fixtures/pairs/simulation-observation.json")
+                ),
+                ObservationEnvelope.from_dict(planned_contract_value()),
+                load("specification/comparison-profile.json"),
+            )
+
+        with (
+            tempfile.TemporaryDirectory(prefix="comparison-first-") as first,
+            tempfile.TemporaryDirectory(prefix="comparison-replay-") as replay,
+        ):
+            first_path = Path(first)
+            replay_path = Path(replay)
+            write_reports(reference_report(), first_path)
+            write_reports(reference_report(), replay_path)
+            inventory = verify_reproducible_reports(first_path, replay_path)
+
+            self.assertEqual(
+                set(inventory),
+                {"comparison.json", "comparison.html"},
+            )
+
+            (replay_path / "comparison.html").write_text(
+                "<!doctype html>\n<p>changed</p>\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                ReportArtifactError,
+                "human-readable projection",
+            ):
+                verify_reproducible_reports(first_path, replay_path)
+
+            write_reports(reference_report(), replay_path)
+            (replay_path / "comparison.json").write_text(
+                '{"report_digest":"one","report_digest":"two"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ReportArtifactError, "strict JSON"):
+                verify_reproducible_reports(first_path, replay_path)
+
+            for encoding in ("utf-16", "utf-32"):
+                with self.subTest(encoding=encoding):
+                    write_reports(reference_report(), replay_path)
+                    replay_json = replay_path / "comparison.json"
+                    report_text = replay_json.read_text(encoding="utf-8")
+                    replay_json.write_bytes(report_text.encode(encoding))
+                    with self.assertRaisesRegex(ReportArtifactError, "UTF-8"):
+                        verify_reproducible_reports(first_path, replay_path)
+
+            write_reports(reference_report(), replay_path)
+            replay_json = replay_path / "comparison.json"
+            replay_json.write_bytes(b"\xef\xbb\xbf" + replay_json.read_bytes())
+            with self.assertRaisesRegex(ReportArtifactError, "UTF-8"):
+                verify_reproducible_reports(first_path, replay_path)
+
+            write_reports(reference_report(), replay_path)
+            replay_html = replay_path / "comparison.html"
+            replay_html.unlink()
+            replay_html.symlink_to(first_path / "comparison.html")
+            with self.assertRaisesRegex(ReportArtifactError, "regular file"):
+                verify_reproducible_reports(first_path, replay_path)
+
+            write_reports(reference_report(), replay_path)
+            with (
+                patch(
+                    "comparative_evidence.artifact_boundary.O_NOFOLLOW",
+                    None,
+                ),
+                self.assertRaisesRegex(ReportArtifactError, "O_NOFOLLOW"),
+            ):
+                verify_reproducible_reports(first_path, replay_path)
+
+    def test_profile_rejects_noncanonical_comparison_paths(self) -> None:
+        for malformed_path in (
+            "$.specimen..status",
+            "$.replicates[01].value",
+            "$.replicates[one].value",
+        ):
+            with self.subTest(path=malformed_path):
+                profile = load("specification/comparison-profile.json")
+                profile["required_paths"].append(malformed_path)
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "released comparison path grammar",
+                ):
+                    compare_synthetic_contract(
+                        ObservationEnvelope.from_dict(
+                            load("fixtures/pairs/simulation-observation.json")
+                        ),
+                        ObservationEnvelope.from_dict(planned_contract_value()),
+                        profile,
+                    )
+
     def test_simulated_evidence_returns_to_observation_path(self) -> None:
         envelope = ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json"))
         with tempfile.TemporaryDirectory() as directory:
@@ -1015,6 +1145,8 @@ class ComparativeEvidenceTests(unittest.TestCase):
         examples = (
             ('{"scenario_id":"A","scenario_id":"B"}', "single definition"),
             ('{"value":Infinity}', "finite representation"),
+            ('{"value":1e400}', "finite representation"),
+            ('{"value":-1e400}', "finite representation"),
         )
         for content, message in examples:
             with self.subTest(message=message), tempfile.TemporaryDirectory() as directory:

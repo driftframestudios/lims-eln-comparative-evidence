@@ -5,6 +5,10 @@ future with either caller-supplied observed evidence or a planned synthetic cont
 shape. It produces machine-readable JSON and a portable HTML report while preserving
 the original inputs and their authority.
 
+Repository authorship and maintenance provenance is recorded in
+[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
+chronology and contribution credit.
+
 The selected future is definitive within its declared simulation reality. An
 environment encounter is a separate evidence mode that can confirm it, reveal an
 actual gap, expose a simulation fault, improve upon the forecast, or show that
@@ -126,6 +130,20 @@ alignment and release-path alignment remain separate machine-readable judgments,
 equivalent schemas reached through distinct migration systems retain visible
 provenance. Simulated, planned, and caller-supplied observed receipt identities remain
 separate evidence coordinates.
+
+The aggregate repository check creates the JSON and HTML reports twice in isolated
+directories and compares their exact bytes. The report binds each input's source and
+provenance by digest while governed locators and non-reportable values remain outside
+both outputs. Comparison-profile paths use one canonical object-and-array format,
+so a malformed or ambiguous path returns to profile correction before it can be
+treated as missing evidence.
+
+Report artifact verification requires an operating system with `O_NOFOLLOW` support
+and opens each leaf through that descriptor boundary. The report root and its parent
+directory remain deployment-owned coordinates; a deployment that permits concurrent
+directory replacement supplies an additional directory-descriptor or isolation
+boundary before verification begins.
+
 [`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
 defines this comparison boundary and its residual architecture decision.
 

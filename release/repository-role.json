@@ -3,7 +3,7 @@
   "repository_role": "comparative_evidence",
   "repository_release": "0.3.1",
   "external_release": "comparison-v0.3.1",
-  "synthetic_contract_report_digest": "sha256:3d5c131d36fe83a1ba52ab90090ab2cc2497911af651bc3df4755361b74aa371",
+  "synthetic_contract_report_digest": "sha256:6fc8b23c191322e30041b2eb98ed2859046d72b1ee884a5c794c58ebbccc4272",
   "reference_simulation_observation_digest": "sha256:f8b15d60bbc57cc023890b7ca24a007ed58432888646ceb0bc10e7ad0416086e",
   "canonical_governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "simulated_closure_comparison_digest": "sha256:fd0c8ccd99af7fe2ef75a04d9c24cece04f33d4e673f8e57468bfbe43898cd66",

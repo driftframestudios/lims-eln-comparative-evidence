@@ -4,6 +4,7 @@ import json
 from hashlib import sha256
 from pathlib import Path
 import sys
+import tempfile
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
@@ -12,12 +13,14 @@ from jsonschema.exceptions import SchemaError
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from comparative_evidence.artifact_boundary import verify_reproducible_reports
 from comparative_evidence.calibration import score_calibration
 from comparative_evidence.compare import compare_synthetic_contract
 from comparative_evidence.database_release import (
     TRUSTED_SIMULATED_DATABASE_RELEASE,
 )
 from comparative_evidence.model import ObservationEnvelope, digest, strict_json_loads
+from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
 from check_artifacts import PATTERNS
 
@@ -162,6 +165,27 @@ def main() -> int:
         ObservationEnvelope.from_dict(planned_observation),
         profile,
     )
+    replay_report = compare_synthetic_contract(
+        ObservationEnvelope.from_dict(
+            _load("fixtures/pairs/simulation-observation.json")
+        ),
+        ObservationEnvelope.from_dict(
+            _load("fixtures/contracts/planned-observation.json")
+        ),
+        _load("specification/comparison-profile.json"),
+    )
+    with (
+        tempfile.TemporaryDirectory(prefix="comparison-first-") as first_directory,
+        tempfile.TemporaryDirectory(prefix="comparison-replay-") as replay_directory,
+    ):
+        first_path = Path(first_directory)
+        replay_path = Path(replay_directory)
+        write_reports(report, first_path)
+        write_reports(replay_report, replay_path)
+        report_artifact_inventory = verify_reproducible_reports(
+            first_path,
+            replay_path,
+        )
     if report.get("comparison_mode") != "synthetic_contract" or report.get(
         "authority_posture"
     ) != {
@@ -241,6 +265,9 @@ def main() -> int:
                     "comparison_digest"
                 ],
                 "calibration_status": calibration["status"],
+                "report_artifact_inventory_digest": digest(
+                    report_artifact_inventory
+                ),
             },
             sort_keys=True,
         )
