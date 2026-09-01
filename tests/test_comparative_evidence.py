@@ -909,6 +909,21 @@ class ComparativeEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ReportArtifactError, "strict JSON"):
                 verify_reproducible_reports(first_path, replay_path)
 
+            for encoding in ("utf-16", "utf-32"):
+                with self.subTest(encoding=encoding):
+                    write_reports(reference_report(), replay_path)
+                    replay_json = replay_path / "comparison.json"
+                    report_text = replay_json.read_text(encoding="utf-8")
+                    replay_json.write_bytes(report_text.encode(encoding))
+                    with self.assertRaisesRegex(ReportArtifactError, "UTF-8"):
+                        verify_reproducible_reports(first_path, replay_path)
+
+            write_reports(reference_report(), replay_path)
+            replay_json = replay_path / "comparison.json"
+            replay_json.write_bytes(b"\xef\xbb\xbf" + replay_json.read_bytes())
+            with self.assertRaisesRegex(ReportArtifactError, "UTF-8"):
+                verify_reproducible_reports(first_path, replay_path)
+
             write_reports(reference_report(), replay_path)
             replay_html = replay_path / "comparison.html"
             replay_html.unlink()

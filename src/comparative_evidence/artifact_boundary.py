@@ -13,6 +13,13 @@ from .report import render_html
 
 
 REPORT_ARTIFACTS = frozenset({"comparison.json", "comparison.html"})
+BYTE_ORDER_MARKS = (
+    b"\x00\x00\xfe\xff",
+    b"\xff\xfe\x00\x00",
+    b"\xfe\xff",
+    b"\xff\xfe",
+    b"\xef\xbb\xbf",
+)
 
 
 class ReportArtifactError(ValueError):
@@ -39,8 +46,18 @@ def report_artifact_inventory(root: Path) -> dict[str, str]:
             continue
         content = _read_regular_file(path, relative)
         if relative == "comparison.json":
+            if any(content.startswith(marker) for marker in BYTE_ORDER_MARKS):
+                raise ReportArtifactError(
+                    "comparison.json requires UTF-8 text without a byte-order mark"
+                )
             try:
-                document = strict_json_loads(content)
+                json_text = content.decode("utf-8", errors="strict")
+            except UnicodeDecodeError as error:
+                raise ReportArtifactError(
+                    "comparison.json requires UTF-8 text"
+                ) from error
+            try:
+                document = strict_json_loads(json_text)
             except ValueError as error:
                 raise ReportArtifactError(
                     f"comparison.json requires strict JSON: {error}"

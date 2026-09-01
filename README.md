@@ -5,6 +5,10 @@ future with either caller-supplied observed evidence or a planned synthetic cont
 shape. It produces machine-readable JSON and a portable HTML report while preserving
 the original inputs and their authority.
 
+Repository authorship and maintenance provenance is recorded in
+[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
+chronology and contribution credit.
+
 The selected future is definitive within its declared simulation reality. An
 environment encounter is a separate evidence mode that can confirm it, reveal an
 actual gap, expose a simulation fault, improve upon the forecast, or show that
