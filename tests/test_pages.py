@@ -4,27 +4,30 @@ from __future__ import annotations
 
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
+import py_compile
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
+import build_pages as pages_builder
 from build_pages import (
-    BIG_BENCH_CANARY,
     DEFAULT_CANONICAL_ORIGIN,
+    DEFAULT_REPOSITORY_URL,
     MANIFEST_PATH,
-    MAPS_CANARY,
     MANIFEST_FILE_SCOPE,
     MANIFEST_VERSION,
     PagesBuildError,
     PROJECTION_OWNER,
-    PUBLIC_ATTRIBUTION,
     SOURCE_LINK_PATHS,
     ValidationFixtureSourceProof,
     build_projection,
@@ -35,6 +38,11 @@ from build_pages import (
 )
 from comparative_evidence.compare import compare_synthetic_contract
 from comparative_evidence.model import ObservationEnvelope, strict_json_loads
+from comparative_evidence.publication import (
+    BIG_BENCH_CANARY,
+    MAPS_CANARY,
+    PUBLIC_ATTRIBUTION,
+)
 from comparative_evidence.report import write_reports
 
 
@@ -70,7 +78,12 @@ def update_manifest_field(projection: Path, field: str, value: object) -> None:
     )
 
 
-def initialize_git_repository(parent: Path, name: str) -> Path:
+def initialize_git_repository(
+    parent: Path,
+    name: str,
+    *,
+    origin: str = DEFAULT_REPOSITORY_URL + ".git",
+) -> Path:
     repository = parent / name
     repository.mkdir()
     subprocess.run(["git", "init", "--quiet"], cwd=repository, check=True)
@@ -84,10 +97,58 @@ def initialize_git_repository(parent: Path, name: str) -> Path:
         cwd=repository,
         check=True,
     )
+    subprocess.run(
+        ["git", "remote", "add", "origin", origin],
+        cwd=repository,
+        check=True,
+    )
     (repository / "source.txt").write_text("settled\n", encoding="utf-8")
     subprocess.run(["git", "add", "source.txt"], cwd=repository, check=True)
     subprocess.run(
         ["git", "commit", "--quiet", "-m", "settle source"],
+        cwd=repository,
+        check=True,
+    )
+    return repository
+
+
+def initialize_publication_repository(
+    parent: Path,
+    name: str,
+    *,
+    origin: str = DEFAULT_REPOSITORY_URL + ".git",
+) -> Path:
+    repository = parent / name
+    shutil.copytree(
+        ROOT,
+        repository,
+        ignore=shutil.ignore_patterns(
+            ".git",
+            ".artifacts",
+            ".venv",
+            "__pycache__",
+            "*.pyc",
+        ),
+    )
+    subprocess.run(["git", "init", "--quiet"], cwd=repository, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "collaborator@example.invalid"],
+        cwd=repository,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Repository Collaborator"],
+        cwd=repository,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "remote", "add", "origin", origin],
+        cwd=repository,
+        check=True,
+    )
+    subprocess.run(["git", "add", "--all"], cwd=repository, check=True)
+    subprocess.run(
+        ["git", "commit", "--quiet", "-m", "settle publication source"],
         cwd=repository,
         check=True,
     )
@@ -367,7 +428,7 @@ class PagesProjectionTests(unittest.TestCase):
                     expected_revision="b" * 40,
                 )
             (repository / "source.txt").write_text("active\n", encoding="utf-8")
-            with self.assertRaisesRegex(PagesBuildError, "clean worktree"):
+            with self.assertRaisesRegex(PagesBuildError, "differs from exact HEAD"):
                 clean_source_revision(repository)
 
     def test_verified_clean_proof_reobserves_worktree_state_at_build_entry(self) -> None:
@@ -386,7 +447,7 @@ class PagesProjectionTests(unittest.TestCase):
                             "changed\n",
                             encoding="utf-8",
                         )
-                        message = "clean worktree"
+                        message = "differs from exact HEAD"
                     else:
                         (repository / "source.txt").write_text(
                             "next revision\n",
@@ -426,6 +487,384 @@ class PagesProjectionTests(unittest.TestCase):
                     parent / "output-cross-root",
                     source_proof=proof,
                 )
+
+    def test_source_root_and_origin_match_the_claimed_repository(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-identity-") as directory:
+            parent = Path(directory)
+            repository = initialize_git_repository(parent, "repository")
+            nested = repository / "nested"
+            nested.mkdir()
+            with self.assertRaisesRegex(PagesBuildError, "Git worktree root"):
+                clean_source_revision(nested)
+
+            adjacent = initialize_git_repository(
+                parent,
+                "adjacent",
+                origin="https://github.com/driftframestudios/adjacent-evidence.git",
+            )
+            with self.assertRaisesRegex(PagesBuildError, "origin differs"):
+                clean_source_revision(adjacent)
+
+    def test_caller_git_redirection_and_config_are_sanitized(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-git-env-") as directory:
+            parent = Path(directory)
+            repository = initialize_git_repository(parent, "repository")
+            decoy = initialize_git_repository(
+                parent,
+                "decoy",
+                origin="https://github.com/driftframestudios/decoy.git",
+            )
+            caller_config = parent / "caller.gitconfig"
+            caller_config.write_text(
+                "[remote \"origin\"]\n"
+                "\turl = https://github.com/driftframestudios/redirected.git\n",
+                encoding="utf-8",
+            )
+            expected_revision = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            with patch.dict(
+                os.environ,
+                {
+                    "GIT_DIR": str(decoy / ".git"),
+                    "GIT_WORK_TREE": str(decoy),
+                    "GIT_CONFIG": str(caller_config),
+                },
+                clear=False,
+            ):
+                proof = clean_source_revision(repository)
+            self.assertEqual(proof.revision, expected_revision)
+            self.assertEqual(proof.repository_url, DEFAULT_REPOSITORY_URL)
+
+    def test_masked_and_divergent_index_state_returns_to_reconciliation(self) -> None:
+        cases = (
+            ("assume-unchanged", "--assume-unchanged"),
+            ("skip-worktree", "--skip-worktree"),
+        )
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-index-") as directory:
+            parent = Path(directory)
+            for name, flag in cases:
+                with self.subTest(name=name):
+                    repository = initialize_git_repository(parent, name)
+                    subprocess.run(
+                        ["git", "update-index", flag, "source.txt"],
+                        cwd=repository,
+                        check=True,
+                    )
+                    with self.assertRaisesRegex(PagesBuildError, "masked index flags"):
+                        clean_source_revision(repository)
+
+            repository = initialize_git_repository(parent, "staged")
+            (repository / "source.txt").write_text("staged\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "source.txt"],
+                cwd=repository,
+                check=True,
+            )
+            with self.assertRaisesRegex(PagesBuildError, "index differs"):
+                clean_source_revision(repository)
+
+    def test_worktree_executable_mode_matches_the_head_blob(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-mode-") as directory:
+            parent = Path(directory)
+            repository = initialize_git_repository(parent, "repository")
+            os.chmod(repository / "source.txt", 0o755)
+            with self.assertRaisesRegex(PagesBuildError, "executable mode"):
+                clean_source_revision(repository)
+
+            executable = initialize_git_repository(parent, "executable")
+            os.chmod(executable / "source.txt", 0o755)
+            subprocess.run(
+                ["git", "add", "source.txt"],
+                cwd=executable,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "--quiet", "-m", "make source executable"],
+                cwd=executable,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "core.fileMode", "false"],
+                cwd=executable,
+                check=True,
+            )
+            os.chmod(executable / "source.txt", 0o650)
+            with self.assertRaisesRegex(PagesBuildError, "executable mode"):
+                clean_source_revision(executable)
+
+    def test_source_read_rejects_a_fifo_without_waiting_for_a_writer(self) -> None:
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFO creation is unavailable")
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-source-kind-") as directory:
+            repository = initialize_git_repository(Path(directory), "repository")
+            (repository / "source.txt").unlink()
+            os.mkfifo(repository / "source.txt")
+            with self.assertRaisesRegex(PagesBuildError, "regular file bytes"):
+                clean_source_revision(repository)
+
+    def test_source_tree_requires_regular_head_blobs(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-source-kind-") as directory:
+            repository = initialize_git_repository(Path(directory), "repository")
+            (repository / "linked-source.txt").symlink_to("source.txt")
+            subprocess.run(
+                ["git", "add", "linked-source.txt"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "--quiet", "-m", "add linked source"],
+                cwd=repository,
+                check=True,
+            )
+            with self.assertRaisesRegex(PagesBuildError, "regular HEAD blobs"):
+                clean_source_revision(repository)
+
+    def test_pages_output_stays_outside_source_and_matches_proof_origin(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-separation-") as directory:
+            parent = Path(directory)
+            repository = initialize_git_repository(parent, "repository")
+            proof = clean_source_revision(repository)
+            with self.assertRaisesRegex(PagesBuildError, "separate directory trees"):
+                build_projection(
+                    repository,
+                    repository / ".artifacts/pages",
+                    source_proof=proof,
+                )
+            with self.assertRaisesRegex(PagesBuildError, "same repository identity"):
+                build_projection(
+                    repository,
+                    parent / "wrong-links",
+                    source_proof=proof,
+                    repository_url="https://github.com/driftframestudios/adjacent-evidence",
+                )
+
+            linked = parent / "linked"
+            subprocess.run(
+                ["git", "worktree", "add", "--quiet", "--detach", str(linked), "HEAD"],
+                cwd=repository,
+                check=True,
+            )
+            linked_proof = clean_source_revision(linked)
+            for name, protected in (
+                ("private", linked_proof.repository_identity.git_directory),
+                ("common", linked_proof.repository_identity.common_directory),
+            ):
+                with self.subTest(name=name):
+                    with self.assertRaisesRegex(
+                        PagesBuildError,
+                        "Git administration.*separate directory trees",
+                    ):
+                        build_projection(
+                            linked,
+                            protected / "pages-output",
+                            source_proof=linked_proof,
+                        )
+
+    def test_projection_validation_rejects_symlinks_and_special_files(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-artifact-") as directory:
+            parent = Path(directory)
+            projection = self.build(parent, "linked")
+            outside = parent / "outside.css"
+            outside.write_text("body {}\n", encoding="utf-8")
+            stylesheet = projection / "assets/site.css"
+            stylesheet.unlink()
+            stylesheet.symlink_to(outside)
+            with self.assertRaisesRegex(PagesBuildError, "regular files and directories"):
+                validate_projection(projection)
+
+            if hasattr(os, "mkfifo"):
+                projection = self.build(parent, "special")
+                os.mkfifo(projection / "pending.pipe")
+                with self.assertRaisesRegex(
+                    PagesBuildError,
+                    "regular files and directories",
+                ):
+                    validate_projection(projection)
+
+    def test_verified_build_uses_commit_bytes_and_rechecks_before_acceptance(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-commit-") as directory:
+            parent = Path(directory)
+            repository = initialize_publication_repository(parent, "repository")
+            proof = clean_source_revision(repository)
+            output = parent / "accepted"
+            manifest = build_projection(repository, output, source_proof=proof)
+            self.assertEqual(manifest["sourceStanding"], "clean_exact_revision")
+            self.assertEqual(manifest["sourceRevision"], proof.revision)
+            validate_projection(output)
+
+            repository = initialize_publication_repository(parent, "artifact-mutating")
+            proof = clean_source_revision(repository)
+            output = parent / "artifact-held"
+            outside = parent / "outside.css"
+            outside.write_text("body {}\n", encoding="utf-8")
+            original_worker = pages_builder._run_materialized_worker
+
+            def replace_artifact(*args: object, **kwargs: object) -> dict[str, object]:
+                result = original_worker(*args, **kwargs)
+                output_root = args[1]
+                self.assertIsInstance(output_root, Path)
+                stylesheet = output_root / "assets/site.css"
+                stylesheet.unlink()
+                stylesheet.symlink_to(outside)
+                return result
+
+            with patch.object(
+                pages_builder,
+                "_run_materialized_worker",
+                replace_artifact,
+            ):
+                with self.assertRaisesRegex(
+                    PagesBuildError,
+                    "regular files and directories",
+                ):
+                    build_projection(repository, output, source_proof=proof)
+            self.assertFalse(output.exists())
+
+            repository = initialize_publication_repository(parent, "mutating")
+            proof = clean_source_revision(repository)
+            output = parent / "held"
+            source_input = repository / "specification/comparison-profile.json"
+            original_worker = pages_builder._run_materialized_worker
+
+            def mutate_source(*args: object, **kwargs: object) -> dict[str, object]:
+                result = original_worker(*args, **kwargs)
+                source_input.write_text("{}\n", encoding="utf-8")
+                return result
+
+            with patch.object(
+                pages_builder,
+                "_run_materialized_worker",
+                mutate_source,
+            ):
+                with self.assertRaisesRegex(PagesBuildError, "differs from exact HEAD"):
+                    build_projection(repository, output, source_proof=proof)
+            self.assertFalse(output.exists())
+            self.assertFalse(
+                any(path.name.startswith(".held-build-") for path in parent.iterdir())
+            )
+            self.assertFalse(
+                any(
+                    path.name.startswith(".comparative-source-")
+                    for path in parent.iterdir()
+                )
+            )
+
+    def test_verified_build_ignores_untracked_timestamp_valid_bytecode(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-bytecode-") as directory:
+            parent = Path(directory)
+            repository = initialize_publication_repository(parent, "repository")
+            publication = repository / "src/comparative_evidence/publication.py"
+            authentic = publication.read_text(encoding="utf-8")
+            altered = authentic.replace("MAPS EVALS", "FAKE EVALS", 1)
+            self.assertEqual(len(authentic), len(altered))
+            staged_source = parent / "publication.py"
+            staged_source.write_text(altered, encoding="utf-8")
+            source_status = publication.stat()
+            os.utime(
+                staged_source,
+                ns=(source_status.st_atime_ns, source_status.st_mtime_ns),
+            )
+            bytecode = (
+                publication.parent
+                / "__pycache__"
+                / f"publication.{sys.implementation.cache_tag}.pyc"
+            )
+            bytecode.parent.mkdir()
+            py_compile.compile(
+                str(staged_source),
+                cfile=str(bytecode),
+                dfile=str(publication),
+                doraise=True,
+                invalidation_mode=py_compile.PycInvalidationMode.TIMESTAMP,
+            )
+            status = subprocess.run(
+                ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            self.assertEqual(status, "")
+            revision = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            output = parent / "output"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-I",
+                    "-S",
+                    "-B",
+                    str(repository / "tools/build_pages.py"),
+                    "--source-revision",
+                    revision,
+                    "--output",
+                    str(output),
+                ],
+                cwd=repository,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn(MAPS_CANARY, index)
+            self.assertNotIn("FAKE EVALS", index)
+
+    def test_command_repository_url_binds_origin_and_generated_links(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-cli-origin-") as directory:
+            parent = Path(directory)
+            repository_url = (
+                "https://github.com/driftframestudios/comparative-receiver"
+            )
+            repository = initialize_publication_repository(
+                parent,
+                "repository",
+                origin=repository_url + ".git",
+            )
+            revision = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            output = parent / "output"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-I",
+                    "-S",
+                    "-B",
+                    str(repository / "tools/build_pages.py"),
+                    "--source-revision",
+                    revision,
+                    "--repository-url",
+                    repository_url,
+                    "--output",
+                    str(output),
+                ],
+                cwd=repository,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest = json.loads(
+                (output / MANIFEST_PATH).read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["repositoryUrl"], repository_url)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn(f"{repository_url}/blob/{revision}/", index)
 
     def test_personal_attribution_uses_only_approved_carriers(self) -> None:
         authors = (ROOT / "AUTHORS").read_text(encoding="utf-8")
