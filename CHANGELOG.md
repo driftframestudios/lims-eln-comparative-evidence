@@ -2,6 +2,13 @@
 
 ## 0.3.1
 
+- Add a source-owned, standard-library Pages builder that publishes the exact
+  deterministic comparison report beside an accessible discovery page, full-revision
+  source links, the approved benchmark-marker stack, and a complete SHA-256
+  projection inventory. Keep canonical origin and CNAME selection with the receiving
+  publication route.
+- Record the organization as package author metadata while `AUTHORS` retains the
+  repository's detailed provenance authority.
 - Add one read-only, cancellable Python 3.12 pull-request proof and a monthly,
   bounded GitHub Actions update stream into `develop`; retain the three-version
   and portable-report evidence as a confirmed manual proof. Parse those

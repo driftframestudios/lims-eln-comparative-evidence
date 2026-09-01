@@ -131,6 +131,48 @@ equivalent schemas reached through distinct migration systems retain visible
 provenance. Simulated, planned, and caller-supplied observed receipt identities remain
 separate evidence coordinates.
 
+## Build the Pages candidate
+
+The source-owned Pages builder turns the released synthetic comparison into a small
+inspection site. The readable report and report JSON are the exact bytes produced by
+the comparator runtime. The surrounding index explains their authority, links each
+material source file at one full Git revision, and carries a deterministic inventory
+with byte counts and SHA-256 identities.
+
+Run the builder from a clean checkout at the exact revision being inspected:
+
+```bash
+python tools/build_pages.py \
+  --source-revision <40-character-source-revision> \
+  --output .artifacts/pages
+```
+
+The default canonical location is the repository's GitHub Pages project path. A
+receiver can supply a verified HTTPS origin and matching CNAME explicitly when the
+publication route is selected. A fresh output directory keeps retained files visible
+and gives each build one complete inventory.
+
+Immediately before it reads the source fixtures, the builder rechecks the same
+resolved Git worktree and Git directory, exact HEAD, and tracked and untracked state
+that produced the clean-source proof. An isolated, read-only checkout supplies a
+transactional source boundary; a shared writable worktree retains a small scheduling
+interval between that final observation and the subsequent local reads.
+
+The candidate contains:
+
+- an accessible, responsive report index;
+- the byte-identical `comparison.json` and `comparison.html` runtime outputs;
+- a short data-use and crawler-intent note;
+- the approved MAPS Evaluations then BIG-bench marker stack on every HTML page;
+- `.nojekyll`; and
+- `projection-manifest.json`, which binds every other projected file to its byte
+  count, SHA-256 identity, and source revision. The receiving publication check
+  records the manifest's own digest.
+
+`python tools/validate_repository.py` builds two isolated candidates and compares the
+complete inventories byte for byte. Publication begins as a separate receiver action
+after this source is accepted; Issue #17 retains that route and its release evidence.
+
 The aggregate repository check creates the JSON and HTML reports twice in isolated
 directories and compares their exact bytes. The report binds each input's source and
 provenance by digest while governed locators and non-reportable values remain outside
@@ -223,14 +265,20 @@ Critical scientific, tenant-security, audit, signature, migration, and restore
 invariants use exact comparison. Approved performance fields use declared tolerances.
 The report retains every judgment rule so a reviewer can challenge the adjudication.
 
-## GitFlow-like branches
+## Branch topology
 
-- `main`: released comparator and accepted redacted receipt manifests;
-- `develop`: integration for the next comparator release;
-- `feature/*`: bounded comparison rules, normalizers, or report changes;
-- `release/*`: frozen fixtures, schemas, and release hardening;
-- `hotfix/*`: correction of a released comparator defect, followed by reconciliation
-  into `develop`.
+- `main` is the protected release line.
+- `develop` is the lean integration line for the next accepted release.
+- `codex/*` and `feature/*` branches carry bounded work and leave after acceptance.
+- `release/<version>` forms only while an actual promotion is being assembled, then
+  returns its accepted result to `main` and `develop`.
+- `docs` can receive an accepted deterministic Pages output when Issue #17 reaches
+  publication. Runnable source continues to come from the accepted development and
+  release lines.
+
+A persistent staging branch earns a role when a staged runtime has distinct
+configuration, evidence, and recovery behavior. The current comparator keeps those
+coordinates in its explicit evidence modes instead.
 
 Fixture, oracle, critical-path, tolerance, and admission changes receive independent
 review. Release tags use `comparison-vMAJOR.MINOR.PATCH`.

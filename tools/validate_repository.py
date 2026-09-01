@@ -24,6 +24,11 @@ from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
 from check_automation_contract import validate_automation_contract
 from check_artifacts import PATTERNS
+from build_pages import (
+    ValidationFixtureSourceProof,
+    build_projection,
+    verify_reproducible_projections,
+)
 
 
 def _load(relative: str) -> dict:
@@ -211,6 +216,28 @@ def main() -> int:
             first_path,
             replay_path,
         )
+    with (
+        tempfile.TemporaryDirectory(prefix="pages-first-") as first_directory,
+        tempfile.TemporaryDirectory(prefix="pages-replay-") as replay_directory,
+    ):
+        first_pages = Path(first_directory) / "site"
+        replay_pages = Path(replay_directory) / "site"
+        pages_revision = "0" * 40
+        pages_source = ValidationFixtureSourceProof(pages_revision)
+        build_projection(
+            ROOT,
+            first_pages,
+            source_proof=pages_source,
+        )
+        build_projection(
+            ROOT,
+            replay_pages,
+            source_proof=pages_source,
+        )
+        pages_inventory = verify_reproducible_projections(
+            first_pages,
+            replay_pages,
+        )
     if report.get("comparison_mode") != "synthetic_contract" or report.get(
         "authority_posture"
     ) != {
@@ -293,6 +320,7 @@ def main() -> int:
                 "report_artifact_inventory_digest": digest(
                     report_artifact_inventory
                 ),
+                "pages_projection_inventory_digest": digest(pages_inventory),
             },
             sort_keys=True,
         )
