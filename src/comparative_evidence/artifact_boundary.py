@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from html import unescape
 import os
 from pathlib import Path
+import re
 import stat
 
 from .contract_v1 import strict_json_loads
@@ -20,6 +22,9 @@ BYTE_ORDER_MARKS = (
     b"\xfe\xff",
     b"\xff\xfe",
     b"\xef\xbb\xbf",
+)
+CANONICAL_LINK_PATTERN = re.compile(
+    r'<link rel="canonical" href="([^"]+)">'
 )
 
 
@@ -105,8 +110,18 @@ def report_artifact_inventory(root: Path) -> dict[str, str]:
         raise ReportArtifactError(
             "comparison.json requires the digest of its report content"
         )
+    canonical_matches = CANONICAL_LINK_PATTERN.findall(html_document)
+    if len(canonical_matches) > 1:
+        raise ReportArtifactError(
+            "comparison.html requires at most one canonical URL"
+        )
     try:
-        expected_html = render_html(report_document)
+        expected_html = render_html(
+            report_document,
+            canonical_url=(
+                unescape(canonical_matches[0]) if canonical_matches else None
+            ),
+        )
     except (KeyError, TypeError, ValueError) as error:
         raise ReportArtifactError(
             "comparison.json requires the portable report fields"

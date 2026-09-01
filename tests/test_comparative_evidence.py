@@ -820,6 +820,27 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertIn("aligned_target", html)
         self.assertIn(report["report_digest"], html)
 
+    def test_html_contains_a_bounded_keyboard_and_touch_table_scroller(self) -> None:
+        report = compare(
+            ObservationEnvelope.from_dict(load("fixtures/pairs/simulation-observation.json")),
+            ObservationEnvelope.from_dict(observed_envelope_value()),
+            load("specification/comparison-profile.json"),
+        )
+        html = render_html(report)
+        self.assertIn(
+            '<div class="table-scroll" role="region" '
+            'aria-labelledby="adjudication-heading" '
+            'aria-describedby="adjudication-instructions" tabindex="0">',
+            html,
+        )
+        self.assertIn(
+            ".table-scroll { width:100%; max-width:100%; overflow-x:auto;",
+            html,
+        )
+        self.assertIn("overscroll-behavior-inline:contain", html)
+        self.assertIn("-webkit-overflow-scrolling:touch", html)
+        self.assertIn("table { width:100%; min-width:72rem;", html)
+
     def test_report_values_require_explicit_profile_visibility(self) -> None:
         profile = load("specification/comparison-profile.json")
         profile["reportable_paths"] = []
