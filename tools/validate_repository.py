@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
+from hashlib import sha1, sha256
 import json
-from hashlib import sha256
 from pathlib import Path
 import sys
 import tempfile
@@ -166,10 +167,68 @@ def main() -> int:
             promotion_receipt
         ),
     }
+    release_subject = promotion_receipt["release_subject"]
+    if not isinstance(release_subject, dict):
+        raise ValueError("observed promotion requires one immutable release subject")
+    expected_release_subject = {
+        "git_object_format": "sha1",
+        "tag": "comparison-v0.3.1",
+        "tag_object_oid": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+        "commit_oid": "b5c13689a32739d29437e209816bf0cd6a878976",
+        "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+        "archive_format": "git-tar",
+        "archive_digest": (
+            "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
+        ),
+        "promoted_at": "2026-09-02T06:27:41Z",
+        "tag_signature_verification": "valid",
+        "hosted_check_contexts": [
+            {
+                "name": "Repository validation",
+                "run_id": "33597969223",
+                "conclusion": "success",
+            },
+            {
+                "name": "branch-shape",
+                "run_id": "33597969333",
+                "conclusion": "success",
+            },
+        ],
+        "local_verification_signals": [
+            "git rev-parse verified reviewed candidate 59d58c46d27a77150d399870ecebef2635c38dc5 and accepted commit b5c13689a32739d29437e209816bf0cd6a878976 share tree 10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+            "git archive --format=tar comparison-v0.3.1 reproduced sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
+        ],
+    }
+    if release_subject != expected_release_subject:
+        raise ValueError(
+            "promotion receipt requires the reviewed comparison-v0.3.1 release evidence"
+        )
+    carrier_observation_time = "2026-09-02T06:59:11Z"
+    publication_source_name = "accepted-main-observation-carrier"
+    release_commit = release_subject["commit_oid"]
+    golden_report_digest = (
+        "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa"
+    )
     expected_promotion_coordinates = {
-        "status": "candidate_ready",
-        "open_receipt_id": promotion_receipt["promotion_receipt_id"],
+        "status": "settled",
+        "settled_receipt_id": promotion_receipt["promotion_receipt_id"],
+        "receipt_path": "receipts/promotion-receipt.json",
         "candidate_source": promotion_receipt["candidate_source"],
+        "reviewed_candidate": {
+            "commit_oid": "59d58c46d27a77150d399870ecebef2635c38dc5",
+            "tree_oid": release_subject["tree_oid"],
+        },
+        "observed_release": {
+            field: release_subject[field]
+            for field in (
+                "tag",
+                "tag_object_oid",
+                "commit_oid",
+                "tree_oid",
+                "archive_digest",
+                "promoted_at",
+            )
+        },
         "required_roles": [
             "site_reading_governance",
             "program_specification",
@@ -177,6 +236,29 @@ def main() -> int:
             "simulated_final_state",
             "comparative_evidence",
         ],
+    }
+    receipt_file_bytes = (ROOT / "receipts/promotion-receipt.json").read_bytes()
+    receipt_blob_header = f"blob {len(receipt_file_bytes)}\0".encode("ascii")
+    expected_publication_coordinates = {
+        "status": "awaiting_accepted_carrier",
+        "source_coordinate_kind": (
+            "first_parent_main_commit_carrying_receipt_blob"
+        ),
+        "accepted_branch_ref": "refs/remotes/origin/main",
+        "release_subject_commit_oid": release_commit,
+        "receipt_path": "receipts/promotion-receipt.json",
+        "receipt_state": "release_observed",
+        "receipt_blob_oid": sha1(
+            receipt_blob_header + receipt_file_bytes,
+            usedforsecurity=False,
+        ).hexdigest(),
+        "receipt_file_sha256": (
+            "sha256:" + sha256(receipt_file_bytes).hexdigest()
+        ),
+        "publication_revision_role": "pages_source_revision",
+        "projection_manifest_field": "sourceRevision",
+        "receiver_issue": 17,
+        "target_branch": "docs",
     }
     if manifest.get("automation_controls") != {
         "pull_request_workflow": ".github/workflows/pull-request.yml",
@@ -237,6 +319,125 @@ def main() -> int:
         "specification/golden-specimen-verification-profile.json"
     )
     constellation = _load("constellation.lock.json")
+    machine_node = _load("machine-node.json")
+    first_receipt = _load("first-receipt.json")
+    coordination_horizon = _load("COORDINATION-HORIZON.json")
+    expected_comparison_coordinate = {
+        "release": release_subject["tag"],
+        "tag_object_oid": release_subject["tag_object_oid"],
+        "commit": release_subject["commit_oid"],
+        "digest": f"git-tree-sha1:{release_subject['tree_oid']}",
+        "archive_digest": release_subject["archive_digest"],
+        "coordinate_status": "release_observed",
+        "canonical_closure_digest": manifest[
+            "canonical_governance_closure_digest"
+        ],
+        "receipt_schema": manifest["contract_bindings"]["governance_schema"],
+    }
+    if constellation.get("comparison") != expected_comparison_coordinate:
+        raise ValueError(
+            "constellation comparison coordinate requires the observed release subject"
+        )
+    expected_provenance = {
+        "release": release_subject["tag"],
+        "commit": release_subject["commit_oid"],
+        "digest": release_subject["archive_digest"],
+    }
+    campaign_states = {
+        item["campaign_id"]: item["status"]
+        for item in machine_node.get("campaigns", [])
+    }
+    if (
+        machine_node.get("lifecycle_state") != "reference_ready"
+        or machine_node.get("current_provenance") != expected_provenance
+        or machine_node.get("open_receipts") != []
+        or first_receipt.get("open_receipts") != []
+        or campaign_states.get("LIMS-ELN-OPEN-RECEIPTS") != "active"
+    ):
+        raise ValueError(
+            "release observation requires reference-ready provenance and one closed promotion receipt"
+        )
+    if datetime.fromisoformat(carrier_observation_time) <= datetime.fromisoformat(
+        release_subject["promoted_at"]
+    ):
+        raise ValueError(
+            "the observation carrier timestamp follows the signed release promotion"
+        )
+    if (
+        machine_node.get("metadata", {}).get("updated_at")
+        != carrier_observation_time
+        or first_receipt.get("as_of") != carrier_observation_time
+        or first_receipt.get("metadata", {}).get("updated_at")
+        != carrier_observation_time
+        or coordination_horizon.get("as_of") != carrier_observation_time
+        or coordination_horizon.get("metadata", {}).get("updated_at")
+        != carrier_observation_time
+    ):
+        raise ValueError(
+            "control-plane carriers require one later observation timestamp"
+        )
+    horizon_items = {
+        item["item_id"]: item
+        for item in coordination_horizon.get("work_items", [])
+    }
+    publication_sources = [
+        item
+        for item in first_receipt.get("source_permissions", [])
+        if isinstance(item, dict)
+        and item.get("source") == publication_source_name
+    ]
+    publication_item = horizon_items.get("WORK-COMPARATIVE-PUBLICATION-017", {})
+    reentry = coordination_horizon.get("reentry_capsule", {})
+    handoff = first_receipt.get("handoff", {})
+    publication_source = (
+        publication_sources[0] if len(publication_sources) == 1 else {}
+    )
+    source_verification = (
+        publication_source.get("verification", "")
+    )
+    next_action = reentry.get("next_safe_action", "")
+    success_evidence = handoff.get("success_evidence", "")
+    completion_evidence = (
+        publication_item.get("completion_evidence", [])
+        if isinstance(publication_item, dict)
+        else []
+    )
+
+    def meaningful_text(value: object) -> bool:
+        return isinstance(value, str) and len(value.strip()) >= 40
+
+    if (
+        coordination_horizon.get("current_item_ids")
+        != ["WORK-COMPARATIVE-PUBLICATION-017"]
+        or not meaningful_text(coordination_horizon.get("objective"))
+        or horizon_items.get("WORK-COMPARATIVE-PROMOTION-003", {}).get(
+            "state"
+        )
+        != "complete"
+        or not isinstance(publication_item, dict)
+        or publication_item.get("sequence") != 4
+        or publication_item.get("state") != "ready"
+        or publication_item.get("owner_role")
+        != "Comparative evidence publication receiver"
+        or publication_item.get("dependency_ids")
+        != ["WORK-COMPARATIVE-PROMOTION-003"]
+        or len(publication_sources) != 1
+        or publication_source.get("permission") != "execute_bounded"
+        or not meaningful_text(source_verification)
+        or handoff.get("recipient_role") != "GitHub Pages publication receiver"
+        or handoff.get("next_safe_action") != next_action
+        or not meaningful_text(next_action)
+        or not meaningful_text(reentry.get("current_state"))
+        or not meaningful_text(reentry.get("verification"))
+        or not meaningful_text(first_receipt.get("current_horizon_summary"))
+        or not meaningful_text(success_evidence)
+        or not isinstance(completion_evidence, list)
+        or len(completion_evidence) < 3
+        or any(not meaningful_text(value) for value in completion_evidence)
+    ):
+        raise ValueError(
+            "Coordination Horizon requires the typed observation-carrier publication handoff"
+        )
     implementation_golden_path = (
         ROOT / "fixtures/pairs/enterprise-postgresql-observation.json"
     )
@@ -267,6 +468,10 @@ def main() -> int:
         golden_profile,
         constellation,
     )
+    if golden_report.get("report_digest") != golden_report_digest:
+        raise ValueError(
+            "Golden report digest requires the reviewed source-constellation identity"
+        )
     golden_replay_report = compare_golden_specimen(
         validate_golden_specimen_observation(
             _load("fixtures/pairs/enterprise-postgresql-observation.json")
@@ -426,6 +631,11 @@ def main() -> int:
         drift["promotion_coordinates"] = {
             "manifest": manifest.get("promotion_coordinates"),
             "derived": expected_promotion_coordinates,
+        }
+    if manifest.get("publication_coordinates") != expected_publication_coordinates:
+        drift["publication_coordinates"] = {
+            "manifest": manifest.get("publication_coordinates"),
+            "derived": expected_publication_coordinates,
         }
     for label, observation_field in (
         ("implementation", "observation_digest"),

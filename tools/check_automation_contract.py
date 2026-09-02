@@ -21,6 +21,10 @@ CHECKOUT_ACTION = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_ACTION = (
     "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97"
 )
+RELEASE_COORDINATE_COMMAND = (
+    "python tools/verify_release_coordinate.py --require-observed"
+)
+MANUAL_VALIDATION_JOB = "comparative-validation"
 
 
 class AutomationContractError(ValueError):
@@ -237,6 +241,144 @@ def _require_equal(actual: object, expected: object, label: str) -> None:
         )
 
 
+def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
+    """Parse the release-coordinate job without widening the YAML subset.
+
+    The manual workflow includes a folded command and a flow-style matrix in its
+    report-producing job. Those forms remain outside this dependency-free parser's
+    deliberately small grammar. The release-coordinate job uses the restricted
+    grammar, so extract that owned mapping and parse it through the same semantic
+    path as the pull-request workflow.
+    """
+
+    source = MANUAL_FULL_PROOF_WORKFLOW.as_posix()
+    raw_lines = workflow_text.splitlines()
+    jobs_lines = [index for index, line in enumerate(raw_lines) if line == "jobs:"]
+    if len(jobs_lines) != 1:
+        raise AutomationContractError(
+            f"{source}: expected exactly one top-level jobs mapping"
+        )
+
+    jobs_start = jobs_lines[0]
+    jobs_end = len(raw_lines)
+    for index in range(jobs_start + 1, len(raw_lines)):
+        line = raw_lines[index]
+        if line and not line.startswith((" ", "#")):
+            jobs_end = index
+            break
+
+    job_header = f"  {MANUAL_VALIDATION_JOB}:"
+    job_lines = [
+        index
+        for index in range(jobs_start + 1, jobs_end)
+        if raw_lines[index] == job_header
+    ]
+    if len(job_lines) != 1:
+        raise AutomationContractError(
+            f"{source}: expected exactly one {MANUAL_VALIDATION_JOB!r} job"
+        )
+
+    job_start = job_lines[0]
+    job_end = jobs_end
+    for index in range(job_start + 1, jobs_end):
+        line = raw_lines[index]
+        if line and not line.startswith(("    ", "#")):
+            job_end = index
+            break
+
+    fragment = "jobs:\n" + "\n".join(raw_lines[job_start:job_end]) + "\n"
+    document = parse_restricted_yaml(fragment, source=source)
+    jobs = _require_mapping(document.get("jobs"), "manual workflow jobs")
+    _require_exact_keys(jobs, {MANUAL_VALIDATION_JOB}, "manual workflow job fragment")
+    return _require_mapping(
+        jobs[MANUAL_VALIDATION_JOB],
+        f"{MANUAL_VALIDATION_JOB} job",
+    )
+
+
+def _validate_manual_full_proof_workflow(workflow_text: str) -> None:
+    job = _extract_manual_validation_job(workflow_text)
+    _require_exact_keys(
+        job,
+        {"if", "needs", "runs-on", "timeout-minutes", "steps"},
+        f"{MANUAL_VALIDATION_JOB} job",
+    )
+    _require_equal(
+        job["if"],
+        "${{ always() && vars.ENABLE_GITHUB_ACTIONS == 'true' "
+        "&& inputs.confirm_run }}",
+        "manual validation activation boundary",
+    )
+    _require_equal(job["needs"], "test-and-report", "manual validation dependency")
+    _require_equal(job["runs-on"], "ubuntu-24.04", "manual validation runner")
+    _require_equal(job["timeout-minutes"], 5, "manual validation timeout")
+
+    steps = _require_list(job["steps"], "manual validation steps")
+    if len(steps) != 6 or any(not isinstance(step, dict) for step in steps):
+        raise AutomationContractError(
+            "manual comparative-validation requires exactly six mapping steps"
+        )
+    require_matrix, checkout, setup, install, validate, verify_release = steps
+    assert isinstance(require_matrix, dict)
+    assert isinstance(checkout, dict)
+    assert isinstance(setup, dict)
+    assert isinstance(install, dict)
+    assert isinstance(validate, dict)
+    assert isinstance(verify_release, dict)
+
+    _require_equal(
+        require_matrix,
+        {
+            "name": "Require the complete comparative proof matrix",
+            "env": {
+                "TEST_AND_REPORT_RESULT": "${{ needs.test-and-report.result }}",
+            },
+            "run": 'test "$TEST_AND_REPORT_RESULT" = "success"',
+        },
+        "manual matrix-result gate",
+    )
+    _require_equal(
+        checkout,
+        {
+            "uses": CHECKOUT_ACTION,
+            "with": {"persist-credentials": False, "fetch-depth": 0},
+        },
+        "manual validation checkout",
+    )
+    _require_equal(
+        setup,
+        {
+            "uses": SETUP_PYTHON_ACTION,
+            "with": {"python-version": "3.13"},
+        },
+        "manual validation Python setup",
+    )
+    _require_equal(
+        install,
+        {
+            "name": "Install released schema validation support",
+            "run": 'python -m pip install --disable-pip-version-check --editable ".[validation]"',
+        },
+        "manual validation-support installation step",
+    )
+    _require_equal(
+        validate,
+        {
+            "name": "Validate released evidence, calibration posture, and repository safety",
+            "run": "python tools/validate_repository.py",
+        },
+        "manual aggregate validation step",
+    )
+    _require_equal(
+        verify_release,
+        {
+            "name": "Verify signed release coordinate",
+            "run": RELEASE_COORDINATE_COMMAND,
+        },
+        "manual signed-release verification step",
+    )
+
+
 def _validate_pull_request_workflow(document: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(
         document,
@@ -272,22 +414,23 @@ def _validate_pull_request_workflow(document: Mapping[str, object]) -> dict[str,
     _require_equal(job["timeout-minutes"], 10, "job timeout")
 
     steps = _require_list(job["steps"], "repository-validation steps")
-    if len(steps) != 5 or any(not isinstance(step, dict) for step in steps):
-        raise AutomationContractError("repository-validation requires exactly five mapping steps")
-    checkout, setup, install, test, validate = steps
+    if len(steps) != 6 or any(not isinstance(step, dict) for step in steps):
+        raise AutomationContractError("repository-validation requires exactly six mapping steps")
+    checkout, setup, install, test, validate, verify_release = steps
     assert isinstance(checkout, dict)
     assert isinstance(setup, dict)
     assert isinstance(install, dict)
     assert isinstance(test, dict)
     assert isinstance(validate, dict)
+    assert isinstance(verify_release, dict)
 
     _require_exact_keys(checkout, {"name", "uses", "with"}, "checkout step")
     _require_equal(checkout["name"], "Check out source", "checkout step name")
     _require_equal(checkout["uses"], CHECKOUT_ACTION, "checkout action")
     _require_equal(
         checkout["with"],
-        {"persist-credentials": False},
-        "checkout credential persistence",
+        {"persist-credentials": False, "fetch-depth": 0},
+        "checkout credential persistence and history depth",
     )
 
     _require_exact_keys(setup, {"name", "uses", "with"}, "setup-python step")
@@ -322,6 +465,14 @@ def _validate_pull_request_workflow(document: Mapping[str, object]) -> dict[str,
             "run": "python tools/validate_repository.py",
         },
         "aggregate validation step",
+    )
+    _require_equal(
+        verify_release,
+        {
+            "name": "Verify signed release coordinate",
+            "run": RELEASE_COORDINATE_COMMAND,
+        },
+        "signed-release verification step",
     )
 
     return {
@@ -398,6 +549,7 @@ def validate_automation_documents(
     workflow_text: str,
     dependabot_text: str,
     *,
+    manual_workflow_text: str,
     declared_controls: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     """Validate source text and return the controls derived from its semantics."""
@@ -410,6 +562,7 @@ def validate_automation_documents(
         dependabot_text,
         source=DEPENDABOT_CONFIGURATION.as_posix(),
     )
+    _validate_manual_full_proof_workflow(manual_workflow_text)
     controls = {
         **_validate_pull_request_workflow(workflow),
         "manual_full_proof_workflow": MANUAL_FULL_PROOF_WORKFLOW.as_posix(),
@@ -446,6 +599,9 @@ def validate_automation_contract(
     return validate_automation_documents(
         (root / PULL_REQUEST_WORKFLOW).read_text(encoding="utf-8"),
         (root / DEPENDABOT_CONFIGURATION).read_text(encoding="utf-8"),
+        manual_workflow_text=(root / MANUAL_FULL_PROOF_WORKFLOW).read_text(
+            encoding="utf-8"
+        ),
         declared_controls=declared_controls,
     )
 

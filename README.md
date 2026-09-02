@@ -209,18 +209,29 @@ The candidate contains:
   records the manifest's own digest.
 
 `python tools/validate_repository.py` builds two isolated candidates and compares the
-complete inventories byte for byte. Publication begins as a separate receiver action
-after this source is accepted; Issue #17 retains that route and its release evidence.
+complete inventories byte for byte. Publication begins as a separate receiver action.
+The signed tag `comparison-v0.3.1` at
+`b5c13689a32739d29437e209816bf0cd6a878976` remains the immutable release subject.
+After this receipt-closing change reaches `main`, the receiver walks accepted main's
+first-parent history after the release subject and selects the first commit whose
+`receipts/promotion-receipt.json` blob is
+`4b2f41fe86fb4050d2d3f7da984baa78463c0c12`. That stable commit becomes
+`accepted-main-observation-carrier`: Issue #17 records its full identity before the
+Pages builder receives it as `--source-revision`. The Issue also retains the
+canonical-origin, CNAME, and publication-acceptance decisions.
 
-The promotion receipt currently records a reviewed candidate source and keeps the
-release subject empty. After the accepted tree receives its signed tag, the same
-receipt can record the observed tag, commit, tree, archive, hosted checks, and local
-verification without changing the comparison's simulated authority.
+The promotion receipt records the observed signed `comparison-v0.3.1` release: its
+tag object, accepted commit and tree, reproducible archive, and successful hosted
+checks. The reviewed candidate and accepted merge share one Git tree. This release
+observation closes the repository promotion receipt while the comparison keeps its
+simulated authority, separate environment-observed path, and zero production
+authorization effect.
 
 The Golden report identity includes the accepted Program, Governance, Enterprise,
-and Simulation source coordinates. The Comparator's own release coordinate remains a
-separate receiving record, so observing the signed release can preserve the report
-bytes that were already reviewed.
+and Simulation source coordinates. The Comparator's signed release subject remains a
+separate receiving record, while the later accepted main observation carrier supplies
+the publication source. This relationship preserves the reviewed Golden report digest
+`sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa`.
 
 The aggregate repository check creates the JSON and HTML reports twice in isolated
 directories and compares their exact bytes. The report binds each input's source and
@@ -294,7 +305,10 @@ repository-wide credential-shape scan after the complete Python test matrix succ
 completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
 [`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
-orientation-only entry surfaces; neither artifact authorizes runtime effects.
+orientation-only entry surfaces; neither artifact authorizes runtime effects. The
+promotion work item is complete. The current re-entry route resolves the later
+accepted main observation carrier after the receipt-closing change reaches `main`,
+then hands that exact source revision to Issue #17's bounded GitHub Pages receiver.
 
 ## Comparative literacy
 
