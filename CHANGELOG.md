@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Add a copy-local collaboration workbench for repository re-entry, source
+  authority mapping, deterministic report projection, and contextual language
+  review. Keep each skill public-possible while repository use and review
+  establish whether it is ready for a separate public projection.
+- Reconcile living orientation with the accepted main observation carrier,
+  deterministic docs revision, canonical public origin, and closed Issue #17
+  while preserving the signed release and report identities.
+- Align local Python examples and branch guidance with the repository's current
+  executable contracts.
+
 ## 0.3.1
 
 - Add a named Golden Specimen verification that validates both producer envelopes

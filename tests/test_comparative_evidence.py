@@ -1355,7 +1355,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 coordination_horizon["as_of"],
                 coordination_horizon["metadata"]["updated_at"],
             },
-            {"2026-09-02T06:59:11Z"},
+            {"2026-09-02T17:18:30Z"},
         )
         source_permissions = {
             item["source"]: item for item in first_receipt["source_permissions"]
@@ -1363,7 +1363,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         publication_source = source_permissions[
             "accepted-main-observation-carrier"
         ]
-        self.assertEqual(publication_source["permission"], "execute_bounded")
+        self.assertEqual(publication_source["permission"], "read")
         self.assertGreaterEqual(len(publication_source["verification"].strip()), 40)
         self.assertEqual(
             coordination_horizon["reentry_capsule"]["next_safe_action"],
@@ -1387,7 +1387,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
             for item in coordination_horizon["work_items"]
             if item["item_id"] == "WORK-COMPARATIVE-PUBLICATION-017"
         )
-        self.assertEqual(publication_item["state"], "ready")
+        self.assertEqual(publication_item["state"], "complete")
         self.assertGreaterEqual(len(publication_item["completion_evidence"]), 3)
         self.assertEqual(
             manifest["promotion_coordinates"]["settled_receipt_id"],
@@ -1395,7 +1395,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["publication_coordinates"]["source_coordinate_kind"],
-            "first_parent_main_commit_carrying_receipt_blob",
+            "accepted_main_publication_carrier",
         )
         self.assertEqual(
             manifest["publication_coordinates"]["receipt_blob_oid"],
