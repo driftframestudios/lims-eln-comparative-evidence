@@ -1,7 +1,7 @@
 {
   "constellation_version": "0.3.1",
   "recorded_at": "2026-09-02",
-  "content_identity": "Accepted Program, Governance, Enterprise, and Simulation coordinates remain distinct from the pending Comparative promotion; the Comparator-owned durable snapshot and accepted selected-future observation retain exact SHA-256 bindings.",
+  "content_identity": "Accepted Program, Governance, Enterprise, and Simulation coordinates remain distinct from the observed Comparative release; the Comparator-owned durable snapshot and accepted selected-future observation retain exact SHA-256 bindings.",
   "specification": {
     "release": null,
     "package_version": "0.3.1",
@@ -46,9 +46,11 @@
   },
   "comparison": {
     "release": "comparison-v0.3.1",
-    "commit": "0000000000000000000000000000000000000000",
-    "digest": "git-tree-sha1:0000000000000000000000000000000000000000",
-    "coordinate_status": "pending_release_commit",
+    "tag_object_oid": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+    "commit": "b5c13689a32739d29437e209816bf0cd6a878976",
+    "digest": "git-tree-sha1:10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+    "archive_digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
+    "coordinate_status": "release_observed",
     "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
     "receipt_schema": "2.0.1"
   },

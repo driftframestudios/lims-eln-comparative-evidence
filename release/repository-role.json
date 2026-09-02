@@ -15,8 +15,9 @@
   "canonical_closure_bundle_file_sha256": "sha256:a72810e850c88f7a06c6e86fb94c1026a22d859089ee70ef31d4413b086fd098",
   "golden_specimen_verification": {
     "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
-    "report_digest": "sha256:4e3fb5a2725eb4dedbfb821ec3852c18423472d723576fccbf2a2eb29c4195f4",
-    "constellation_lock_digest": "sha256:38a1ebaa603706fcdf0a2f8674411980aff329d973ec8a2d57ac27123492b9bb",
+    "report_digest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
+    "constellation_lock_digest": "sha256:044058e9cabe10c5c7569fb0707ac3338b4c30aee7f8d6b2f2f3f7fdf2f49c98",
+    "source_constellation_digest": "sha256:8048a485b443469f98350c26dbea4fd4067371e619ed210dec5fd61a3ecdf9d4",
     "classification_counts": {
       "agreement": 10,
       "explainable_variation": 4,
@@ -85,6 +86,13 @@
     "environment_observed_closure": "separate_unasserted_state",
     "production_authorization_effect": "none",
     "observed_admission_status": "caller_supplied_only_unexercised"
+  },
+  "promotion_receipt_contract": {
+    "schema_path": "schemas/promotion-receipt.schema.json",
+    "schema_version": "1.0.0",
+    "schema_file_sha256": "sha256:8ebce65f823acb91b459049b2692bf05261c78d5346034e9603319c85de1b594",
+    "receipt_path": "receipts/promotion-receipt.json",
+    "receipt_canonical_json_digest": "sha256:b9ae327dec49bff8e38a72e180f6b77752119c61f295d60f1d80e1046537445d"
   },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
@@ -160,8 +168,26 @@
     "settings_state": "pending_source_acceptance_and_observed_check_name"
   },
   "promotion_coordinates": {
-    "status": "pending_cross_repository_settlement",
-    "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
+    "status": "settled",
+    "settled_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
+    "receipt_path": "receipts/promotion-receipt.json",
+    "candidate_source": {
+      "coordinate_kind": "accepted_develop_merge_source",
+      "commit_oid": "daae956379cf00f5008672d19765aee6bec7eb4a",
+      "tree_oid": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
+    },
+    "reviewed_candidate": {
+      "commit_oid": "59d58c46d27a77150d399870ecebef2635c38dc5",
+      "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b"
+    },
+    "observed_release": {
+      "tag": "comparison-v0.3.1",
+      "tag_object_oid": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+      "commit_oid": "b5c13689a32739d29437e209816bf0cd6a878976",
+      "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+      "archive_digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
+      "promoted_at": "2026-09-02T06:27:41Z"
+    },
     "required_roles": [
       "site_reading_governance",
       "program_specification",
@@ -169,5 +195,19 @@
       "simulated_final_state",
       "comparative_evidence"
     ]
+  },
+  "publication_coordinates": {
+    "status": "awaiting_accepted_carrier",
+    "source_coordinate_kind": "first_parent_main_commit_carrying_receipt_blob",
+    "accepted_branch_ref": "refs/remotes/origin/main",
+    "release_subject_commit_oid": "b5c13689a32739d29437e209816bf0cd6a878976",
+    "receipt_path": "receipts/promotion-receipt.json",
+    "receipt_state": "release_observed",
+    "receipt_blob_oid": "4b2f41fe86fb4050d2d3f7da984baa78463c0c12",
+    "receipt_file_sha256": "sha256:733261cf52339f7f6b3e650302ab4b8b51c37eef57c752b0f5e2d2c4e27485ff",
+    "publication_revision_role": "pages_source_revision",
+    "projection_manifest_field": "sourceRevision",
+    "receiver_issue": 17,
+    "target_branch": "docs"
   }
 }

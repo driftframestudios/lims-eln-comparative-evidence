@@ -163,11 +163,12 @@ separate evidence coordinates.
 
 ## Build the Pages candidate
 
-The source-owned Pages builder turns the released synthetic comparison into a small
-inspection site. The readable report and report JSON are the exact bytes produced by
-the comparator runtime. The surrounding index explains their authority, links each
-material source file at one full Git revision, and carries a deterministic inventory
-with byte counts and SHA-256 identities.
+The repository's Pages builder turns both synthetic comparison routes into a small
+inspection site. The Golden Specimen result is the primary reading path, and the
+contract-shape reference remains available beside it. Each readable report and JSON
+file preserves the exact bytes produced by the comparator. The surrounding index
+explains what each report establishes, links every material source file at one full
+Git revision, and records each projected file's byte count and SHA-256 identity.
 
 Run the builder from a clean checkout at the exact revision being inspected:
 
@@ -196,7 +197,10 @@ destination.
 The candidate contains:
 
 - an accessible, responsive report index;
-- the byte-identical `comparison.json` and `comparison.html` runtime outputs;
+- the byte-identical Golden Specimen `comparison.json` and `comparison.html` runtime
+  outputs as the primary inspection route;
+- the byte-identical contract-shape reference report as a separate comparison
+  exercise;
 - a short data-use and crawler-intent note;
 - the approved MAPS Evaluations then BIG-bench marker stack on every HTML page;
 - `.nojekyll`; and
@@ -205,8 +209,29 @@ The candidate contains:
   records the manifest's own digest.
 
 `python tools/validate_repository.py` builds two isolated candidates and compares the
-complete inventories byte for byte. Publication begins as a separate receiver action
-after this source is accepted; Issue #17 retains that route and its release evidence.
+complete inventories byte for byte. Publication begins as a separate receiver action.
+The signed tag `comparison-v0.3.1` at
+`b5c13689a32739d29437e209816bf0cd6a878976` remains the immutable release subject.
+After this receipt-closing change reaches `main`, the receiver walks accepted main's
+first-parent history after the release subject and selects the first commit whose
+`receipts/promotion-receipt.json` blob is
+`4b2f41fe86fb4050d2d3f7da984baa78463c0c12`. That stable commit becomes
+`accepted-main-observation-carrier`: Issue #17 records its full identity before the
+Pages builder receives it as `--source-revision`. The Issue also retains the
+canonical-origin, CNAME, and publication-acceptance decisions.
+
+The promotion receipt records the observed signed `comparison-v0.3.1` release: its
+tag object, accepted commit and tree, reproducible archive, and successful hosted
+checks. The reviewed candidate and accepted merge share one Git tree. This release
+observation closes the repository promotion receipt while the comparison keeps its
+simulated authority, separate environment-observed path, and zero production
+authorization effect.
+
+The Golden report identity includes the accepted Program, Governance, Enterprise,
+and Simulation source coordinates. The Comparator's signed release subject remains a
+separate receiving record, while the later accepted main observation carrier supplies
+the publication source. This relationship preserves the reviewed Golden report digest
+`sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa`.
 
 The aggregate repository check creates the JSON and HTML reports twice in isolated
 directories and compares their exact bytes. The report binds each input's source and
@@ -280,7 +305,10 @@ repository-wide credential-shape scan after the complete Python test matrix succ
 completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
 [`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
-orientation-only entry surfaces; neither artifact authorizes runtime effects.
+orientation-only entry surfaces; neither artifact authorizes runtime effects. The
+promotion work item is complete. The current re-entry route resolves the later
+accepted main observation carrier after the receipt-closing change reaches `main`,
+then hands that exact source revision to Issue #17's bounded GitHub Pages receiver.
 
 ## Comparative literacy
 

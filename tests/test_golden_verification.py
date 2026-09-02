@@ -153,6 +153,18 @@ def observation(*, producer: str) -> dict:
 def constellation() -> dict:
     return {
         "constellation_version": "0.3.1",
+        "specification": {
+            "package_version": "0.3.1",
+            "commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+            "digest": "git-tree-sha1:887e2c12a699105994097e4e9094270453de16ba",
+            "coordinate_status": "accepted_package_source",
+        },
+        "governance": {
+            "release": "governance-v2.1.0",
+            "commit": "8469c2a6b2c7f4445523cee262b961ffe3d2523b",
+            "digest": "git-tree-sha1:aed5d57120e15ceabe77d7bba700a43097200b19",
+            "coordinate_status": "release_observed",
+        },
         "implementation": {
             "release": "v0.3.1",
             "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
@@ -180,6 +192,12 @@ def constellation() -> dict:
                 observation(producer="simulation")
             ),
             "projection_digest": canonical_digest(simulation_projection()),
+        },
+        "comparison": {
+            "release": "comparison-v0.3.1",
+            "commit": "0" * 40,
+            "digest": "git-tree-sha1:" + "0" * 40,
+            "coordinate_status": "pending_release_commit",
         },
     }
 
@@ -303,7 +321,49 @@ class GoldenSpecimenVerificationTests(unittest.TestCase):
             report["simulation"]["coordinate"],
             coordinate["simulation"],
         )
-        self.assertEqual(report["constellation_digest"], canonical_digest(coordinate))
+        source_constellation = {
+            "constellation_version": coordinate["constellation_version"],
+            **{
+                role: coordinate[role]
+                for role in (
+                    "specification",
+                    "governance",
+                    "implementation",
+                    "simulation",
+                )
+            },
+        }
+        self.assertEqual(
+            report["source_constellation_digest"],
+            canonical_digest(source_constellation),
+        )
+
+    def test_receiving_coordinate_stays_outside_source_report_identity(self) -> None:
+        pending = constellation()
+        accepted = deepcopy(pending)
+        accepted["comparison"] = {
+            "release": "comparison-v0.3.1",
+            "commit": "a" * 40,
+            "digest": "git-tree-sha1:" + "b" * 40,
+            "coordinate_status": "release_observed",
+        }
+
+        pending_report = self.compare(constellation_value=pending)
+        accepted_report = self.compare(constellation_value=accepted)
+
+        self.assertEqual(pending_report, accepted_report)
+
+        changed_source = deepcopy(pending)
+        changed_source["governance"]["commit"] = "c" * 40
+        changed_source_report = self.compare(constellation_value=changed_source)
+        self.assertNotEqual(
+            pending_report["source_constellation_digest"],
+            changed_source_report["source_constellation_digest"],
+        )
+        self.assertNotEqual(
+            pending_report["report_digest"],
+            changed_source_report["report_digest"],
+        )
 
     def test_profile_is_exactly_the_closed_seventeen_leaf_contract(self) -> None:
         missing = deepcopy(self.profile)

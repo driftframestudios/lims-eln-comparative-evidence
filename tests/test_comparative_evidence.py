@@ -1309,12 +1309,12 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             machine_node["current_provenance"],
             {
-                "release": "candidate-comparison-v0.3.1",
-                "commit": "0" * 40,
-                "digest": "sha256:" + ("0" * 64),
+                "release": "comparison-v0.3.1",
+                "commit": "b5c13689a32739d29437e209816bf0cd6a878976",
+                "digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
             },
         )
-        self.assertEqual(machine_node["lifecycle_state"], "settling")
+        self.assertEqual(machine_node["lifecycle_state"], "reference_ready")
         self.assertEqual(
             {
                 (item["campaign_id"], item["marking_schema_version"])
@@ -1328,11 +1328,33 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             machine_node["open_receipts"],
-            ["RCP-COMPARATIVE-PROMOTION-003"],
+            [],
         )
         self.assertEqual(
             first_receipt["open_receipts"],
             machine_node["open_receipts"],
+        )
+        self.assertEqual(
+            {
+                machine_node["metadata"]["updated_at"],
+                first_receipt["as_of"],
+                first_receipt["metadata"]["updated_at"],
+                coordination_horizon["as_of"],
+                coordination_horizon["metadata"]["updated_at"],
+            },
+            {"2026-09-02T06:59:11Z"},
+        )
+        source_permissions = {
+            item["source"]: item for item in first_receipt["source_permissions"]
+        }
+        publication_source = source_permissions[
+            "accepted-main-observation-carrier"
+        ]
+        self.assertEqual(publication_source["permission"], "execute_bounded")
+        self.assertGreaterEqual(len(publication_source["verification"].strip()), 40)
+        self.assertEqual(
+            coordination_horizon["reentry_capsule"]["next_safe_action"],
+            first_receipt["handoff"]["next_safe_action"],
         )
         promotion_items = {
             item["item_id"]: item
@@ -1341,15 +1363,34 @@ class ComparativeEvidenceTests(unittest.TestCase):
         }
         self.assertEqual(
             coordination_horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PROMOTION-003"],
+            ["WORK-COMPARATIVE-PUBLICATION-017"],
         )
         self.assertEqual(
             promotion_items["WORK-COMPARATIVE-PROMOTION-003"]["state"],
-            "settling",
+            "complete",
+        )
+        publication_item = next(
+            item
+            for item in coordination_horizon["work_items"]
+            if item["item_id"] == "WORK-COMPARATIVE-PUBLICATION-017"
+        )
+        self.assertEqual(publication_item["state"], "ready")
+        self.assertGreaterEqual(len(publication_item["completion_evidence"]), 3)
+        self.assertEqual(
+            manifest["promotion_coordinates"]["settled_receipt_id"],
+            "RCP-COMPARATIVE-PROMOTION-003",
         )
         self.assertEqual(
-            manifest["promotion_coordinates"]["open_receipt_id"],
-            machine_node["open_receipts"][0],
+            manifest["publication_coordinates"]["source_coordinate_kind"],
+            "first_parent_main_commit_carrying_receipt_blob",
+        )
+        self.assertEqual(
+            manifest["publication_coordinates"]["receipt_blob_oid"],
+            "4b2f41fe86fb4050d2d3f7da984baa78463c0c12",
+        )
+        self.assertEqual(
+            manifest["publication_coordinates"]["release_subject_commit_oid"],
+            machine_node["current_provenance"]["commit"],
         )
         vocabulary_binding = manifest["external_contract_bindings"][
             "receipt_family_vocabulary_map"
