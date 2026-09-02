@@ -1,0 +1,32 @@
+{
+  "$schema": "../schemas/promotion-receipt.schema.json",
+  "schema_version": "1.0.0",
+  "promotion_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
+  "repository": "driftframestudios/lims-eln-comparative-evidence",
+  "target_release": "comparison-v0.3.1",
+  "promotion_state": "candidate_ready",
+  "release_event_evidence": {
+    "evidence_mode": "planned",
+    "assurance_stage": "specified"
+  },
+  "comparison_authority": {
+    "evidence_mode": "simulated",
+    "assurance_stage": "verified",
+    "comparison_mode": "simulated_verification",
+    "environment_observed_closure": "separate_unasserted_state",
+    "production_authorization_effect": "none"
+  },
+  "candidate_source": {
+    "coordinate_kind": "accepted_develop_merge_source",
+    "commit_oid": "daae956379cf00f5008672d19765aee6bec7eb4a",
+    "tree_oid": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
+  },
+  "release_subject": null,
+  "required_evidence": [
+    "Repository validation reproduces both deterministic comparison bundles and the complete Pages artifact inventory.",
+    "The reviewed release candidate and accepted main merge resolve to one Git tree.",
+    "The signed annotated release tag identifies the accepted main merge and its reproducible Git archive.",
+    "The promotion observation retains simulated-verification authority, a separate environment-observed path, and no production authorization."
+  ],
+  "accountable_role": "Comparative evidence release stewardship"
+}

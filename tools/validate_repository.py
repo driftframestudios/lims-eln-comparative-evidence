@@ -25,6 +25,11 @@ from comparative_evidence.database_release import (
 )
 from comparative_evidence.model import ObservationEnvelope, digest, strict_json_loads
 from comparative_evidence.golden_verification import compare_golden_specimen
+from comparative_evidence.promotion_receipt import (
+    canonical_digest as promotion_receipt_digest,
+    file_digest as promotion_file_digest,
+    validate_promotion_receipt,
+)
 from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
 from check_automation_contract import validate_automation_contract
@@ -140,6 +145,39 @@ def main() -> int:
     )
     bundle_summary = validate_simulated_closure_bundle(bundle)
     manifest = _load("release/repository-role.json")
+    promotion_schema_path = ROOT / "schemas/promotion-receipt.schema.json"
+    promotion_receipt_path = ROOT / "receipts/promotion-receipt.json"
+    promotion_schema = _load("schemas/promotion-receipt.schema.json")
+    promotion_receipt = _load("receipts/promotion-receipt.json")
+    validate_json_contract(
+        schema=promotion_schema,
+        instance=promotion_receipt,
+        version_property="schema_version",
+        expected_version="1.0.0",
+        contract_name="promotion receipt",
+    )
+    validate_promotion_receipt(promotion_receipt)
+    expected_promotion_binding = {
+        "schema_path": "schemas/promotion-receipt.schema.json",
+        "schema_version": "1.0.0",
+        "schema_file_sha256": promotion_file_digest(promotion_schema_path),
+        "receipt_path": "receipts/promotion-receipt.json",
+        "receipt_canonical_json_digest": promotion_receipt_digest(
+            promotion_receipt
+        ),
+    }
+    expected_promotion_coordinates = {
+        "status": "candidate_ready",
+        "open_receipt_id": promotion_receipt["promotion_receipt_id"],
+        "candidate_source": promotion_receipt["candidate_source"],
+        "required_roles": [
+            "site_reading_governance",
+            "program_specification",
+            "enterprise_implementation",
+            "simulated_final_state",
+            "comparative_evidence",
+        ],
+    }
     if manifest.get("automation_controls") != {
         "pull_request_workflow": ".github/workflows/pull-request.yml",
         "pull_request_targets": ["develop", "main"],
@@ -378,6 +416,17 @@ def main() -> int:
         for field, value in expected.items()
         if manifest.get(field) != value
     }
+    promotion_binding = manifest.get("promotion_receipt_contract")
+    if promotion_binding != expected_promotion_binding:
+        drift["promotion_receipt_contract"] = {
+            "manifest": promotion_binding,
+            "derived": expected_promotion_binding,
+        }
+    if manifest.get("promotion_coordinates") != expected_promotion_coordinates:
+        drift["promotion_coordinates"] = {
+            "manifest": manifest.get("promotion_coordinates"),
+            "derived": expected_promotion_coordinates,
+        }
     for label, observation_field in (
         ("implementation", "observation_digest"),
         ("simulation", "reference_observation_digest"),
@@ -449,6 +498,9 @@ def main() -> int:
                     golden_report_artifact_inventory
                 ),
                 "pages_projection_inventory_digest": digest(pages_inventory),
+                "promotion_receipt_digest": promotion_receipt_digest(
+                    promotion_receipt
+                ),
             },
             sort_keys=True,
         )

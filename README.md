@@ -212,6 +212,11 @@ The candidate contains:
 complete inventories byte for byte. Publication begins as a separate receiver action
 after this source is accepted; Issue #17 retains that route and its release evidence.
 
+The promotion receipt currently records a reviewed candidate source and keeps the
+release subject empty. After the accepted tree receives its signed tag, the same
+receipt can record the observed tag, commit, tree, archive, hosted checks, and local
+verification without changing the comparison's simulated authority.
+
 The Golden report identity includes the accepted Program, Governance, Enterprise,
 and Simulation source coordinates. The Comparator's own release coordinate remains a
 separate receiving record, so observing the signed release can preserve the report

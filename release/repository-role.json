@@ -87,6 +87,13 @@
     "production_authorization_effect": "none",
     "observed_admission_status": "caller_supplied_only_unexercised"
   },
+  "promotion_receipt_contract": {
+    "schema_path": "schemas/promotion-receipt.schema.json",
+    "schema_version": "1.0.0",
+    "schema_file_sha256": "sha256:8ebce65f823acb91b459049b2692bf05261c78d5346034e9603319c85de1b594",
+    "receipt_path": "receipts/promotion-receipt.json",
+    "receipt_canonical_json_digest": "sha256:e358ae6137dcd30516476084ccf6caee65b0aa897a881259084b907b6f986767"
+  },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
   "historical_external_releases": [
@@ -161,8 +168,13 @@
     "settings_state": "pending_source_acceptance_and_observed_check_name"
   },
   "promotion_coordinates": {
-    "status": "pending_cross_repository_settlement",
+    "status": "candidate_ready",
     "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
+    "candidate_source": {
+      "coordinate_kind": "accepted_develop_merge_source",
+      "commit_oid": "daae956379cf00f5008672d19765aee6bec7eb4a",
+      "tree_oid": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
+    },
     "required_roles": [
       "site_reading_governance",
       "program_specification",

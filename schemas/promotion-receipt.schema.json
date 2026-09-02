@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.driftframe.org/lims-eln-comparative-evidence/v1.0.0/promotion-receipt.schema.json",
+  "title": "Comparative Evidence Promotion Receipt v1",
+  "description": "Separates a reviewed comparison candidate source from the later observed Git release that gives the comparator an immutable release coordinate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "promotion_receipt_id",
+    "repository",
+    "target_release",
+    "promotion_state",
+    "release_event_evidence",
+    "comparison_authority",
+    "candidate_source",
+    "release_subject",
+    "required_evidence",
+    "accountable_role"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../schemas/promotion-receipt.schema.json"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "promotion_receipt_id": {
+      "const": "RCP-COMPARATIVE-PROMOTION-003"
+    },
+    "repository": {
+      "const": "driftframestudios/lims-eln-comparative-evidence"
+    },
+    "target_release": {
+      "const": "comparison-v0.3.1"
+    },
+    "promotion_state": {
+      "enum": [
+        "candidate_ready",
+        "release_observed"
+      ]
+    },
+    "release_event_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_mode",
+        "assurance_stage"
+      ],
+      "properties": {
+        "evidence_mode": {
+          "enum": [
+            "planned",
+            "observed"
+          ]
+        },
+        "assurance_stage": {
+          "enum": [
+            "specified",
+            "verified"
+          ]
+        }
+      }
+    },
+    "comparison_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_mode",
+        "assurance_stage",
+        "comparison_mode",
+        "environment_observed_closure",
+        "production_authorization_effect"
+      ],
+      "properties": {
+        "evidence_mode": {
+          "const": "simulated"
+        },
+        "assurance_stage": {
+          "const": "verified"
+        },
+        "comparison_mode": {
+          "const": "simulated_verification"
+        },
+        "environment_observed_closure": {
+          "const": "separate_unasserted_state"
+        },
+        "production_authorization_effect": {
+          "const": "none"
+        }
+      }
+    },
+    "candidate_source": {
+      "$ref": "#/$defs/candidateSource"
+    },
+    "release_subject": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/observedReleaseSubject"
+        }
+      ]
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 500
+      }
+    },
+    "accountable_role": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120
+    }
+  },
+  "$defs": {
+    "nonzeroSha1": {
+      "type": "string",
+      "pattern": "^(?!0{40}$)[a-f0-9]{40}$"
+    },
+    "nonzeroSha256": {
+      "type": "string",
+      "pattern": "^sha256:(?!0{64}$)[a-f0-9]{64}$"
+    },
+    "candidateSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate_kind",
+        "commit_oid",
+        "tree_oid"
+      ],
+      "properties": {
+        "coordinate_kind": {
+          "const": "accepted_develop_merge_source"
+        },
+        "commit_oid": {
+          "const": "daae956379cf00f5008672d19765aee6bec7eb4a"
+        },
+        "tree_oid": {
+          "const": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
+        }
+      }
+    },
+    "hostedCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "run_id",
+        "conclusion"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "run_id": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "conclusion": {
+          "const": "success"
+        }
+      }
+    },
+    "observedReleaseSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "git_object_format",
+        "tag",
+        "tag_object_oid",
+        "commit_oid",
+        "tree_oid",
+        "archive_format",
+        "archive_digest",
+        "promoted_at",
+        "tag_signature_verification",
+        "hosted_check_contexts",
+        "local_verification_signals"
+      ],
+      "properties": {
+        "git_object_format": {
+          "const": "sha1"
+        },
+        "tag": {
+          "const": "comparison-v0.3.1"
+        },
+        "tag_object_oid": {
+          "$ref": "#/$defs/nonzeroSha1"
+        },
+        "commit_oid": {
+          "$ref": "#/$defs/nonzeroSha1"
+        },
+        "tree_oid": {
+          "$ref": "#/$defs/nonzeroSha1"
+        },
+        "archive_format": {
+          "const": "git-tar"
+        },
+        "archive_digest": {
+          "$ref": "#/$defs/nonzeroSha256"
+        },
+        "promoted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tag_signature_verification": {
+          "const": "valid"
+        },
+        "hosted_check_contexts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/hostedCheck"
+          }
+        },
+        "local_verification_signals": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 300
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "promotion_state": {
+            "const": "candidate_ready"
+          }
+        },
+        "required": [
+          "promotion_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "release_event_evidence": {
+            "const": {
+              "evidence_mode": "planned",
+              "assurance_stage": "specified"
+            }
+          },
+          "release_subject": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "promotion_state": {
+            "const": "release_observed"
+          }
+        },
+        "required": [
+          "promotion_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "release_event_evidence": {
+            "const": {
+              "evidence_mode": "observed",
+              "assurance_stage": "verified"
+            }
+          },
+          "release_subject": {
+            "$ref": "#/$defs/observedReleaseSubject"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -34,6 +34,9 @@
 
 # Roles: solution-architecture and quality-regulatory
 /release/ @driftframestudios
+/receipts/ @driftframestudios
+/src/comparative_evidence/promotion_receipt.py @driftframestudios
+/tests/test_promotion_lifecycle.py @driftframestudios
 /machine-node.json @driftframestudios
 /first-receipt.json @driftframestudios
 /COORDINATION-HORIZON.json @driftframestudios
