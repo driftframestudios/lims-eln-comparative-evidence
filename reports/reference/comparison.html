@@ -20,11 +20,12 @@ h1 { font-size:clamp(2rem,5vw,4.5rem); line-height:.95; max-width:13ch; letter-s
 table { width:100%; min-width:72rem; border-collapse:collapse; background:#fff9; }
 th,td { border:1px solid var(--line); padding:.8rem; text-align:left; vertical-align:top; }
 th { background:#e7ecf6; }
+.classification-column { min-width:13rem; overflow-wrap:normal; }
 .table-instructions { margin:.25rem 0 .75rem; color:#536270; }
 .table-scroll { width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; }
 .table-scroll:focus-visible { outline:3px solid var(--blue); outline-offset:3px; }
 pre { margin:0; max-width:34ch; overflow:auto; white-space:pre-wrap; }
-.pill { display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; }
+.pill { display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; white-space:nowrap; }
 .actual_defect,.shared_specification_violation { color:#a82d21; }
 .desired_divergence,.simulation_fault { color:#176b45; }
 footer { margin-top:2rem; font-size:.85rem; color:#536270; }
@@ -58,9 +59,9 @@ footer { margin-top:2rem; font-size:.85rem; color:#536270; }
 <p class="table-instructions" id="adjudication-instructions">Scroll horizontally inside the comparison table to review every field.</p>
 <div class="table-scroll" role="region" aria-labelledby="adjudication-heading" aria-describedby="adjudication-instructions" tabindex="0">
 <table>
-<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>Planned contract shape</th></tr></thead>
-<tbody><tr><td><code>$.operations.manual_steps</code></td><td><span class="pill comparison_inconclusive">comparison_inconclusive</span></td><td>Standard</td><td>explicit</td><td>Synthetic contract exercise; environment-observed closure remains a separate unasserted state. Planned contract-shape operation requires an additional manual handoff; the team will assess automation and accountable control value.</td><td><pre>1</pre></td><td><pre>2</pre></td></tr>
-<tr><td><code>$.restore.observed_recovery_seconds</code></td><td><span class="pill comparison_inconclusive">comparison_inconclusive</span></td><td>Standard</td><td>explicit</td><td>Synthetic contract exercise; environment-observed closure remains a separate unasserted state. Planned contract-shape recovery is faster than the conservative forecast and remains within the approved objective.</td><td><pre>72</pre></td><td><pre>41</pre></td></tr></tbody>
+<thead><tr><th>Path</th><th class="classification-column">Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>Planned contract shape</th></tr></thead>
+<tbody><tr><td><code>$.operations.manual_steps</code></td><td class="classification-column"><span class="pill comparison_inconclusive">comparison_inconclusive</span></td><td>Standard</td><td>explicit</td><td>Synthetic contract exercise; environment-observed closure remains a separate unasserted state. Planned contract-shape operation requires an additional manual handoff; the team will assess automation and accountable control value.</td><td><pre>1</pre></td><td><pre>2</pre></td></tr>
+<tr><td><code>$.restore.observed_recovery_seconds</code></td><td class="classification-column"><span class="pill comparison_inconclusive">comparison_inconclusive</span></td><td>Standard</td><td>explicit</td><td>Synthetic contract exercise; environment-observed closure remains a separate unasserted state. Planned contract-shape recovery is faster than the conservative forecast and remains within the approved objective.</td><td><pre>72</pre></td><td><pre>41</pre></td></tr></tbody>
 </table>
 </div>
 <footer>
