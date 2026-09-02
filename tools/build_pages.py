@@ -66,6 +66,7 @@ REPORT_INPUT_PATHS = (
 CONTRACT_RESOURCE_PATHS = (
     "src/comparative_evidence/contract_resources/contract-binding.v1.json",
     "src/comparative_evidence/contract_resources/golden-specimen.v1.json",
+    "src/comparative_evidence/contract_resources/golden-specimen-result-projection.v1.schema.json",
     "src/comparative_evidence/contract_resources/observation-envelope.v1.schema.json",
 )
 RUNTIME_SOURCE_PATHS = (
