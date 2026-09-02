@@ -840,6 +840,19 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertIn("overscroll-behavior-inline:contain", html)
         self.assertIn("-webkit-overflow-scrolling:touch", html)
         self.assertIn("table { width:100%; min-width:72rem;", html)
+        self.assertIn(
+            '.classification-column { min-width:13rem; overflow-wrap:normal; }',
+            html,
+        )
+        self.assertIn(
+            '<th class="classification-column">Classification</th>',
+            html,
+        )
+        self.assertIn(
+            '<td class="classification-column"><span class="pill ',
+            html,
+        )
+        self.assertIn("white-space:nowrap", html)
 
     def test_report_values_require_explicit_profile_visibility(self) -> None:
         profile = load("specification/comparison-profile.json")
