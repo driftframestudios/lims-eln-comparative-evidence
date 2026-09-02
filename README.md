@@ -163,11 +163,12 @@ separate evidence coordinates.
 
 ## Build the Pages candidate
 
-The source-owned Pages builder turns the released synthetic comparison into a small
-inspection site. The readable report and report JSON are the exact bytes produced by
-the comparator runtime. The surrounding index explains their authority, links each
-material source file at one full Git revision, and carries a deterministic inventory
-with byte counts and SHA-256 identities.
+The repository's Pages builder turns both synthetic comparison routes into a small
+inspection site. The Golden Specimen result is the primary reading path, and the
+contract-shape reference remains available beside it. Each readable report and JSON
+file preserves the exact bytes produced by the comparator. The surrounding index
+explains what each report establishes, links every material source file at one full
+Git revision, and records each projected file's byte count and SHA-256 identity.
 
 Run the builder from a clean checkout at the exact revision being inspected:
 
@@ -196,7 +197,10 @@ destination.
 The candidate contains:
 
 - an accessible, responsive report index;
-- the byte-identical `comparison.json` and `comparison.html` runtime outputs;
+- the byte-identical Golden Specimen `comparison.json` and `comparison.html` runtime
+  outputs as the primary inspection route;
+- the byte-identical contract-shape reference report as a separate comparison
+  exercise;
 - a short data-use and crawler-intent note;
 - the approved MAPS Evaluations then BIG-bench marker stack on every HTML page;
 - `.nojekyll`; and
@@ -207,6 +211,11 @@ The candidate contains:
 `python tools/validate_repository.py` builds two isolated candidates and compares the
 complete inventories byte for byte. Publication begins as a separate receiver action
 after this source is accepted; Issue #17 retains that route and its release evidence.
+
+The Golden report identity includes the accepted Program, Governance, Enterprise,
+and Simulation source coordinates. The Comparator's own release coordinate remains a
+separate receiving record, so observing the signed release can preserve the report
+bytes that were already reviewed.
 
 The aggregate repository check creates the JSON and HTML reports twice in isolated
 directories and compares their exact bytes. The report binds each input's source and

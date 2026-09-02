@@ -46,15 +46,25 @@ MANIFEST_FILE_SCOPE = (
 RELEASED_SOURCE_STANDINGS = frozenset(
     {"clean_exact_revision", "validation_fixture"}
 )
-REPORT_PATHS = (
+REFERENCE_REPORT_PATHS = (
     "reports/reference/comparison.html",
     "reports/reference/comparison.json",
 )
+GOLDEN_REPORT_PATHS = (
+    "reports/golden-specimen/comparison.html",
+    "reports/golden-specimen/comparison.json",
+)
+REPORT_PATHS = REFERENCE_REPORT_PATHS + GOLDEN_REPORT_PATHS
 SOURCE_LINK_PATHS = (
     "specification/comparison-profile.json",
     "fixtures/pairs/simulation-observation.json",
     "fixtures/contracts/planned-observation.json",
+    "specification/golden-specimen-verification-profile.json",
+    "fixtures/pairs/enterprise-postgresql-observation.json",
+    "fixtures/pairs/simulation-golden-specimen-observation.json",
+    "constellation.lock.json",
     "src/comparative_evidence/compare.py",
+    "src/comparative_evidence/golden_verification.py",
     "src/comparative_evidence/report.py",
     "release/repository-role.json",
 )
@@ -62,6 +72,10 @@ REPORT_INPUT_PATHS = (
     "fixtures/pairs/simulation-observation.json",
     "fixtures/contracts/planned-observation.json",
     "specification/comparison-profile.json",
+    "fixtures/pairs/enterprise-postgresql-observation.json",
+    "fixtures/pairs/simulation-golden-specimen-observation.json",
+    "specification/golden-specimen-verification-profile.json",
+    "constellation.lock.json",
 )
 CONTRACT_RESOURCE_PATHS = (
     "src/comparative_evidence/contract_resources/contract-binding.v1.json",
@@ -77,6 +91,7 @@ RUNTIME_SOURCE_PATHS = (
     "src/comparative_evidence/contract_v1.py",
     "src/comparative_evidence/database_release.py",
     "src/comparative_evidence/gate.py",
+    "src/comparative_evidence/golden_verification.py",
     "src/comparative_evidence/model.py",
     "src/comparative_evidence/normalize.py",
     "src/comparative_evidence/publication.py",
@@ -103,6 +118,7 @@ class _RuntimeBindings:
 
     report_artifact_inventory: Any
     contract_v1_module: Any
+    compare_golden_specimen: Any
     compare_synthetic_contract: Any
     ObservationEnvelope: Any
     strict_json_loads: Any
@@ -299,6 +315,7 @@ def _load_runtime(
         from comparative_evidence import contract_v1 as contract_v1_module
         from comparative_evidence.artifact_boundary import report_artifact_inventory
         from comparative_evidence.compare import compare_synthetic_contract
+        from comparative_evidence.golden_verification import compare_golden_specimen
         from comparative_evidence.model import ObservationEnvelope, strict_json_loads
         from comparative_evidence.publication import (
             BIG_BENCH_CANARY,
@@ -335,6 +352,7 @@ def _load_runtime(
     return _RuntimeBindings(
         report_artifact_inventory=report_artifact_inventory,
         contract_v1_module=contract_v1_module,
+        compare_golden_specimen=compare_golden_specimen,
         compare_synthetic_contract=compare_synthetic_contract,
         ObservationEnvelope=ObservationEnvelope,
         strict_json_loads=strict_json_loads,
@@ -1032,10 +1050,11 @@ def _index_html(
     canonical_origin: str,
     repository_url: str,
     source_revision: str,
-    report: dict[str, Any],
+    reference_report: dict[str, Any],
+    golden_report: dict[str, Any],
     runtime: _RuntimeBindings,
 ) -> str:
-    summary = report["summary"]
+    counts = golden_report["summary"]["classification_counts"]
     source_items = "\n".join(
         "<li><a href=\""
         + escape(_source_url(repository_url, source_revision, path), quote=True)
@@ -1052,23 +1071,23 @@ def _index_html(
 <body>
 <a class="skip-link" href="#content">Skip to evidence</a>
 <header class="page-shell">
-  <p class="kicker">Deterministic comparison</p>
-  <h1>Inspect the result and its source.</h1>
-  <p class="lede">This reference report compares one released selected-future simulation with a planned synthetic contract shape. It exercises the comparison contract while environment-observed evidence retains its own admission path.</p>
+  <p class="kicker">Shared-result verification</p>
+  <h1>Inspect the Golden Specimen result and its sources.</h1>
+  <p class="lede">This deterministic report compares the decision-relevant result from a durable workbench snapshot with the accepted selected-future result. Both inputs are simulated and pass through the same released projection contract.</p>
   <div class="actions">
-    <a class="button" href="reports/reference/comparison.html">Open the readable report</a>
-    <a class="button" href="reports/reference/comparison.json">Inspect report JSON</a>
+    <a class="button" href="reports/golden-specimen/comparison.html">Open the readable report</a>
+    <a class="button" href="reports/golden-specimen/comparison.json">Inspect report JSON</a>
   </div>
 </header>
 <main id="content" class="page-shell">
   <section class="panel" aria-labelledby="report-summary">
     <h2 id="report-summary">What this run establishes</h2>
-    <p>The same fixtures, released profile, and comparator produce one stable report digest. The report records that its evidence comes from a synthetic contract exercise; an environment conclusion begins with separately admitted observed evidence.</p>
-    <div class="metrics" aria-label="Reference report summary">
-      <div class="metric"><strong>{summary['leaf_paths_compared']}</strong>paths compared</div>
-      <div class="metric"><strong>{summary['converged_paths']}</strong>converged paths</div>
-      <div class="metric"><strong>{summary['material_differences']}</strong>contract differences</div>
-      <div class="metric"><strong>{summary['critical_differences']}</strong>critical differences</div>
+    <p>The same two fixtures, committed profile, constellation lock, and comparator produce one stable report digest across all 17 shared projection leaves.</p>
+    <div class="metrics" aria-label="Golden Specimen report summary">
+      <div class="metric"><strong>{golden_report['summary']['leaf_paths_compared']}</strong>paths compared</div>
+      <div class="metric"><strong>{counts['agreement']}</strong>agreements</div>
+      <div class="metric"><strong>{counts['explainable_variation']}</strong>explainable variations</div>
+      <div class="metric"><strong>{counts['material_divergence']}</strong>material divergences</div>
     </div>
   </section>
   <section class="panel" aria-labelledby="source-coordinate">
@@ -1079,7 +1098,8 @@ def _index_html(
   </section>
   <section class="panel" aria-labelledby="reading-boundary">
     <h2 id="reading-boundary">Reading boundary</h2>
-    <p>The report is a synthetic contract exercise. Its two differences show how the released classifier and visibility rules behave; they remain distinct from measured outcomes in a configured environment.</p>
+    <p>The Golden Specimen report verifies two simulated producers. Environment-observed evidence enters through its independent provenance and acceptance route.</p>
+    <p>The <a href="reports/reference/comparison.html">contract-shape reference</a> and its <a href="reports/reference/comparison.json">machine-readable report</a> remain available as a separate exercise of classifier and visibility behavior. Its report digest is <code>{escape(reference_report['report_digest'])}</code>.</p>
     <p><a href="data-use.html">Read the data-use and crawler-intent note</a></p>
   </section>
 </main>
@@ -1183,6 +1203,7 @@ def _manifest(
     source_standing: str,
     cname: str | None,
     report_digest: str,
+    golden_specimen_report_digest: str,
 ) -> dict[str, Any]:
     report_sources = set(REPORT_PATHS)
     files = []
@@ -1215,6 +1236,7 @@ def _manifest(
         "canonicalOrigin": canonical_origin,
         "cname": cname,
         "reportDigest": report_digest,
+        "goldenSpecimenReportDigest": golden_specimen_report_digest,
         "fileScope": MANIFEST_FILE_SCOPE,
         "files": files,
     }
@@ -1424,29 +1446,46 @@ def validate_projection(
     if index.count(source_prefix) < len(SOURCE_LINK_PATHS):
         raise PagesBuildError("projection source links require the full revision")
 
-    report_root = root / "reports/reference"
-    report_inventory = runtime.report_artifact_inventory(report_root)
-    report_bytes, _ = _read_regular_bytes(
-        root,
-        "reports/reference/comparison.json",
-        label="comparison report JSON",
+    report_bundles = (
+        (
+            "reports/reference",
+            REFERENCE_REPORT_PATHS,
+            "reportDigest",
+            "reference comparison",
+        ),
+        (
+            "reports/golden-specimen",
+            GOLDEN_REPORT_PATHS,
+            "goldenSpecimenReportDigest",
+            "Golden Specimen comparison",
+        ),
     )
-    report_document = runtime.strict_json_loads(report_bytes)
-    if not isinstance(report_document, dict) or (
-        manifest.get("reportDigest") != report_document.get("report_digest")
-    ):
-        raise PagesBuildError(
-            "projection manifest report digest requires the validated runtime report"
+    for report_directory, report_paths, manifest_field, label in report_bundles:
+        report_inventory = runtime.report_artifact_inventory(
+            root / report_directory
         )
-    for report_path in REPORT_PATHS:
-        entry = declared[report_path]
-        name = PurePosixPath(report_path).name
-        if entry.get("byteRelation") != "exact_comparator_runtime_output" or (
-            "sha256:" + entry["sha256"] != report_inventory[name]
+        report_json_path = f"{report_directory}/comparison.json"
+        report_bytes, _ = _read_regular_bytes(
+            root,
+            report_json_path,
+            label=f"{label} report JSON",
+        )
+        report_document = runtime.strict_json_loads(report_bytes)
+        if not isinstance(report_document, dict) or (
+            manifest.get(manifest_field) != report_document.get("report_digest")
         ):
             raise PagesBuildError(
-                f"{report_path} requires exact comparator runtime bytes"
+                f"projection manifest {label} digest requires the validated runtime report"
             )
+        for report_path in report_paths:
+            entry = declared[report_path]
+            name = PurePosixPath(report_path).name
+            if entry.get("byteRelation") != "exact_comparator_runtime_output" or (
+                "sha256:" + entry["sha256"] != report_inventory[name]
+            ):
+                raise PagesBuildError(
+                    f"{report_path} requires exact comparator runtime bytes"
+                )
     return manifest
 
 
@@ -1493,7 +1532,7 @@ def _render_projection(
     """Render and validate one projection with an already selected runtime."""
 
     with _contract_resources_from(source_root, runtime=runtime):
-        report = runtime.compare_synthetic_contract(
+        reference_report = runtime.compare_synthetic_contract(
             runtime.ObservationEnvelope.from_dict(
                 _load_object(
                     source_root,
@@ -1514,9 +1553,31 @@ def _render_projection(
                 runtime=runtime,
             ),
         )
+        golden_report = runtime.compare_golden_specimen(
+            _load_object(
+                source_root,
+                "fixtures/pairs/enterprise-postgresql-observation.json",
+                runtime=runtime,
+            ),
+            _load_object(
+                source_root,
+                "fixtures/pairs/simulation-golden-specimen-observation.json",
+                runtime=runtime,
+            ),
+            _load_object(
+                source_root,
+                "specification/golden-specimen-verification-profile.json",
+                runtime=runtime,
+            ),
+            _load_object(
+                source_root,
+                "constellation.lock.json",
+                runtime=runtime,
+            ),
+        )
     report_root = output_root / "reports/reference"
     runtime.write_reports(
-        report,
+        reference_report,
         report_root,
         canonical_url=_canonical_url(
             canonical_origin,
@@ -1524,6 +1585,16 @@ def _render_projection(
         ),
     )
     runtime.report_artifact_inventory(report_root)
+    golden_report_root = output_root / "reports/golden-specimen"
+    runtime.write_reports(
+        golden_report,
+        golden_report_root,
+        canonical_url=_canonical_url(
+            canonical_origin,
+            "reports/golden-specimen/comparison.html",
+        ),
+    )
+    runtime.report_artifact_inventory(golden_report_root)
     _write_text(output_root / "assets/site.css", _site_css())
     _write_text(
         output_root / "index.html",
@@ -1531,7 +1602,8 @@ def _render_projection(
             canonical_origin=canonical_origin,
             repository_url=repository_url,
             source_revision=source_revision,
-            report=report,
+            reference_report=reference_report,
+            golden_report=golden_report,
             runtime=runtime,
         ),
     )
@@ -1552,7 +1624,8 @@ def _render_projection(
         source_revision=source_revision,
         source_standing=source_standing,
         cname=cname,
-        report_digest=report["report_digest"],
+        report_digest=reference_report["report_digest"],
+        golden_specimen_report_digest=golden_report["report_digest"],
     )
     _write_text(
         output_root / MANIFEST_PATH,

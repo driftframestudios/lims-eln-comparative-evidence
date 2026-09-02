@@ -15,8 +15,9 @@
   "canonical_closure_bundle_file_sha256": "sha256:a72810e850c88f7a06c6e86fb94c1026a22d859089ee70ef31d4413b086fd098",
   "golden_specimen_verification": {
     "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
-    "report_digest": "sha256:4e3fb5a2725eb4dedbfb821ec3852c18423472d723576fccbf2a2eb29c4195f4",
+    "report_digest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
     "constellation_lock_digest": "sha256:38a1ebaa603706fcdf0a2f8674411980aff329d973ec8a2d57ac27123492b9bb",
+    "source_constellation_digest": "sha256:8048a485b443469f98350c26dbea4fd4067371e619ed210dec5fd61a3ecdf9d4",
     "classification_counts": {
       "agreement": 10,
       "explainable_variation": 4,

@@ -37,6 +37,7 @@ from build_pages import (
     verify_reproducible_projections,
 )
 from comparative_evidence.compare import compare_synthetic_contract
+from comparative_evidence.golden_verification import compare_golden_specimen
 from comparative_evidence.model import ObservationEnvelope, strict_json_loads
 from comparative_evidence.publication import (
     BIG_BENCH_CANARY,
@@ -181,6 +182,9 @@ class PagesProjectionTests(unittest.TestCase):
             self.assertEqual(manifest["fileScope"], MANIFEST_FILE_SCOPE)
             self.assertEqual(manifest["canonicalOrigin"], DEFAULT_CANONICAL_ORIGIN)
             self.assertIsNone(manifest["cname"])
+            self.assertTrue(
+                manifest["goldenSpecimenReportDigest"].startswith("sha256:")
+            )
             self.assertNotIn("CNAME", inventory)
             self.assertEqual(
                 set(inventory),
@@ -190,6 +194,8 @@ class PagesProjectionTests(unittest.TestCase):
                     "data-use.html",
                     "index.html",
                     "projection-manifest.json",
+                    "reports/golden-specimen/comparison.html",
+                    "reports/golden-specimen/comparison.json",
                     "reports/reference/comparison.html",
                     "reports/reference/comparison.json",
                 },
@@ -227,6 +233,58 @@ class PagesProjectionTests(unittest.TestCase):
                     (runtime / filename).read_bytes(),
                 )
 
+    def test_golden_projection_preserves_comparator_runtime_bytes(self) -> None:
+        with (
+            tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory,
+            tempfile.TemporaryDirectory(prefix="golden-report-") as report_directory,
+        ):
+            projection = self.build(Path(directory), "site")
+            report = compare_golden_specimen(
+                load("fixtures/pairs/enterprise-postgresql-observation.json"),
+                load("fixtures/pairs/simulation-golden-specimen-observation.json"),
+                load("specification/golden-specimen-verification-profile.json"),
+                load("constellation.lock.json"),
+            )
+            runtime = Path(report_directory)
+            write_reports(
+                report,
+                runtime,
+                canonical_url=(
+                    DEFAULT_CANONICAL_ORIGIN
+                    + "reports/golden-specimen/comparison.html"
+                ),
+            )
+            for filename in ("comparison.html", "comparison.json"):
+                self.assertEqual(
+                    (
+                        projection
+                        / "reports/golden-specimen"
+                        / filename
+                    ).read_bytes(),
+                    (runtime / filename).read_bytes(),
+                )
+
+    def test_golden_report_keeps_public_and_horizontal_boundaries(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory:
+            projection = self.build(Path(directory), "site")
+            document = (
+                projection / "reports/golden-specimen/comparison.html"
+            ).read_text(encoding="utf-8")
+
+            self.assertIn(
+                "Scroll horizontally inside the comparison table",
+                document,
+            )
+            self.assertIn('class="table-scroll" role="region"', document)
+            self.assertIn('aria-describedby="adjudication-instructions"', document)
+            self.assertIn('tabindex="0"', document)
+            self.assertIn("overflow-x:auto", document)
+            self.assertLess(
+                document.index(MAPS_CANARY),
+                document.index(BIG_BENCH_CANARY),
+            )
+            self.assertIn(PUBLIC_ATTRIBUTION, document)
+
     def test_all_html_carries_accessible_orientation_and_marker_order(self) -> None:
         with tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory:
             projection = self.build(Path(directory), "site")
@@ -248,6 +306,14 @@ class PagesProjectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory:
             projection = self.build(Path(directory), "site")
             index = (projection / "index.html").read_text(encoding="utf-8")
+            self.assertIn(
+                'href="reports/golden-specimen/comparison.html"',
+                index,
+            )
+            self.assertIn(
+                'href="reports/golden-specimen/comparison.json"',
+                index,
+            )
             prefix = (
                 "https://github.com/driftframestudios/"
                 f"lims-eln-comparative-evidence/blob/{REVISION}/"
@@ -301,6 +367,7 @@ class PagesProjectionTests(unittest.TestCase):
             for relative in (
                 "index.html",
                 "data-use.html",
+                "reports/golden-specimen/comparison.html",
                 "reports/reference/comparison.html",
             ):
                 with self.subTest(relative=relative):
@@ -362,7 +429,22 @@ class PagesProjectionTests(unittest.TestCase):
 
             projection = self.build(parent, "digest")
             update_manifest_field(projection, "reportDigest", "sha256:" + "0" * 64)
-            with self.assertRaisesRegex(PagesBuildError, "validated runtime report"):
+            with self.assertRaisesRegex(
+                PagesBuildError,
+                "reference comparison digest requires the validated runtime report",
+            ):
+                validate_projection(projection)
+
+            projection = self.build(parent, "golden-digest")
+            update_manifest_field(
+                projection,
+                "goldenSpecimenReportDigest",
+                "sha256:" + "0" * 64,
+            )
+            with self.assertRaisesRegex(
+                PagesBuildError,
+                "Golden Specimen comparison digest requires the validated runtime report",
+            ):
                 validate_projection(projection)
 
     def test_relative_link_and_responsive_contracts_fail_closed(self) -> None:

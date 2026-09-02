@@ -335,6 +335,9 @@ def main() -> int:
             "profile_digest": digest(golden_profile),
             "report_digest": golden_report["report_digest"],
             "constellation_lock_digest": digest(constellation),
+            "source_constellation_digest": golden_report[
+                "source_constellation_digest"
+            ],
             "classification_counts": golden_report["summary"][
                 "classification_counts"
             ],

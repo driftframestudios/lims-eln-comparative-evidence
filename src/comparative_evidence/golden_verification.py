@@ -42,6 +42,12 @@ PROJECTION_PATHS = frozenset(
         "$.release.released_at",
     }
 )
+SOURCE_CONSTELLATION_ROLES = (
+    "specification",
+    "governance",
+    "implementation",
+    "simulation",
+)
 
 _PROFILE_FIELDS = {
     "profile_version",
@@ -137,7 +143,9 @@ def compare_golden_specimen(
         "projection_version": profile["projection_version"],
         "comparison_compatibility": profile["comparison_compatibility"],
         "profile_digest": canonical_digest(profile),
-        "constellation_digest": canonical_digest(constellation),
+        "source_constellation_digest": canonical_digest(
+            _source_constellation_projection(constellation)
+        ),
         "implementation": _producer_context(
             implementation_document,
             implementation_coordinate,
@@ -321,6 +329,23 @@ def _validate_constellation(
     return implementation_coordinate, simulation_coordinate
 
 
+def _source_constellation_projection(
+    constellation: dict[str, Any],
+) -> dict[str, Any]:
+    """Select source authorities while leaving receiving promotion independent."""
+
+    version = constellation.get("constellation_version")
+    if not isinstance(version, str) or not version.strip():
+        raise ValueError("constellation_version requires text")
+    projection: dict[str, Any] = {"constellation_version": version}
+    for role in SOURCE_CONSTELLATION_ROLES:
+        coordinate = constellation.get(role)
+        if not isinstance(coordinate, dict):
+            raise ValueError(f"constellation {role} requires one coordinate object")
+        projection[role] = deepcopy(coordinate)
+    return projection
+
+
 def _accepted_coordinate(value: Any, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"constellation {label} requires one coordinate object")
@@ -435,5 +460,6 @@ __all__ = [
     "EXPLAINABLE_VARIATION",
     "MATERIAL_DIVERGENCE",
     "PROJECTION_PATHS",
+    "SOURCE_CONSTELLATION_ROLES",
     "compare_golden_specimen",
 ]
