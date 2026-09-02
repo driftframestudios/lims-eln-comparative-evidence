@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RECEIPT-COMPARATIVE-EVIDENCE-001",
   "machine_node_id": "NODE-COMPARATIVE-EVIDENCE-001",
-  "as_of": "2026-07-28T20:30:00Z",
+  "as_of": "2026-09-02T06:59:11Z",
   "orientation_purpose": "Give each entering collaborator a compact, non-authorizing account of the comparator's contracts, canonical closure, evidence posture, coordination state, and safe handoff.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -34,10 +34,8 @@
     }
   ],
   "coordination_horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
-  "current_horizon_summary": "Canonical closure admission and governance conformance are complete; the candidate comparison-v0.3.1 provenance and immutable cross-repository promotion coordinates are settling.",
-  "open_receipts": [
-    "RCP-COMPARATIVE-PROMOTION-003"
-  ],
+  "current_horizon_summary": "Canonical closure admission, governance conformance, and the signed comparison-v0.3.1 promotion are complete. When this receipt-closing change reaches main, the first accepted main commit carrying the exact closed-receipt blob becomes the observation carrier for the bounded GitHub Pages receiver.",
+  "open_receipts": [],
   "invalidation_conditions": [
     "The governance schema, selected-future assumptions, or canonical closure digest changes.",
     "A promoted release changes the comparator's authority or evidence-admission posture."
@@ -57,17 +55,22 @@
       "source": "observed-evidence-envelope",
       "permission": "propose",
       "verification": "The observed admission gate verifies provenance, redaction, independent review, and accountable acceptance."
+    },
+    {
+      "source": "accepted-main-observation-carrier",
+      "permission": "execute_bounded",
+      "verification": "Walk the accepted main first-parent history after release subject b5c13689a32739d29437e209816bf0cd6a878976 and select its first commit whose receipts/promotion-receipt.json blob is 4b2f41fe86fb4050d2d3f7da984baa78463c0c12. Record that full commit in Issue #17 and use it as the Pages source revision."
     }
   ],
   "handoff": {
-    "recipient_role": "Constellation release steward",
-    "next_safe_action": "Run the full comparator and governance contract validations, promote candidate comparison-v0.3.1 through reviewed repository flow, then close RCP-COMPARATIVE-PROMOTION-003 with immutable provenance.",
-    "success_evidence": "All tests and schema checks pass, the Machine Node replaces candidate zeros with the promoted commit and digest, and the release manifest retains the canonical closure digest with a non-authorizing posture."
+    "recipient_role": "GitHub Pages publication receiver",
+    "next_safe_action": "After this receipt-closing change reaches main, resolve accepted-main-observation-carrier as the first commit on accepted main's first-parent history after b5c13689a32739d29437e209816bf0cd6a878976 whose receipts/promotion-receipt.json blob is 4b2f41fe86fb4050d2d3f7da984baa78463c0c12. Record its full commit in Issue #17, then use it as the Pages --source-revision.",
+    "success_evidence": "The docs projection binds the resolved accepted-main-observation-carrier full commit as its sourceRevision, reproduces both deterministic report bundles, preserves the Golden report digest, binds every public file, and retains the comparator's non-authorizing evidence posture; hosted verification confirms the canonical location."
   },
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-07-28T20:30:00Z",
+    "updated_at": "2026-09-02T06:59:11Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-RECEIPT-001",
       "display_name": "Comparative evidence stewardship role",

@@ -4,10 +4,10 @@
   "promotion_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
   "repository": "driftframestudios/lims-eln-comparative-evidence",
   "target_release": "comparison-v0.3.1",
-  "promotion_state": "candidate_ready",
+  "promotion_state": "release_observed",
   "release_event_evidence": {
-    "evidence_mode": "planned",
-    "assurance_stage": "specified"
+    "evidence_mode": "observed",
+    "assurance_stage": "verified"
   },
   "comparison_authority": {
     "evidence_mode": "simulated",
@@ -21,7 +21,33 @@
     "commit_oid": "daae956379cf00f5008672d19765aee6bec7eb4a",
     "tree_oid": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
   },
-  "release_subject": null,
+  "release_subject": {
+    "git_object_format": "sha1",
+    "tag": "comparison-v0.3.1",
+    "tag_object_oid": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+    "commit_oid": "b5c13689a32739d29437e209816bf0cd6a878976",
+    "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+    "archive_format": "git-tar",
+    "archive_digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
+    "promoted_at": "2026-09-02T06:27:41Z",
+    "tag_signature_verification": "valid",
+    "hosted_check_contexts": [
+      {
+        "name": "Repository validation",
+        "run_id": "33597969223",
+        "conclusion": "success"
+      },
+      {
+        "name": "branch-shape",
+        "run_id": "33597969333",
+        "conclusion": "success"
+      }
+    ],
+    "local_verification_signals": [
+      "git rev-parse verified reviewed candidate 59d58c46d27a77150d399870ecebef2635c38dc5 and accepted commit b5c13689a32739d29437e209816bf0cd6a878976 share tree 10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+      "git archive --format=tar comparison-v0.3.1 reproduced sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
+    ]
+  },
   "required_evidence": [
     "Repository validation reproduces both deterministic comparison bundles and the complete Pages artifact inventory.",
     "The reviewed release candidate and accepted main merge resolve to one Git tree.",

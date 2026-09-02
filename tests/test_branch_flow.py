@@ -67,9 +67,12 @@ def runner_job_blocks(workflow: str) -> dict[str, str]:
 
 
 class BranchFlowTests(unittest.TestCase):
-    def automation_documents(self) -> tuple[str, str, dict[str, object]]:
+    def automation_documents(self) -> tuple[str, str, str, dict[str, object]]:
         workflow = (
             ROOT / ".github" / "workflows" / "pull-request.yml"
+        ).read_text(encoding="utf-8")
+        manual_workflow = (
+            ROOT / ".github" / "workflows" / "verify.yml"
         ).read_text(encoding="utf-8")
         dependabot = (ROOT / ".github" / "dependabot.yml").read_text(
             encoding="utf-8"
@@ -77,7 +80,12 @@ class BranchFlowTests(unittest.TestCase):
         release = json.loads(
             (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
         )
-        return workflow, dependabot, release["automation_controls"]
+        return (
+            workflow,
+            manual_workflow,
+            dependabot,
+            release["automation_controls"],
+        )
 
     def invoke(self, base: str, head: str, author: str) -> tuple[int, str]:
         output = StringIO()
@@ -130,10 +138,11 @@ class BranchFlowTests(unittest.TestCase):
 
     def test_dependency_schedule_matches_branch_grammar(self) -> None:
         self.assertFalse((ROOT / ".github" / "dependabot.manual.yml").exists())
-        workflow, config, declared = self.automation_documents()
+        workflow, manual_workflow, config, declared = self.automation_documents()
         controls = validate_automation_documents(
             workflow,
             config,
+            manual_workflow_text=manual_workflow,
             declared_controls=declared,
         )
         configured = {
@@ -184,6 +193,11 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("retention-days: 1", workflow)
         self.assertIn("timeout-minutes: 10", workflow)
         self.assertIn("persist-credentials: false", workflow)
+        self.assertIn("fetch-depth: 0", workflow)
+        self.assertIn(
+            "python tools/verify_release_coordinate.py --require-observed",
+            workflow,
+        )
         jobs = runner_job_blocks(workflow)
         self.assertTrue(jobs)
         for name, block in jobs.items():
@@ -195,19 +209,25 @@ class BranchFlowTests(unittest.TestCase):
                 self.assertIn("inputs.confirm_run", gate.group(1))
 
     def test_pull_request_workflow_is_bounded_and_read_only(self) -> None:
-        workflow, dependabot, declared = self.automation_documents()
+        workflow, manual_workflow, dependabot, declared = self.automation_documents()
         controls = validate_automation_documents(
             workflow,
             dependabot,
+            manual_workflow_text=manual_workflow,
             declared_controls=declared,
         )
         self.assertEqual(["develop", "main"], controls["pull_request_targets"])
         self.assertEqual({"contents": "read"}, controls["pull_request_permissions"])
         self.assertTrue(controls["pull_request_concurrency_cancellation"])
         self.assertEqual(10, controls["pull_request_timeout_minutes"])
+        self.assertIn("fetch-depth: 0", workflow)
+        self.assertIn(
+            "python tools/verify_release_coordinate.py --require-observed",
+            workflow,
+        )
 
     def test_pull_request_contract_rejects_material_mutations(self) -> None:
-        workflow, dependabot, declared = self.automation_documents()
+        workflow, manual_workflow, dependabot, declared = self.automation_documents()
         checkout_sha = "3d3c42e5aac5ba805825da76410c181273ba90b1"
         setup_sha = "5fda3b95a4ea91299a34e894583c3862153e4b97"
         mutations = {
@@ -233,6 +253,11 @@ class BranchFlowTests(unittest.TestCase):
             "validation can fail open": workflow.replace(
                 "      - name: Validate repository evidence contracts\n        run:",
                 "      - name: Validate repository evidence contracts\n"
+                "        continue-on-error: true\n        run:",
+            ),
+            "release verification can fail open": workflow.replace(
+                "      - name: Verify signed release coordinate\n        run:",
+                "      - name: Verify signed release coordinate\n"
                 "        continue-on-error: true\n        run:",
             ),
             "cancellation comment decoy": workflow.replace(
@@ -292,6 +317,14 @@ class BranchFlowTests(unittest.TestCase):
                 "          persist-credentials: false",
                 "          persist-credentials: true",
             ),
+            "shallow release checkout": workflow.replace(
+                "          fetch-depth: 0",
+                "          fetch-depth: 1",
+            ),
+            "release verifier command drift": workflow.replace(
+                "        run: python tools/verify_release_coordinate.py --require-observed",
+                "        run: python tools/validate_repository.py",
+            ),
         }
         for name, mutated in mutations.items():
             with self.subTest(mutation=name):
@@ -299,11 +332,69 @@ class BranchFlowTests(unittest.TestCase):
                     validate_automation_documents(
                         mutated,
                         dependabot,
+                        manual_workflow_text=manual_workflow,
+                        declared_controls=declared,
+                    )
+
+    def test_manual_release_verification_rejects_material_mutations(self) -> None:
+        workflow, manual_workflow, dependabot, declared = self.automation_documents()
+        validation_marker = "\n  comparative-validation:\n"
+        report_job, validation_job = manual_workflow.split(validation_marker, 1)
+        wrong_job_shallow_checkout = (
+            report_job.replace(
+                "          persist-credentials: false",
+                "          persist-credentials: false\n          fetch-depth: 0",
+                1,
+            )
+            + validation_marker
+            + validation_job.replace(
+                "          fetch-depth: 0",
+                "          fetch-depth: 1",
+                1,
+            )
+        )
+        command = "python tools/verify_release_coordinate.py --require-observed"
+        mutations = {
+            "verification step disabled": manual_workflow.replace(
+                "      - name: Verify signed release coordinate\n        run:",
+                "      - name: Verify signed release coordinate\n"
+                "        if: false\n"
+                "        run:",
+            ),
+            "verification can fail open": manual_workflow.replace(
+                "      - name: Verify signed release coordinate\n        run:",
+                "      - name: Verify signed release coordinate\n"
+                "        continue-on-error: true\n"
+                "        run:",
+            ),
+            "validation job disabled": manual_workflow.replace(
+                validation_marker + validation_job,
+                validation_marker
+                + validation_job.replace(
+                    "    if: ${{ always() && vars.ENABLE_GITHUB_ACTIONS == 'true' "
+                    "&& inputs.confirm_run }}",
+                    "    if: false",
+                    1,
+                ),
+            ),
+            "wrong job owns full history": wrong_job_shallow_checkout,
+            "verification command drift": manual_workflow.replace(
+                command,
+                "python tools/verify_release_coordinate.py",
+            ),
+        }
+        for name, mutated in mutations.items():
+            with self.subTest(mutation=name):
+                with self.assertRaises(AutomationContractError):
+                    validate_automation_documents(
+                        workflow,
+                        dependabot,
+                        manual_workflow_text=mutated,
                         declared_controls=declared,
                     )
 
     def test_dependabot_contract_rejects_material_mutations(self) -> None:
-        workflow, dependabot, declared = self.automation_documents()
+        workflow, manual_workflow, dependabot, declared = self.automation_documents()
         mutations = {
             "quoted ecosystem key": dependabot.replace(
                 "  - package-ecosystem: github-actions",
@@ -374,11 +465,12 @@ class BranchFlowTests(unittest.TestCase):
                     validate_automation_documents(
                         workflow,
                         mutated,
+                        manual_workflow_text=manual_workflow,
                         declared_controls=declared,
                     )
 
     def test_declared_automation_controls_are_derived_from_source(self) -> None:
-        workflow, dependabot, declared = self.automation_documents()
+        workflow, manual_workflow, dependabot, declared = self.automation_documents()
         drifted = deepcopy(declared)
         drifted["pull_request_timeout_minutes"] = 9
         with self.assertRaisesRegex(
@@ -388,6 +480,7 @@ class BranchFlowTests(unittest.TestCase):
             validate_automation_documents(
                 workflow,
                 dependabot,
+                manual_workflow_text=manual_workflow,
                 declared_controls=drifted,
             )
 
@@ -416,7 +509,9 @@ class BranchFlowTests(unittest.TestCase):
             "/tools/check_automation_contract.py",
             "/tools/check_branch_flow.py",
             "/tools/check_artifacts.py",
+            "/tools/verify_release_coordinate.py",
             "/tests/test_branch_flow.py",
+            "/tests/test_release_coordinate.py",
             "/machine-node.json",
             "/first-receipt.json",
             "/COORDINATION-HORIZON.json",

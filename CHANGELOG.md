@@ -19,9 +19,15 @@
 - Bind the Golden report to its Program, Governance, Enterprise, and Simulation
   source coordinates while recording the Comparator's own signed promotion as a
   separate receiving coordinate whose settlement preserves the reviewed report bytes.
-- Add a typed promotion receipt whose candidate state records the accepted source and
-  keeps the release subject open for the later signed tag, tree, archive, and check
-  observation. Preserve simulated comparison authority across both states.
+- Close the typed promotion receipt against signed tag `comparison-v0.3.1`, accepted
+  commit and tree, reproducible archive, and successful hosted checks. Keep the
+  comparison's simulated authority, separate environment-observed path, and zero
+  production authorization effect while the reviewed Golden report digest remains
+  unchanged.
+- Reproduce that release through a scrubbed Git boundary that binds stable refs,
+  repository-carried signer and receipt bytes, release ancestry, and tree-owned
+  archive attributes. Route Pages through the first accepted main carrier of the
+  exact closed-receipt blob so later `main` changes preserve the selected source.
 - Bind publication to the claimed GitHub origin and exact regular-file `HEAD` tree,
   materialize report inputs from committed blobs, run the committed Python source in
   an isolated worker, and recheck the source before the candidate reaches its fresh

@@ -1,10 +1,10 @@
 {
   "horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
   "title": "Governance-bound selected-future evidence",
-  "objective": "Admit one canonical governance closure with its detailed executable receipts while preserving observed evidence as an independent, non-required comparison path.",
-  "as_of": "2026-07-28T20:30:00Z",
+  "objective": "Admit one canonical governance closure with its detailed executable receipts, preserve observed evidence as an independent comparison path, and hand the accepted observation carrier to one bounded GitHub Pages publication receiver.",
+  "as_of": "2026-09-02T06:59:11Z",
   "current_item_ids": [
-    "WORK-COMPARATIVE-PROMOTION-003"
+    "WORK-COMPARATIVE-PUBLICATION-017"
   ],
   "work_items": [
     {
@@ -43,10 +43,11 @@
       "item_id": "WORK-COMPARATIVE-PROMOTION-003",
       "horizon_label": "Immutable comparative-evidence promotion",
       "sequence": 3,
-      "state": "settling",
+      "state": "complete",
       "desired_state": "The promoted comparison-v0.3.1 release records immutable local provenance and governance, simulation, implementation, and specification coordinates.",
       "entry_evidence": [
-        "All repository-local contracts and tests pass against the shared schema release."
+        "All repository-local contracts and tests pass against the shared schema release.",
+        "Reviewed candidate 59d58c46d27a77150d399870ecebef2635c38dc5 and accepted commit b5c13689a32739d29437e209816bf0cd6a878976 share Git tree 10a784b8a677ee6eb524d2860ff5ee7151d6050b."
       ],
       "completion_evidence": [
         "Promoted manifests identify immutable PR-head or release coordinates and preserve the canonical closure digest.",
@@ -57,16 +58,38 @@
       "dependency_ids": [
         "WORK-GOVERNANCE-CONFORMANCE-001"
       ]
+    },
+    {
+      "item_id": "WORK-COMPARATIVE-PUBLICATION-017",
+      "horizon_label": "Stable public comparison baseline",
+      "sequence": 4,
+      "state": "ready",
+      "desired_state": "The accepted main observation carrier publishes the deterministic Golden Specimen and contract-shape reports. That carrier contains the closed comparison-v0.3.1 promotion receipt and descends from immutable release subject b5c13689a32739d29437e209816bf0cd6a878976.",
+      "entry_evidence": [
+        "Signed release subject comparison-v0.3.1 resolves to commit b5c13689a32739d29437e209816bf0cd6a878976, and the closed promotion receipt preserves that immutable coordinate.",
+        "The receipt-closing change reaches main; the publication receiver then resolves the first accepted main commit carrying the exact closed-receipt blob as the observation carrier.",
+        "Issue #17 retains canonical origin, CNAME, and publication acceptance decisions."
+      ],
+      "completion_evidence": [
+        "The docs branch receives one deterministic Pages projection built from the exact accepted main observation carrier.",
+        "The projection manifest sourceRevision equals that carrier's full commit; the carrier contains the closed promotion receipt and descends from release subject b5c13689a32739d29437e209816bf0cd6a878976.",
+        "The published projection manifest binds every public file and preserves Golden report digest sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa.",
+        "Hosted verification confirms the canonical location and readable public baseline."
+      ],
+      "owner_role": "Comparative evidence publication receiver",
+      "dependency_ids": [
+        "WORK-COMPARATIVE-PROMOTION-003"
+      ]
     }
   ],
   "reentry_capsule": {
-    "current_state": "Canonical selected-future closure admission and governance conformance are complete; candidate comparison-v0.3.1 promotion and immutable cross-repository release coordinates are settling.",
+    "current_state": "Canonical selected-future closure admission, governance conformance, and signed comparison-v0.3.1 promotion are complete. The bounded Pages route is ready to resolve its accepted main observation carrier after this receipt-closing change reaches main.",
     "recent_decisions": [
       "DECISION-GOVERNANCE-CLOSURE-AS-AUTHORITY-BOUNDARY-001",
       "DECISION-OBSERVED-EVIDENCE-AS-INDEPENDENT-COMPARISON-001"
     ],
-    "next_safe_action": "Run the full comparator suite and governance contract validations, then promote comparison-v0.3.1 and close RCP-COMPARATIVE-PROMOTION-003 with immutable provenance.",
-    "verification": "Confirm the canonical closure digest, four receipt links, non-authorizing posture, immutable admission, schema conformance, repository artifact safety, and exact promoted commit and digest."
+    "next_safe_action": "After this receipt-closing change reaches main, resolve accepted-main-observation-carrier as the first commit on accepted main's first-parent history after b5c13689a32739d29437e209816bf0cd6a878976 whose receipts/promotion-receipt.json blob is 4b2f41fe86fb4050d2d3f7da984baa78463c0c12. Record its full commit in Issue #17, then use it as the Pages --source-revision.",
+    "verification": "Confirm the signed tag object, release commit and tree, archive digest, and closed promotion receipt. Then confirm that accepted-main-observation-carrier contains the closed receipt, descends from the release subject, preserves the Golden report digest, and produces one deterministic Pages inventory with a non-authorizing evidence posture."
   },
   "retained_effects": [
     "The selected future remains definitive only inside its declared simulation reality.",
@@ -79,7 +102,7 @@
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-07-28T20:30:00Z",
+    "updated_at": "2026-09-02T06:59:11Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-HORIZON-001",
       "display_name": "Comparative evidence stewardship role",

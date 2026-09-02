@@ -68,13 +68,18 @@ jobs:
           TEST_AND_REPORT_RESULT: ${{ needs.test-and-report.result }}
         run: test "$TEST_AND_REPORT_RESULT" = "success"
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+          fetch-depth: 0
+      # actions/setup-python v7.0.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.13"
       - name: Install released schema validation support
         run: python -m pip install --disable-pip-version-check --editable ".[validation]"
       - name: Validate released evidence, calibration posture, and repository safety
         run: python tools/validate_repository.py
+      - name: Verify signed release coordinate
+        run: python tools/verify_release_coordinate.py --require-observed
