@@ -52,7 +52,7 @@ def render_html(
     rows = "\n".join(
         "<tr>"
         f"<td><code>{escape(item['path'])}</code></td>"
-        f"<td><span class=\"pill {escape(item['classification'])}\">{escape(item['classification'])}</span></td>"
+        f"<td class=\"classification-column\"><span class=\"pill {escape(item['classification'])}\">{escape(item['classification'])}</span></td>"
         f"<td>{'Critical' if item['critical'] else 'Standard'}</td>"
         f"<td>{escape(item['value_visibility'])}</td>"
         f"<td>{escape(item['rationale'])}</td>"
@@ -100,11 +100,12 @@ h1 {{ font-size:clamp(2rem,5vw,4.5rem); line-height:.95; max-width:13ch; letter-
 table {{ width:100%; min-width:72rem; border-collapse:collapse; background:#fff9; }}
 th,td {{ border:1px solid var(--line); padding:.8rem; text-align:left; vertical-align:top; }}
 th {{ background:#e7ecf6; }}
+.classification-column {{ min-width:13rem; overflow-wrap:normal; }}
 .table-instructions {{ margin:.25rem 0 .75rem; color:#536270; }}
 .table-scroll {{ width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; }}
 .table-scroll:focus-visible {{ outline:3px solid var(--blue); outline-offset:3px; }}
 pre {{ margin:0; max-width:34ch; overflow:auto; white-space:pre-wrap; }}
-.pill {{ display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; }}
+.pill {{ display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; white-space:nowrap; }}
 .actual_defect,.shared_specification_violation {{ color:#a82d21; }}
 .desired_divergence,.simulation_fault {{ color:#176b45; }}
 footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
@@ -138,7 +139,7 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
 <p class="table-instructions" id="adjudication-instructions">Scroll horizontally inside the comparison table to review every field.</p>
 <div class="table-scroll" role="region" aria-labelledby="adjudication-heading" aria-describedby="adjudication-instructions" tabindex="0">
 <table>
-<thead><tr><th>Path</th><th>Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>{escape(counterpart_heading)}</th></tr></thead>
+<thead><tr><th>Path</th><th class="classification-column">Classification</th><th>Critical</th><th>Value visibility</th><th>Rationale</th><th>Simulation</th><th>{escape(counterpart_heading)}</th></tr></thead>
 <tbody>{rows or '<tr><td colspan="7">All compared paths converged.</td></tr>'}</tbody>
 </table>
 </div>
@@ -166,7 +167,7 @@ def _render_simulated_verification_html(
     rows = "\n".join(
         "<tr>"
         f"<td><code>{escape(item['path'])}</code></td>"
-        f"<td><span class=\"pill {escape(item['classification'])}\">"
+        f"<td class=\"classification-column\"><span class=\"pill {escape(item['classification'])}\">"
         f"{escape(item['classification'])}</span></td>"
         f"<td>{escape(item['rationale'])}</td>"
         f"<td><pre>{escape(json.dumps(item['implementation'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
@@ -201,11 +202,12 @@ h1 {{ font-size:clamp(2rem,5vw,4.5rem); line-height:.95; max-width:14ch; letter-
 table {{ width:100%; min-width:68rem; border-collapse:collapse; background:#fff9; }}
 th,td {{ border:1px solid var(--line); padding:.8rem; text-align:left; vertical-align:top; }}
 th {{ background:#e7ecf6; }}
+.classification-column {{ min-width:13rem; overflow-wrap:normal; }}
 .table-instructions {{ margin:.25rem 0 .75rem; color:#536270; }}
 .table-scroll {{ width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; }}
 .table-scroll:focus-visible {{ outline:3px solid var(--blue); outline-offset:3px; }}
 pre {{ margin:0; max-width:34ch; overflow:auto; white-space:pre-wrap; }}
-.pill {{ display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; }}
+.pill {{ display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; white-space:nowrap; }}
 .agreement {{ color:var(--green); }}
 .explainable_variation {{ color:var(--amber); }}
 .material_divergence {{ color:var(--red); }}
@@ -236,7 +238,7 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
 <p class="table-instructions" id="adjudication-instructions">Scroll horizontally inside the comparison table to review every shared field.</p>
 <div class="table-scroll" role="region" aria-labelledby="adjudication-heading" aria-describedby="adjudication-instructions" tabindex="0">
 <table>
-<thead><tr><th>Path</th><th>Classification</th><th>Why</th><th>Durable workbench</th><th>Selected future</th></tr></thead>
+<thead><tr><th>Path</th><th class="classification-column">Classification</th><th>Why</th><th>Durable workbench</th><th>Selected future</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
 </div>
