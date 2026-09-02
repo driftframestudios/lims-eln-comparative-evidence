@@ -32,7 +32,7 @@ def main() -> int:
         summary = verify_shared_package()
     except ModuleNotFoundError:
         print(
-            "contract package is available through the private distribution or "
+            "contract package is available through the reviewed VCS install or "
             "--contract-source; provide one path to run cross-repository conformance"
         )
         return 2

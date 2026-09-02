@@ -2,6 +2,13 @@
 
 ## 0.3.1
 
+- Add a named Golden Specimen verification that validates both producer envelopes
+  against the shared Program result projection, compares all 17 decision-relevant
+  leaves, retains producer detail by digest, and renders deterministic JSON and HTML
+  with `agreement`, `explainable_variation`, and `material_divergence` classifications.
+- Bind the Comparator-owned durable PostgreSQL snapshot and accepted selected-future
+  observation to their exact Program, Enterprise, Simulation, and Governance source
+  coordinates while preserving the observed-evidence lane as an independent route.
 - Add a source-owned, standard-library Pages builder that publishes the exact
   deterministic comparison report beside an accessible discovery page, full-revision
   source links, the approved benchmark-marker stack, and a complete SHA-256

@@ -3,21 +3,45 @@
   "repository_role": "comparative_evidence",
   "repository_release": "0.3.1",
   "external_release": "comparison-v0.3.1",
-  "synthetic_contract_report_digest": "sha256:6fc8b23c191322e30041b2eb98ed2859046d72b1ee884a5c794c58ebbccc4272",
-  "reference_simulation_observation_digest": "sha256:f8b15d60bbc57cc023890b7ca24a007ed58432888646ceb0bc10e7ad0416086e",
-  "canonical_governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
-  "simulated_closure_comparison_digest": "sha256:fd0c8ccd99af7fe2ef75a04d9c24cece04f33d4e673f8e57468bfbe43898cd66",
-  "aggregate_closure_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
-  "source_result_digest": "sha256:9d42b972c77764c81ff32fefe8f02367a27406e9ba082a704587cc9b5a9da860",
+  "synthetic_contract_report_digest": "sha256:0c05712b106c84847c94051cdad80608b5a2806a792da7cf04f6f06467debb51",
+  "reference_simulation_observation_digest": "sha256:c64909ae6bc1b77747ee9852be34f2ccbcd7099badebf5148f63cc216dba4ba4",
+  "canonical_governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+  "simulated_closure_comparison_digest": "sha256:0743cc1829bdb662824918feb99e2610540fc46ee0bbb1b40c564ffb75abd34d",
+  "aggregate_closure_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
+  "source_result_digest": "sha256:5ed067887dc02d2a4c85845d3d25ab6b3fbee857011bed7e5b528e4e58c03861",
   "comparison_profile_digest": "sha256:861eb337308f320fc7149015cd363ddd5b7554ff2e1d8624d937a04bb8996ab2",
   "calibration_ledger_digest": "sha256:062ca293c0fe36ad489e9702a61f191c5bb542d1e6c50145b1334a71f41d9433",
-  "canonical_closure_bundle_digest": "sha256:04c94dff906ddb83607aa14ea4fc618cf97e040d02b427680c7512a0818be7b4",
-  "canonical_closure_bundle_file_sha256": "sha256:b868604412039c3705d4b60e649c43da2f51592ca0215d22ebe4477b75016ef4",
+  "canonical_closure_bundle_digest": "sha256:441b2038b74346474237dead2ff92ae0fe65eae39011ffa6556c1744696f4479",
+  "canonical_closure_bundle_file_sha256": "sha256:a72810e850c88f7a06c6e86fb94c1026a22d859089ee70ef31d4413b086fd098",
+  "golden_specimen_verification": {
+    "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
+    "report_digest": "sha256:4e3fb5a2725eb4dedbfb821ec3852c18423472d723576fccbf2a2eb29c4195f4",
+    "constellation_lock_digest": "sha256:38a1ebaa603706fcdf0a2f8674411980aff329d973ec8a2d57ac27123492b9bb",
+    "classification_counts": {
+      "agreement": 10,
+      "explainable_variation": 4,
+      "material_divergence": 3
+    },
+    "implementation": {
+      "fixture_path": "fixtures/pairs/enterprise-postgresql-observation.json",
+      "fixture_authority": "comparative_owned_snapshot_from_accepted_enterprise_source",
+      "file_sha256": "sha256:c4d6c47bb58c14b187426f1182be3df0467ca2ed65f84f76d430d348075e3b28",
+      "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+      "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e"
+    },
+    "simulation": {
+      "fixture_path": "fixtures/pairs/simulation-golden-specimen-observation.json",
+      "fixture_authority": "accepted_simulation_release_observation",
+      "file_sha256": "sha256:72773f06611ad98f89c298f44a9043f12427991ff9c43f7c437c658c08640975",
+      "observation_digest": "sha256:30b9384464bd5832085158a8a0f4f7bae6b0874f1774c82a5b2edb4cf4c758e3",
+      "projection_digest": "sha256:cead042eaf3ca8f72b9c30c41d9acb0bd9255027448f3b28e3451305bed1aef1"
+    }
+  },
   "trusted_simulated_closure": {
     "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
     "future_reality_version": "future-reality-2028-06-30-v1",
     "future_reality_id": "FUTURE-REALITY-LIMS-2028-001",
-    "governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
+    "governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
     "source_coordinates": [
       {
         "release": "seed-forecast-2026-Q3-r2",
@@ -100,12 +124,16 @@
       "contract_id": "LIMS-ELN-CONTRACT-NUCLEUS",
       "version": "1.0.0",
       "authority": "driftframestudios/lims-eln-program-specification",
-      "distribution": "lims-eln-program-specification==0.3.1",
+      "distribution": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290",
       "binding_path": "src/comparative_evidence/contract_resources/contract-binding.v1.json",
+      "source_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+      "source_tree": "887e2c12a699105994097e4e9094270453de16ba",
+      "source_identity_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674",
       "golden_scenario_document_digest": "sha256:d383578b8c55facd4613a8915f3f2137f8dfa14b2530ad9829e879c0db3a7261",
       "golden_scenario_validated_model_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
       "observation_schema_document_digest": "sha256:954e5a3643a7a139ec1e7bf40d1d356ba49c0be98953310ffce1b24043a4d47f",
-      "distribution_state": "source_bound_awaiting_private_distribution"
+      "golden_result_projection_schema_document_digest": "sha256:0519835a178742d52994b1342f3fdf38281b982feca9283782d45489123871fb",
+      "distribution_state": "accepted_full_commit_vcs_coordinate"
     }
   },
   "seed_release_coordinates": {

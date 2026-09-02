@@ -1,9 +1,10 @@
 # LIMS/ELN Comparative Evidence
 
 This repository independently compares a released specification and frozen selected
-future with either caller-supplied observed evidence or a planned synthetic contract
-shape. It produces machine-readable JSON and a portable HTML report while preserving
-the original inputs and their authority.
+future through three explicit routes: a shared-result verification between two
+synthetic executions, a planned contract-shape exercise, or caller-supplied observed
+evidence. It produces machine-readable JSON and a portable HTML report while
+preserving the original inputs and their authority.
 
 Repository authorship and maintenance provenance is recorded in
 [`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
@@ -14,9 +15,10 @@ environment encounter is a separate evidence mode that can confirm it, reveal an
 actual gap, expose a simulation fault, improve upon the forecast, or show that
 context changed.
 
-The repository persists the selected-future simulation and planned synthetic
-contract shapes. Environment-observed and accepted envelopes enter at runtime from
-governed evidence storage. The checked-in portable report uses
+The repository persists the selected-future simulation, a reviewed durable-workbench
+snapshot, and planned synthetic contract shapes. Environment-observed and accepted
+envelopes enter at runtime from governed evidence storage. The checked-in portable
+report uses
 `comparison_mode: synthetic_contract`, preserves
 `environment_observed_closure: separate_unasserted_state`, and records
 `production_authorization_effect: none`.
@@ -75,7 +77,7 @@ simulator.
 
 The repository packages byte-identical scenario and schema snapshots with explicit
 version and digest bindings, so normal comparison and admission remain independently
-runnable. When the private package or sibling source is available, this focused check
+runnable. When the reviewed package or sibling source is available, this focused check
 proves snapshot identity and validates both observations through the authoritative
 Pydantic model:
 
@@ -84,10 +86,10 @@ python tools/check_contract_conformance.py \
   --contract-source ../lims-eln-program-specification/src
 ```
 
-The optional `contract-conformance` extra is ready for the version-pinned private
-distribution on Python 3.12+. Publishing that distribution, then choosing whether to
-raise this repository's current Python 3.11+ floor, is the remaining seam. That
-settlement can replace the standalone compatibility adapter in a later bounded change.
+The optional `contract-conformance` extra resolves the reviewed full-commit Program
+source on Python 3.12+. A future packaged distribution can replace that VCS
+coordinate after it preserves the same source identity. The standalone adapter keeps
+ordinary comparison available without a network or sibling checkout.
 
 Receipt-family vocabulary is owned by program specification contract
 `RECEIPT-VOCABULARY-MAP-001` in
@@ -95,6 +97,27 @@ Receipt-family vocabulary is owned by program specification contract
 `specifications/receipt-vocabulary-map.v1.json`. Comparator schemas and redacted
 manifests use its four canonical governance-family values directly. The release
 manifest records this external repository coordinate, digest, and promotion state.
+
+## Shared Golden Specimen verification
+
+The named verification route compares the decision-relevant Golden Specimen result
+emitted by the durable workbench with the result emitted inside the accepted selected
+future. Both envelopes pass through the exact Program projection contract before any
+field is classified. The report includes all 17 closed projection leaves and uses
+three direct classifications:
+
+- `agreement` for the same decision-relevant value;
+- `explainable_variation` for execution-owned identifiers and timestamps; and
+- `material_divergence` for scientific values whose meanings need an accountable
+  mapping before they can be treated as equivalent.
+
+Producer-specific detail remains available as source context and a canonical digest.
+It stays outside the field-by-field judgment. The durable fixture is a
+Comparator-owned snapshot generated from the accepted Enterprise source and its
+reviewed PostgreSQL proof route; it is identified as a snapshot rather than an
+Enterprise release artifact. Both inputs retain simulated authority, so this report
+supports design and implementation decisions while the observed-evidence lane keeps
+its independent provenance and acceptance route.
 
 ## Run it
 
@@ -106,6 +129,13 @@ PYTHONPATH=src python -m comparative_evidence.cli compare-synthetic-contract \
   --simulation fixtures/pairs/simulation-observation.json \
   --contract-candidate fixtures/contracts/planned-observation.json \
   --output build/comparison
+
+PYTHONPATH=src python -m comparative_evidence.cli compare-simulated-verification \
+  --profile specification/golden-specimen-verification-profile.json \
+  --implementation fixtures/pairs/enterprise-postgresql-observation.json \
+  --simulation fixtures/pairs/simulation-golden-specimen-observation.json \
+  --constellation constellation.lock.json \
+  --output build/golden-specimen-verification
 ```
 
 The validation extra executes the released Draft 2020-12 comparison-profile and

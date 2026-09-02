@@ -31,6 +31,11 @@ def render_html(
     *,
     canonical_url: str | None = None,
 ) -> str:
+    if report.get("comparison_mode") == "simulated_verification":
+        return _render_simulated_verification_html(
+            report,
+            canonical_url=canonical_url,
+        )
     summary = report["summary"]
     database_release = report["database_release_alignment"]
     synthetic_contract = report.get("comparison_mode") == "synthetic_contract"
@@ -146,3 +151,119 @@ footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
 </body>
 </html>
 """
+
+
+def _render_simulated_verification_html(
+    report: dict[str, Any],
+    *,
+    canonical_url: str | None = None,
+) -> str:
+    """Render the shared-result report without implying observed evidence."""
+
+    summary = report["summary"]
+    counts = summary["classification_counts"]
+    comparisons = report["comparisons"]
+    rows = "\n".join(
+        "<tr>"
+        f"<td><code>{escape(item['path'])}</code></td>"
+        f"<td><span class=\"pill {escape(item['classification'])}\">"
+        f"{escape(item['classification'])}</span></td>"
+        f"<td>{escape(item['rationale'])}</td>"
+        f"<td><pre>{escape(json.dumps(item['implementation'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
+        f"<td><pre>{escape(json.dumps(item['simulation'], indent=2, sort_keys=True, allow_nan=False))}</pre></td>"
+        "</tr>"
+        for item in comparisons
+    )
+    implementation = report["implementation"]
+    simulation = report["simulation"]
+    embedded = escape(json.dumps(report, sort_keys=True, allow_nan=False))
+    canonical_markup = _canonical_markup(canonical_url)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+{canonical_markup}<title>Golden Specimen verification · {escape(report['scenario_id'])}</title>
+<style>
+:root {{ color-scheme:light; --ink:#152433; --paper:#f4f0e8; --blue:#2357d9; --green:#176b45; --amber:#8b5a00; --red:#a82d21; --line:#b8c2cc; }}
+* {{ box-sizing:border-box; }}
+body {{ margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 ui-sans-serif,system-ui,sans-serif; overflow-wrap:anywhere; }}
+main {{ max-width:1500px; margin:auto; padding:3rem; }}
+.skip-link {{ position:absolute; left:.75rem; top:.75rem; transform:translateY(-200%); background:#fff; color:var(--ink); padding:.55rem .8rem; z-index:2; }}
+.skip-link:focus {{ transform:none; }}
+h1 {{ font-size:clamp(2rem,5vw,4.5rem); line-height:.95; max-width:14ch; letter-spacing:-.04em; }}
+.kicker {{ color:var(--blue); font-weight:700; letter-spacing:.09em; text-transform:uppercase; }}
+.summary,.sources {{ display:grid; grid-template-columns:repeat(3,minmax(12rem,1fr)); gap:1rem; margin:2rem 0; }}
+.sources {{ grid-template-columns:repeat(2,minmax(16rem,1fr)); }}
+.card {{ border:1px solid var(--line); border-radius:1rem; padding:1.2rem; background:#fff9; }}
+.value {{ display:block; font-size:2.4rem; font-weight:750; }}
+.coordinate {{ margin:.4rem 0 0; font-size:.88rem; }}
+table {{ width:100%; min-width:68rem; border-collapse:collapse; background:#fff9; }}
+th,td {{ border:1px solid var(--line); padding:.8rem; text-align:left; vertical-align:top; }}
+th {{ background:#e7ecf6; }}
+.table-instructions {{ margin:.25rem 0 .75rem; color:#536270; }}
+.table-scroll {{ width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; }}
+.table-scroll:focus-visible {{ outline:3px solid var(--blue); outline-offset:3px; }}
+pre {{ margin:0; max-width:34ch; overflow:auto; white-space:pre-wrap; }}
+.pill {{ display:inline-block; border:1px solid currentColor; border-radius:99rem; padding:.15rem .55rem; }}
+.agreement {{ color:var(--green); }}
+.explainable_variation {{ color:var(--amber); }}
+.material_divergence {{ color:var(--red); }}
+footer {{ margin-top:2rem; font-size:.85rem; color:#536270; }}
+.public-boundary {{ margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--line); }}
+.public-boundary pre {{ margin:.5rem 0; max-width:none; white-space:pre-wrap; overflow-wrap:anywhere; }}
+.public-boundary .attribution {{ margin-top:1rem; }}
+@media(max-width:900px) {{ main{{padding:1rem}} .summary,.sources{{grid-template-columns:1fr}} }}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#comparison-content">Skip to comparison</a>
+<main id="comparison-content">
+<p class="kicker">Shared-result verification</p>
+<h1>Golden Specimen</h1>
+<p>Two synthetic producers are compared through the same released result projection. The durable input is a Comparator-owned snapshot generated from accepted Enterprise source; the selected-future input is the accepted Simulation observation. Environment-observed evidence keeps its independent provenance and acceptance route.</p>
+<section class="summary" aria-label="Comparison summary">
+  <div class="card"><span class="value">{counts['agreement']}</span>agreements</div>
+  <div class="card"><span class="value">{counts['explainable_variation']}</span>explainable variations</div>
+  <div class="card"><span class="value">{counts['material_divergence']}</span>material divergences</div>
+</section>
+<h2>Source coordinates</h2>
+<section class="sources" aria-label="Producer source coordinates">
+  <div class="card"><strong>Durable workbench snapshot</strong><p class="coordinate">Release <code>{escape(implementation['coordinate']['release'])}</code><br>Commit <code>{escape(implementation['coordinate']['commit'])}</code><br>Observation <code>{escape(implementation['observation_digest'])}</code><br>Projection <code>{escape(implementation['projection_digest'])}</code></p></div>
+  <div class="card"><strong>Selected-future observation</strong><p class="coordinate">Release <code>{escape(simulation['coordinate']['release'])}</code><br>Commit <code>{escape(simulation['coordinate']['commit'])}</code><br>Observation <code>{escape(simulation['observation_digest'])}</code><br>Projection <code>{escape(simulation['projection_digest'])}</code></p></div>
+</section>
+<h2 id="adjudication-heading">Decision-relevant result</h2>
+<p class="table-instructions" id="adjudication-instructions">Scroll horizontally inside the comparison table to review every shared field.</p>
+<div class="table-scroll" role="region" aria-labelledby="adjudication-heading" aria-describedby="adjudication-instructions" tabindex="0">
+<table>
+<thead><tr><th>Path</th><th>Classification</th><th>Why</th><th>Durable workbench</th><th>Selected future</th></tr></thead>
+<tbody>{rows}</tbody>
+</table>
+</div>
+<footer>
+  <p>Compared {summary['leaf_paths_compared']} closed projection paths. Report digest: <code>{escape(report['report_digest'])}</code></p>
+  <details><summary>Machine-readable report</summary><pre>{embedded}</pre></details>
+  {render_public_boundary()}
+</footer>
+</main>
+</body>
+</html>
+"""
+
+
+def _canonical_markup(canonical_url: str | None) -> str:
+    if canonical_url is None:
+        return ""
+    parsed = urlsplit(canonical_url)
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError(
+            "portable report canonical URL requires one credential-free HTTPS location"
+        )
+    return f'<link rel="canonical" href="{escape(canonical_url, quote=True)}">\n'

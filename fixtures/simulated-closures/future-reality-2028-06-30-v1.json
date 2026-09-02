@@ -10,7 +10,7 @@
         "version_bands_retained": true
       },
       "claim_scope": "Configured, authenticated, version-banded vendor environments in the selected future",
-      "closure_digest": "sha256:b63b7b0f5a48add8d7eb2f103e4a95d1f77b0892621aa94d7151ce966e8ec11e",
+      "closure_digest": "sha256:be5b5f5daeb2f3cbb32b642fe8c05efb624d16285a00551e51ae78d19dd4e6a9",
       "closure_status": "closed_in_simulation",
       "environment": {
         "configuration_provider": "aws-ssm-and-secrets-manager",
@@ -34,21 +34,21 @@
       "vendor_bindings": [
         {
           "conformance": "passed",
-          "readback_digest": "sha256:a45164d1613b52f1fede6c14dcd9974eb3a2d373ea009d3f82246ada47d159d8",
+          "readback_digest": "sha256:35fd06085240d0640a327229868c822b1305332d4225f52f87f05465091d28a0",
           "sdk_band": "sapiopylib-compatible-simulated-band",
           "vendor": "sapio",
           "version": "simulated-tenant-2026.3"
         },
         {
           "conformance": "passed",
-          "readback_digest": "sha256:6edeceff387de0d180508cb2817add8c09782d436aaab21a976451abba7ffa32",
+          "readback_digest": "sha256:39364a7cbfa2bfc33eab8454bffde85ab5084d1d18bacdda35d28d96041d05fd",
           "sdk_band": "benchling-sdk-stable-simulated-band",
           "vendor": "benchling",
           "version": "simulated-v3-2026.3"
         },
         {
           "conformance": "passed",
-          "readback_digest": "sha256:6edeceff387de0d180508cb2817add8c09782d436aaab21a976451abba7ffa32",
+          "readback_digest": "sha256:39364a7cbfa2bfc33eab8454bffde85ab5084d1d18bacdda35d28d96041d05fd",
           "sdk_band": "labkey-python-api-simulated-band",
           "vendor": "labkey",
           "version": "simulated-4.3.0"
@@ -146,25 +146,25 @@
         "simulated_evidence_declared": true
       },
       "claim_scope": "Independent Scientific, Quality, and Regulatory acceptance in the selected future",
-      "closure_digest": "sha256:d4544b91410af54043b8227b02d4ef72eb07731793435e5f504a896b96377aac",
+      "closure_digest": "sha256:7aaa8e60ab415fca7a9451667de49199150e0be7542e9a021e71cc6932a5f609",
       "closure_status": "closed_in_simulation",
       "decisions": [
         {
-          "basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
+          "basis_digest": "sha256:a8bb13fed365436155cf6b75185040647076d28fe277b3e4fb10b018979773bf",
           "decision": "accept",
           "domain": "scientific",
           "scope": "selected future reality and released intended-use profile",
           "simulated_accountable_role": "future-scientific-authority"
         },
         {
-          "basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
+          "basis_digest": "sha256:a8bb13fed365436155cf6b75185040647076d28fe277b3e4fb10b018979773bf",
           "decision": "accept",
           "domain": "quality",
           "scope": "selected future reality and released intended-use profile",
           "simulated_accountable_role": "future-quality-authority"
         },
         {
-          "basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
+          "basis_digest": "sha256:a8bb13fed365436155cf6b75185040647076d28fe277b3e4fb10b018979773bf",
           "decision": "accept",
           "domain": "regulatory",
           "scope": "selected future reality and released intended-use profile",
@@ -176,7 +176,7 @@
       "independence": {
         "mode": "distinct_simulated_accountable_roles",
         "role_count": 3,
-        "shared_basis_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90"
+        "shared_basis_digest": "sha256:a8bb13fed365436155cf6b75185040647076d28fe277b3e4fb10b018979773bf"
       },
       "outcome": "passed",
       "reality_basis": {
@@ -197,7 +197,7 @@
     "aggregate_artifacts": [
       {
         "artifact_id": "ARTIFACT-SIM-SUBSTANTIVE-CLOSURE-2028-V1",
-        "digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
+        "digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
         "locator": "evidence://simulation/closures/substantive-2028-v1",
         "media_type": "application/json",
         "retention_class": "simulation-baseline",
@@ -333,7 +333,7 @@
         "artifacts": [
           {
             "artifact_id": "ARTIFACT-SIM-VENDOR-CONFORMANCE-2028-V1",
-            "digest": "sha256:b63b7b0f5a48add8d7eb2f103e4a95d1f77b0892621aa94d7151ce966e8ec11e",
+            "digest": "sha256:be5b5f5daeb2f3cbb32b642fe8c05efb624d16285a00551e51ae78d19dd4e6a9",
             "locator": "evidence://simulation/closures/configured-vendors-2028-v1",
             "media_type": "application/json",
             "retention_class": "simulation-baseline",
@@ -460,7 +460,7 @@
         "artifacts": [
           {
             "artifact_id": "ARTIFACT-SIM-ACCOUNTABLE-ACCEPTANCE-2028-V1",
-            "digest": "sha256:d4544b91410af54043b8227b02d4ef72eb07731793435e5f504a896b96377aac",
+            "digest": "sha256:7aaa8e60ab415fca7a9451667de49199150e0be7542e9a021e71cc6932a5f609",
             "locator": "evidence://simulation/closures/accountable-acceptance-2028-v1",
             "media_type": "application/json",
             "retention_class": "simulation-baseline",
@@ -487,7 +487,7 @@
         "scope": "The selected future research-use lifecycle, vendor integrations, migration, recovery, security, observability, and retained evidence.",
         "simulated_environment": {
           "class": "qualification",
-          "configuration_digest": "sha256:93967f795e1420f28ac66f7f4f737da9f81182f2180c1d41c6f2a6ee8a0cac90",
+          "configuration_digest": "sha256:a8bb13fed365436155cf6b75185040647076d28fe277b3e4fb10b018979773bf",
           "environment_id": "ENV-SIM-ACCEPTANCE-2028-V1",
           "region": "synthetic-us-east",
           "schema_version": "acceptance-packet-3.0"
@@ -501,6 +501,6 @@
       }
     ]
   },
-  "governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
-  "source_result_digest": "sha256:9d42b972c77764c81ff32fefe8f02367a27406e9ba082a704587cc9b5a9da860"
+  "governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+  "source_result_digest": "sha256:5ed067887dc02d2a4c85845d3d25ab6b3fbee857011bed7e5b528e4e58c03861"
 }

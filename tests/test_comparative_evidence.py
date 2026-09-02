@@ -296,7 +296,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(summary["closure_status"], "closed_in_simulation")
         self.assertEqual(
             summary["governance_closure_digest"],
-            "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
+            "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
         )
         self.assertEqual(
             summary["environment_observed_closure"],
