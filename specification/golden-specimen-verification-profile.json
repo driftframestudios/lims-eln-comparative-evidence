@@ -50,17 +50,17 @@
     {
       "path": "$.measurement.analyte",
       "divergence_classification": "material_divergence",
-      "rationale": "The accepted durable concentration and selected-future copy-number results name different analytes; an accountable scientific mapping has not joined them."
+      "rationale": "The durable-workbench snapshot and selected-future result name different analytes; an accountable scientific mapping has not joined them."
     },
     {
       "path": "$.measurement.value",
       "divergence_classification": "material_divergence",
-      "rationale": "The accepted durable and selected-future results carry different scientific quantities whose equivalence has not been established."
+      "rationale": "The durable-workbench snapshot and selected-future result carry different scientific quantities whose equivalence has not been established."
     },
     {
       "path": "$.measurement.unit",
       "divergence_classification": "material_divergence",
-      "rationale": "The accepted durable concentration unit and selected-future copy-number unit express different measurement semantics."
+      "rationale": "The durable-workbench snapshot expresses concentration in ng/uL, while the selected-future result expresses copy number; they carry different measurement semantics."
     },
     {
       "path": "$.measurement.quality_flag",
