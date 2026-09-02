@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lims-eln/observation-envelope/1.0.0",
+  "$id": "https://example.invalid/lims-eln/observation-envelope/1.2.0",
   "title": "Comparative observation envelope",
   "type": "object",
   "required": [
@@ -16,7 +16,7 @@
     "classification"
   ],
   "properties": {
-    "envelope_version": {"const": "1.0.0"},
+    "envelope_version": {"const": "1.2.0"},
     "observation_id": {
       "type": "string",
       "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
@@ -31,11 +31,23 @@
     },
     "source": {
       "type": "object",
-      "required": ["environment_id", "implementation_commit", "configuration_digest"],
+      "required": ["environment_id", "implementation_commit", "configuration_digest", "database_release"],
       "properties": {
         "environment_id": {"$ref": "#/$defs/identity"},
         "implementation_commit": {"type": "string", "minLength": 1, "maxLength": 128},
-        "configuration_digest": {"$ref": "#/$defs/sha256"}
+        "simulation_commit": {"type": "string", "minLength": 1, "maxLength": 128},
+        "configuration_digest": {"$ref": "#/$defs/sha256"},
+        "database_release": {"$ref": "#/$defs/database_release_coordinate"},
+        "future_reality_version": {
+          "type": "string",
+          "pattern": "^future-reality-[0-9]{4}-[0-9]{2}-[0-9]{2}-v[0-9]+$"
+        },
+        "closure_id": {
+          "type": "string",
+          "pattern": "^CLOSURE-[A-Z0-9]+(?:-[A-Z0-9]+)*$"
+        },
+        "governance_closure_digest": {"$ref": "#/$defs/sha256"},
+        "aggregate_artifact_digest": {"$ref": "#/$defs/sha256"}
       },
       "additionalProperties": false
     },
@@ -83,6 +95,36 @@
   "allOf": [
     {
       "if": {
+        "properties": {"evidence_mode": {"const": "simulated"}},
+        "required": ["evidence_mode"]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "required": [
+              "environment_id",
+              "implementation_commit",
+              "simulation_commit",
+              "configuration_digest",
+              "future_reality_version",
+              "closure_id",
+              "governance_closure_digest",
+              "aggregate_artifact_digest"
+            ],
+            "properties": {
+              "implementation_commit": {
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "simulation_commit": {
+                "pattern": "^[a-f0-9]{40}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
         "properties": {"evidence_mode": {"const": "observed"}},
         "required": ["evidence_mode"]
       },
@@ -121,6 +163,74 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
       "minLength": 3,
       "maxLength": 128
+    },
+    "governed_identity": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
+      "maxLength": 128
+    },
+    "semantic_version": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$"
+    },
+    "database_release_coordinate": {
+      "type": "object",
+      "required": [
+        "oracle_id",
+        "oracle_version",
+        "database_release",
+        "data_contract_id",
+        "data_contract_version",
+        "data_contract_digest",
+        "migration_manifest_id",
+        "migration_manifest_version",
+        "migration_manifest_digest",
+        "migration_mechanism_id",
+        "migration_mechanism_version",
+        "migration_mechanism_digest",
+        "migration_history_relation",
+        "migration_lock_strategy",
+        "migration_transaction_strategy",
+        "migration_receipt_id",
+        "migration_receipt_digest",
+        "release_receipt_id",
+        "release_receipt_digest",
+        "schema_digest"
+      ],
+      "properties": {
+        "oracle_id": {"$ref": "#/$defs/governed_identity"},
+        "oracle_version": {"$ref": "#/$defs/semantic_version"},
+        "database_release": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+        },
+        "data_contract_id": {"$ref": "#/$defs/governed_identity"},
+        "data_contract_version": {"$ref": "#/$defs/semantic_version"},
+        "data_contract_digest": {"$ref": "#/$defs/sha256"},
+        "migration_manifest_id": {"$ref": "#/$defs/governed_identity"},
+        "migration_manifest_version": {"$ref": "#/$defs/semantic_version"},
+        "migration_manifest_digest": {"$ref": "#/$defs/sha256"},
+        "migration_mechanism_id": {"$ref": "#/$defs/governed_identity"},
+        "migration_mechanism_version": {"$ref": "#/$defs/semantic_version"},
+        "migration_mechanism_digest": {"$ref": "#/$defs/sha256"},
+        "migration_history_relation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,62}\\.[a-z][a-z0-9_]{0,62}$"
+        },
+        "migration_lock_strategy": {"$ref": "#/$defs/mechanism_strategy"},
+        "migration_transaction_strategy": {"$ref": "#/$defs/mechanism_strategy"},
+        "migration_receipt_id": {"$ref": "#/$defs/governed_identity"},
+        "migration_receipt_digest": {"$ref": "#/$defs/sha256"},
+        "release_receipt_id": {"$ref": "#/$defs/governed_identity"},
+        "release_receipt_digest": {"$ref": "#/$defs/sha256"},
+        "schema_digest": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "mechanism_strategy": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "maxLength": 96
     },
     "approval": {
       "type": "object",

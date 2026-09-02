@@ -13,9 +13,13 @@
 /schemas/simulated-closure-bundle.schema.json @driftframestudios
 /.github/workflows/ @driftframestudios
 /.github/dependabot.yml @driftframestudios
+/tools/check_automation_contract.py @driftframestudios
 /tools/check_branch_flow.py @driftframestudios
 /tools/check_artifacts.py @driftframestudios
+/tools/build_pages.py @driftframestudios
 /tests/test_branch_flow.py @driftframestudios
+/tests/test_pages.py @driftframestudios
+/src/comparative_evidence/publication.py @driftframestudios
 
 # Roles: scientific-data and quality-regulatory
 /specification/ @driftframestudios
@@ -30,6 +34,9 @@
 
 # Roles: solution-architecture and quality-regulatory
 /release/ @driftframestudios
+/receipts/ @driftframestudios
+/src/comparative_evidence/promotion_receipt.py @driftframestudios
+/tests/test_promotion_lifecycle.py @driftframestudios
 /machine-node.json @driftframestudios
 /first-receipt.json @driftframestudios
 /COORDINATION-HORIZON.json @driftframestudios

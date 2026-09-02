@@ -1,20 +1,35 @@
 # LIMS/ELN Comparative Evidence
 
-This repository independently compares a released specification, a frozen selected
-future, and—when useful—an observed implementation result. It produces
-machine-readable JSON and a portable HTML report while preserving the original
-inputs and their authority.
+This repository independently compares a released specification and frozen selected
+future through three explicit routes: a shared-result verification between two
+synthetic executions, a planned contract-shape exercise, or caller-supplied observed
+evidence. It produces machine-readable JSON and a portable HTML report while
+preserving the original inputs and their authority.
+
+Repository authorship and maintenance provenance is recorded in
+[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
+chronology and contribution credit.
 
 The selected future is definitive within its declared simulation reality. An
 environment encounter is a separate evidence mode that can confirm it, reveal an
 actual gap, expose a simulation fault, improve upon the forecast, or show that
 context changed.
 
+The repository persists the selected-future simulation, a reviewed durable-workbench
+snapshot, and planned synthetic contract shapes. Environment-observed and accepted
+envelopes enter at runtime from governed evidence storage. The checked-in portable
+report uses
+`comparison_mode: synthetic_contract`, preserves
+`environment_observed_closure: separate_unasserted_state`, and records
+`production_authorization_effect: none`.
+
 ## Evidence namespaces
 
 `simulated-closures/` receives a bundle after the comparator confirms:
 
-- the exact governance 2.0.0 closure document matches its release-bound digest;
+- the exact governance 2.0.1 closure document matches its release-bound digest;
+- the closure bundle's source-result digest independently reproduces the
+  aggregate artifact digest;
 - all four governance receipt projections and detailed executable receipts are
   present exactly once in the same future reality;
 - every projected artifact digest resolves to its detailed receipt;
@@ -25,24 +40,56 @@ context changed.
 
 This path records `closed_in_simulation`, keeps environment-observed closure in
 `separate_unasserted_state`, and grants `production_authorization_effect: none`.
-It therefore closes the receipts inside the selected future without requiring an
-external environment encounter or personal identities.
+It closes the receipts inside the selected future using simulated accountable roles
+and declared reference-environment coordinates; external environment encounters and
+personal identities remain in `separate_unasserted_state`.
 
 Evidence enters `accepted/` only through the admission gate. The gate requires:
 
 - `evidence_mode: observed`;
 - a named environment and immutable implementation identity;
+- a typed database-release coordinate binding the target data contract, migration
+  manifest, mechanism identity and execution semantics, observed migration and
+  release receipts, and resulting schema digest;
 - a raw-artifact digest and governed locator;
 - performer and independent reviewer identities;
 - an accountable approval for acceptance-stage records;
 - a classification and redaction statement.
 
 Observed records retain their independent admission path. Their presence extends the
-comparative surface and does not determine whether a selected future is complete.
+comparative surface while the selected future retains its declared simulation scope.
 
-Raw vendor exports, sensitive traces, credentials, and regulated records live in
-governed evidence storage. Git contains redacted manifests, content digests, and
-protected locators.
+Raw vendor exports, sensitive traces, credentials, regulated records, and observed
+envelopes live in governed evidence storage. This release includes the schemas and
+admission path; its `accepted/` and `receipts/redacted/` namespaces contain guidance
+and reserved locations rather than environment-evidence examples.
+
+## Shared contract boundary
+
+Each local 1.2 envelope also passes through a contract-v1 compatibility projection
+before admission or comparison. The projection validates the shared envelope fields,
+evidence vocabulary, provenance shape, approval limits, observed-evidence posture,
+and finite JSON boundary while the local envelope retains its database-release and
+selected-future coordinates. The comparison profile, persisted simulation, and
+planned contract shape use `SCN-GOLDEN-SPECIMEN-001`; specimen revision and
+scientific-result expectations come from the same golden scenario that drives the
+simulator.
+
+The repository packages byte-identical scenario and schema snapshots with explicit
+version and digest bindings, so normal comparison and admission remain independently
+runnable. When the reviewed package or sibling source is available, this focused check
+proves snapshot identity and validates both observations through the authoritative
+Pydantic model:
+
+```bash
+python tools/check_contract_conformance.py \
+  --contract-source ../lims-eln-program-specification/src
+```
+
+The optional `contract-conformance` extra resolves the reviewed full-commit Program
+source on Python 3.12+. A future packaged distribution can replace that VCS
+coordinate after it preserves the same source identity. The standalone adapter keeps
+ordinary comparison available without a network or sibling checkout.
 
 Receipt-family vocabulary is owned by program specification contract
 `RECEIPT-VOCABULARY-MAP-001` in
@@ -51,26 +98,169 @@ Receipt-family vocabulary is owned by program specification contract
 manifests use its four canonical governance-family values directly. The release
 manifest records this external repository coordinate, digest, and promotion state.
 
+## Shared Golden Specimen verification
+
+The named verification route compares the decision-relevant Golden Specimen result
+emitted by the durable workbench with the result emitted inside the accepted selected
+future. Both envelopes pass through the exact Program projection contract before any
+field is classified. The report includes all 17 closed projection leaves and uses
+three direct classifications:
+
+- `agreement` for the same decision-relevant value;
+- `explainable_variation` for execution-owned identifiers and timestamps; and
+- `material_divergence` for scientific values whose meanings need an accountable
+  mapping before they can be treated as equivalent.
+
+Producer-specific detail remains available as source context and a canonical digest.
+It stays outside the field-by-field judgment. The durable fixture is a
+Comparator-owned snapshot generated from the accepted Enterprise source and its
+reviewed PostgreSQL proof route; it is identified as a snapshot rather than an
+Enterprise release artifact. Both inputs retain simulated authority, so this report
+supports design and implementation decisions while the observed-evidence lane keeps
+its independent provenance and acceptance route.
+
 ## Run it
 
 ```bash
+python -m pip install --editable ".[validation]"
 python -m unittest discover -s tests -v
-PYTHONPATH=src python -m comparative_evidence.cli compare \
+PYTHONPATH=src python -m comparative_evidence.cli compare-synthetic-contract \
   --profile specification/comparison-profile.json \
   --simulation fixtures/pairs/simulation-observation.json \
-  --actual fixtures/pairs/actual-observation.json \
+  --contract-candidate fixtures/contracts/planned-observation.json \
   --output build/comparison
+
+PYTHONPATH=src python -m comparative_evidence.cli compare-simulated-verification \
+  --profile specification/golden-specimen-verification-profile.json \
+  --implementation fixtures/pairs/enterprise-postgresql-observation.json \
+  --simulation fixtures/pairs/simulation-golden-specimen-observation.json \
+  --constellation constellation.lock.json \
+  --output build/golden-specimen-verification
 ```
+
+The validation extra executes the released Draft 2020-12 comparison-profile and
+observation-envelope contracts during both the test matrix and the aggregate
+repository gate.
 
 The output contains `comparison.json` and `comparison.html`. Difference values appear
 only for paths declared in the released profile's `reportable_paths`. Every other
-value becomes a classification and content digest.
+value becomes a classification and content digest. Profile paths use `$.field` and
+`[index]`; nested named projections carry source keys that contain path delimiters.
+Empty objects and arrays remain material values, and numeric tolerances apply to
+numbers while boolean states retain exact meaning.
+
+Observation envelopes detach and recursively freeze all nested input content. JSON
+serialization returns a fresh mutable projection, preserving the envelope digest
+across caller activity. Comparison applies JSON primitive semantics: booleans remain
+distinct from numbers, and numeric tolerances apply exclusively to finite numeric
+values. Each report also records both database-release coordinates and states whether
+their oracle, data contract, migration manifest, migration mechanism, history
+relation, lock strategy, transaction strategy, and target schema align. Target-state
+alignment and release-path alignment remain separate machine-readable judgments, so
+equivalent schemas reached through distinct migration systems retain visible
+provenance. Simulated, planned, and caller-supplied observed receipt identities remain
+separate evidence coordinates.
+
+## Build the Pages candidate
+
+The repository's Pages builder turns both synthetic comparison routes into a small
+inspection site. The Golden Specimen result is the primary reading path, and the
+contract-shape reference remains available beside it. Each readable report and JSON
+file preserves the exact bytes produced by the comparator. The surrounding index
+explains what each report establishes, links every material source file at one full
+Git revision, and records each projected file's byte count and SHA-256 identity.
+
+Run the builder from a clean checkout at the exact revision being inspected:
+
+```bash
+python -I -S -B tools/build_pages.py \
+  --source-revision <40-character-source-revision> \
+  --output ../lims-eln-comparative-pages
+```
+
+The default canonical location is the repository's GitHub Pages project path. A
+receiver can supply a verified HTTPS origin and matching CNAME explicitly when the
+publication route is selected. The fresh output directory lives outside the source
+worktree, keeps retained files visible, and gives each build one complete inventory.
+
+The isolated Python invocation keeps caller package paths, site customization, and
+cached project bytecode outside the publication runtime. The builder clears
+caller-supplied Git redirection and configuration variables, then
+confirms the repository root, origin, private Git directory, exact `HEAD`, index, and
+worktree. Every tracked path must resolve to a regular `HEAD` blob with the same bytes
+and executable bit in the index and worktree. Report inputs and contract resources are
+materialized from those blobs into a temporary source tree outside the checkout. A
+fresh isolated worker loads the committed Python source from that tree. The same source
+identity is rechecked immediately before the complete candidate is moved into its
+destination.
+
+The candidate contains:
+
+- an accessible, responsive report index;
+- the byte-identical Golden Specimen `comparison.json` and `comparison.html` runtime
+  outputs as the primary inspection route;
+- the byte-identical contract-shape reference report as a separate comparison
+  exercise;
+- a short data-use and crawler-intent note;
+- the approved MAPS Evaluations then BIG-bench marker stack on every HTML page;
+- `.nojekyll`; and
+- `projection-manifest.json`, which binds every other projected file to its byte
+  count, SHA-256 identity, and source revision. The receiving publication check
+  records the manifest's own digest.
+
+`python tools/validate_repository.py` builds two isolated candidates and compares the
+complete inventories byte for byte. Publication begins as a separate receiver action
+after this source is accepted; Issue #17 retains that route and its release evidence.
+
+The promotion receipt currently records a reviewed candidate source and keeps the
+release subject empty. After the accepted tree receives its signed tag, the same
+receipt can record the observed tag, commit, tree, archive, hosted checks, and local
+verification without changing the comparison's simulated authority.
+
+The Golden report identity includes the accepted Program, Governance, Enterprise,
+and Simulation source coordinates. The Comparator's own release coordinate remains a
+separate receiving record, so observing the signed release can preserve the report
+bytes that were already reviewed.
+
+The aggregate repository check creates the JSON and HTML reports twice in isolated
+directories and compares their exact bytes. The report binds each input's source and
+provenance by digest while governed locators and non-reportable values remain outside
+both outputs. Comparison-profile paths use one canonical object-and-array format,
+so a malformed or ambiguous path returns to profile correction before it can be
+treated as missing evidence.
+
+Report artifact verification requires an operating system with `O_NOFOLLOW` support
+and opens each leaf through that descriptor boundary. The report root and its parent
+directory remain deployment-owned coordinates; a deployment that permits concurrent
+directory replacement supplies an additional directory-descriptor or isolation
+boundary before verification begins.
+
+[`docs/migration-mechanism-comparison.md`](docs/migration-mechanism-comparison.md)
+defines this comparison boundary and its residual architecture decision.
+
+The released profile also declares every required comparison path and the preferred
+direction for recovery time and manual effort. A missing governed path becomes a
+shared-specification violation; a faster or lower-effort observed result can be
+recognized as a favorable divergence. The synthetic-contract report prefixes each
+rationale with its contract-exercise authority so classifications remain distinct
+from environment conclusions.
+
+Observed comparison uses the default, observed-only command with a caller-provided
+governed envelope:
+
+```bash
+PYTHONPATH=src python -m comparative_evidence.cli compare \
+  --profile specification/comparison-profile.json \
+  --simulation fixtures/pairs/simulation-observation.json \
+  --actual "${OBSERVED_ENVELOPE}" \
+  --output "${COMPARISON_OUTPUT}"
+```
 
 Admission uses a separate command:
 
 ```bash
 PYTHONPATH=src python -m comparative_evidence.cli admit \
-  --envelope fixtures/pairs/actual-observation.json \
+  --envelope "${OBSERVED_ENVELOPE}" \
   --accepted accepted/
 ```
 
@@ -82,12 +272,28 @@ PYTHONPATH=src python -m comparative_evidence.cli admit-simulated \
   --accepted simulated-closures/
 ```
 
+Forecast calibration starts with an honest empty ledger and activates only when an
+independently observed outcome carries immutable resolution evidence:
+
+```bash
+PYTHONPATH=src python -m comparative_evidence.cli calibrate \
+  --ledger fixtures/calibration/observed-outcomes.json
+```
+
+The resulting Brier score ranges from zero to one, with lower values indicating
+closer probabilistic fit. Simulated results remain available for comparison and stay
+outside the observed calibration ledger.
+
+The stable `comparative-validation` workflow gate recomputes the canonical closure,
+synthetic contract report, profile, calibration posture, JSON integrity, and
+repository-wide credential-shape scan after the complete Python test matrix succeeds.
+
 ## Coordination Horizon
 
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) describes current focus,
 completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
-[`first-receipt.json`](first-receipt.json) provide governance-2.0.0-conformant,
+[`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects.
 
 ## Comparative literacy
@@ -108,14 +314,20 @@ Critical scientific, tenant-security, audit, signature, migration, and restore
 invariants use exact comparison. Approved performance fields use declared tolerances.
 The report retains every judgment rule so a reviewer can challenge the adjudication.
 
-## GitFlow-like branches
+## Branch topology
 
-- `main`: released comparator and accepted redacted receipt manifests;
-- `develop`: integration for the next comparator release;
-- `feature/*`: bounded comparison rules, normalizers, or report changes;
-- `release/*`: frozen fixtures, schemas, and release hardening;
-- `hotfix/*`: correction of a released comparator defect, followed by reconciliation
-  into `develop`.
+- `main` is the protected release line.
+- `develop` is the lean integration line for the next accepted release.
+- `codex/*` and `feature/*` branches carry bounded work and leave after acceptance.
+- `release/<version>` forms only while an actual promotion is being assembled, then
+  returns its accepted result to `main` and `develop`.
+- `docs` can receive an accepted deterministic Pages output when Issue #17 reaches
+  publication. Runnable source continues to come from the accepted development and
+  release lines.
+
+A persistent staging branch earns a role when a staged runtime has distinct
+configuration, evidence, and recovery behavior. The current comparator keeps those
+coordinates in its explicit evidence modes instead.
 
 Fixture, oracle, critical-path, tolerance, and admission changes receive independent
 review. Release tags use `comparison-vMAJOR.MINOR.PATCH`.

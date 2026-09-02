@@ -1,17 +1,48 @@
 {
   "manifest_version": "2.0.0",
   "repository_role": "comparative_evidence",
-  "repository_release": "0.3.0",
-  "external_release": "comparison-v0.3.0",
-  "reference_report_digest": "sha256:f2e8906f2f32daba1193610b0ba1391e682af5ffa38d02da3e901b0004a30f81",
-  "canonical_governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
-  "simulated_closure_comparison_digest": "sha256:9c1472729260693e0fe719cc4abc71839e32de4fbfa0635057694adb2ffe301f",
-  "aggregate_closure_artifact_digest": "sha256:9ca1cba1efb73cd3c0bdede1d98f995835d4a3d7eaccbc1b87b4f4188591a9ad",
+  "repository_release": "0.3.1",
+  "external_release": "comparison-v0.3.1",
+  "synthetic_contract_report_digest": "sha256:0c05712b106c84847c94051cdad80608b5a2806a792da7cf04f6f06467debb51",
+  "reference_simulation_observation_digest": "sha256:c64909ae6bc1b77747ee9852be34f2ccbcd7099badebf5148f63cc216dba4ba4",
+  "canonical_governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+  "simulated_closure_comparison_digest": "sha256:0743cc1829bdb662824918feb99e2610540fc46ee0bbb1b40c564ffb75abd34d",
+  "aggregate_closure_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
+  "source_result_digest": "sha256:5ed067887dc02d2a4c85845d3d25ab6b3fbee857011bed7e5b528e4e58c03861",
+  "comparison_profile_digest": "sha256:861eb337308f320fc7149015cd363ddd5b7554ff2e1d8624d937a04bb8996ab2",
+  "calibration_ledger_digest": "sha256:062ca293c0fe36ad489e9702a61f191c5bb542d1e6c50145b1334a71f41d9433",
+  "canonical_closure_bundle_digest": "sha256:441b2038b74346474237dead2ff92ae0fe65eae39011ffa6556c1744696f4479",
+  "canonical_closure_bundle_file_sha256": "sha256:a72810e850c88f7a06c6e86fb94c1026a22d859089ee70ef31d4413b086fd098",
+  "golden_specimen_verification": {
+    "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
+    "report_digest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
+    "constellation_lock_digest": "sha256:38a1ebaa603706fcdf0a2f8674411980aff329d973ec8a2d57ac27123492b9bb",
+    "source_constellation_digest": "sha256:8048a485b443469f98350c26dbea4fd4067371e619ed210dec5fd61a3ecdf9d4",
+    "classification_counts": {
+      "agreement": 10,
+      "explainable_variation": 4,
+      "material_divergence": 3
+    },
+    "implementation": {
+      "fixture_path": "fixtures/pairs/enterprise-postgresql-observation.json",
+      "fixture_authority": "comparative_owned_snapshot_from_accepted_enterprise_source",
+      "file_sha256": "sha256:c4d6c47bb58c14b187426f1182be3df0467ca2ed65f84f76d430d348075e3b28",
+      "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+      "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e"
+    },
+    "simulation": {
+      "fixture_path": "fixtures/pairs/simulation-golden-specimen-observation.json",
+      "fixture_authority": "accepted_simulation_release_observation",
+      "file_sha256": "sha256:72773f06611ad98f89c298f44a9043f12427991ff9c43f7c437c658c08640975",
+      "observation_digest": "sha256:30b9384464bd5832085158a8a0f4f7bae6b0874f1774c82a5b2edb4cf4c758e3",
+      "projection_digest": "sha256:cead042eaf3ca8f72b9c30c41d9acb0bd9255027448f3b28e3451305bed1aef1"
+    }
+  },
   "trusted_simulated_closure": {
     "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
     "future_reality_version": "future-reality-2028-06-30-v1",
     "future_reality_id": "FUTURE-REALITY-LIMS-2028-001",
-    "governance_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+    "governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
     "source_coordinates": [
       {
         "release": "seed-forecast-2026-Q3-r2",
@@ -25,14 +56,43 @@
       }
     ]
   },
+  "trusted_simulated_database_release": {
+    "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+    "oracle_version": "1.0.0",
+    "database_release": "database-final-state-v1",
+    "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+    "data_contract_version": "1.0.0",
+    "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+    "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+    "migration_manifest_version": "1.0.0",
+    "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
+    "migration_mechanism_id": "FLYWAY",
+    "migration_mechanism_version": "13.0.0",
+    "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+    "migration_history_relation": "public.flyway_schema_history",
+    "migration_lock_strategy": "flyway_postgresql_history_lock",
+    "migration_transaction_strategy": "one_transaction_per_migration",
+    "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+    "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
+    "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
+    "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
+    "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+  },
   "first_receipt_contract": {
     "path": "first-receipt.json",
     "authority_mode": "orientation_only",
-    "evidence_modes": ["simulated", "observed"],
+    "persisted_evidence_modes": ["simulated", "planned"],
     "simulated_closure_status": "closed_in_simulation",
     "environment_observed_closure": "separate_unasserted_state",
     "production_authorization_effect": "none",
-    "observed_admission_status": "available_for_independent_comparison"
+    "observed_admission_status": "caller_supplied_only_unexercised"
+  },
+  "promotion_receipt_contract": {
+    "schema_path": "schemas/promotion-receipt.schema.json",
+    "schema_version": "1.0.0",
+    "schema_file_sha256": "sha256:8ebce65f823acb91b459049b2692bf05261c78d5346034e9603319c85de1b594",
+    "receipt_path": "receipts/promotion-receipt.json",
+    "receipt_canonical_json_digest": "sha256:e358ae6137dcd30516476084ccf6caee65b0aa897a881259084b907b6f986767"
   },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
@@ -49,11 +109,13 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "2.0.0",
-    "comparison_profile_schema": "1.0.0",
-    "observation_envelope_schema": "1.0.0",
+    "governance_schema": "2.0.1",
+    "comparison_profile_schema": "1.2.0",
+    "observation_envelope_schema": "1.2.0",
+    "database_release_coordinate": "1.1.0",
     "redacted_receipt_schema": "1.0.0",
-    "simulated_closure_bundle_schema": "2.0.0",
+    "calibration_ledger_schema": "1.0.0",
+    "simulated_closure_bundle_schema": "2.0.1",
     "control_plane_profile": "0.3.0"
   },
   "external_contract_bindings": {
@@ -64,7 +126,22 @@
       "coordinate_kind": "external_repository_path",
       "path": "specifications/receipt-vocabulary-map.v1.json",
       "status": "pending_cross_repository_promotion",
-      "digest": "sha256:a2752fb31914e24a025738bfc3d5bd12e035a076934be8c27c11a5df8701f9cd"
+      "digest": "sha256:0f3be9ab956877281f9261c69a5f099547b048c1c878541a7c9c47edc5e03280"
+    },
+    "shared_contract_nucleus": {
+      "contract_id": "LIMS-ELN-CONTRACT-NUCLEUS",
+      "version": "1.0.0",
+      "authority": "driftframestudios/lims-eln-program-specification",
+      "distribution": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290",
+      "binding_path": "src/comparative_evidence/contract_resources/contract-binding.v1.json",
+      "source_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+      "source_tree": "887e2c12a699105994097e4e9094270453de16ba",
+      "source_identity_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674",
+      "golden_scenario_document_digest": "sha256:d383578b8c55facd4613a8915f3f2137f8dfa14b2530ad9829e879c0db3a7261",
+      "golden_scenario_validated_model_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
+      "observation_schema_document_digest": "sha256:954e5a3643a7a139ec1e7bf40d1d356ba49c0be98953310ffce1b24043a4d47f",
+      "golden_result_projection_schema_document_digest": "sha256:0519835a178742d52994b1342f3fdf38281b982feca9283782d45489123871fb",
+      "distribution_state": "accepted_full_commit_vcs_coordinate"
     }
   },
   "seed_release_coordinates": {
@@ -73,9 +150,31 @@
     "simulation_commit": "6194a1c3911a97aa5e29b1861819a55554019488",
     "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
   },
+  "automation_controls": {
+    "pull_request_workflow": ".github/workflows/pull-request.yml",
+    "pull_request_targets": ["develop", "main"],
+    "pull_request_runner": "ubuntu-24.04",
+    "pull_request_python": "3.12",
+    "pull_request_timeout_minutes": 10,
+    "pull_request_permissions": {"contents": "read"},
+    "pull_request_concurrency_cancellation": true,
+    "manual_full_proof_workflow": ".github/workflows/verify.yml",
+    "dependabot_configuration": ".github/dependabot.yml",
+    "dependabot_target": "develop",
+    "dependabot_interval": "monthly",
+    "dependabot_open_pull_requests_per_ecosystem": 2,
+    "dependabot_grouped_update_types": ["minor", "patch"],
+    "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
+    "settings_state": "pending_source_acceptance_and_observed_check_name"
+  },
   "promotion_coordinates": {
-    "status": "pending_cross_repository_settlement",
+    "status": "candidate_ready",
     "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
+    "candidate_source": {
+      "coordinate_kind": "accepted_develop_merge_source",
+      "commit_oid": "daae956379cf00f5008672d19765aee6bec7eb4a",
+      "tree_oid": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
+    },
     "required_roles": [
       "site_reading_governance",
       "program_specification",

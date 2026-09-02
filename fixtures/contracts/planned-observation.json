@@ -1,0 +1,60 @@
+{
+  "envelope_version": "1.2.0",
+  "observation_id": "PLAN-CONTRACT-GOLDEN-001",
+  "evidence_mode": "planned",
+  "assurance_stage": "specified",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "source": {
+    "environment_id": "synthetic-contract-surface",
+    "implementation_commit": "planned-at-runtime",
+    "configuration_digest": "sha256:6ace2029f0688baf278329b520391162762e5794aa78d570e9391acf4da524e6",
+    "database_release": {
+      "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+      "oracle_version": "1.0.0",
+      "database_release": "database-final-state-v1",
+      "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+      "data_contract_version": "1.0.0",
+      "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+      "migration_manifest_id": "PLAN-DATABASE-MIGRATIONS-001",
+      "migration_manifest_version": "1.0.0",
+      "migration_manifest_digest": "sha256:2fa1e50a573a0a2fc8b2083c3fcbf2fbaa9b7348f87d1f1a22b6210a4ecb9829",
+      "migration_mechanism_id": "FLYWAY",
+      "migration_mechanism_version": "13.0.0",
+      "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+      "migration_history_relation": "public.flyway_schema_history",
+      "migration_lock_strategy": "flyway_postgresql_history_lock",
+      "migration_transaction_strategy": "one_transaction_per_migration",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-PLAN-001",
+      "migration_receipt_digest": "sha256:3bcb9cdf7ffc5d49b73425bf0cb90d023649cb4fc078d95976b73ff3bcae33b5",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-PLAN-001",
+      "release_receipt_digest": "sha256:830a26ef0a1f0617cc71ff8422fc35d17154ad4f2822491beb7d6bdeda87aef5",
+      "schema_digest": "sha256:6a260a2bc4b153a0ed3087e8bd9e953ea8129ddd6ce9e208d4ba8cbaa8828233"
+    }
+  },
+  "result": {
+    "specimen": {
+      "specimen_id": "SPM-SYN-0001",
+      "tenant_id": "TENANT-SYN-GENOMICS",
+      "status": "released",
+      "revision": 5,
+      "result": {"unit": "copies", "quality_flag": "pass"}
+    },
+    "migration": {"semantic_parity": true},
+    "restore": {"clean_environment": true, "observed_recovery_seconds": 41},
+    "security": {"tenant_boundary": "enforced"},
+    "telemetry": {"vendor_projection_readback": 0.9994},
+    "operations": {"manual_steps": 2},
+    "execution": {"completed_at": "planned-at-runtime", "trace_id": "planned-at-runtime"}
+  },
+  "provenance": {
+    "raw_artifact_digest": "sha256:7d7a3eb911e3c04731b76ff120ae28f33e8f06f7ce11421c2d8b02d9464be360",
+    "governed_locator": "synthetic-contract://planned/PLAN-CONTRACT-GOLDEN-001",
+    "performed_by": "contract-authoring-role",
+    "reviewed_by": "contract-review-role"
+  },
+  "approvals": [],
+  "classification": {
+    "data_class": "synthetic",
+    "redaction_status": "generated-identities"
+  }
+}

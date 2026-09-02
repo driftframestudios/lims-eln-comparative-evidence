@@ -1,0 +1,114 @@
+{
+  "approvals": [],
+  "assurance_stage": "specified",
+  "classification": {
+    "data_class": "synthetic",
+    "redaction_status": "generated-identities"
+  },
+  "envelope_version": "1.0.0",
+  "evidence_mode": "simulated",
+  "observation_id": "SIM-OBS-GOLDEN-001",
+  "provenance": {
+    "governed_locator": "simulation://forecast-2028-FR-v1/golden-specimen",
+    "performed_by": "simulation-runner",
+    "raw_artifact_digest": "sha256:fd850581374bbf024eb97861a55f84251287e5b61c83c6df0c42aee6d38ca4de",
+    "reviewed_by": "simulation-reviewer"
+  },
+  "result": {
+    "producer_detail": {
+      "configuration": {
+        "forecast_recovery_seconds": 72,
+        "future_reality_version": "future-reality-2028-06-30-v1",
+        "runtime_configuration_digest": "sha256:cc297505ae61026fa4a56401fad7974054e106378c338af8baba30af73c7825e"
+      },
+      "database_oracle": {
+        "canonical_json_digest": "sha256:d6d45141adf5b493f5739d57f2299d002e7c2a328d59a026c76dca17a7bb68f2",
+        "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+        "oracle_version": "1.0.0",
+        "release_coordinates": {
+          "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+          "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+          "data_contract_version": "1.0.0",
+          "database_release": "database-final-state-v1",
+          "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
+          "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+          "migration_manifest_version": "1.0.0",
+          "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
+          "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+          "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+          "oracle_version": "1.0.0",
+          "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
+          "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
+          "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      },
+      "simulation": {
+        "execution": {
+          "completed_at": "2026-08-17T14:35:00Z",
+          "trace_id": "sim-trace-001"
+        },
+        "migration": {
+          "semantic_parity": true
+        },
+        "operations": {
+          "manual_steps": 1
+        },
+        "restore": {
+          "clean_environment": true,
+          "observed_recovery_seconds": 72
+        },
+        "security": {
+          "tenant_boundary": "enforced"
+        },
+        "specimen": {
+          "result": {
+            "quality_flag": "pass",
+            "unit": "copies"
+          },
+          "revision": 5,
+          "status": "released"
+        },
+        "telemetry": {
+          "vendor_projection_readback": 1.0
+        }
+      }
+    },
+    "projection": {
+      "comparison_compatibility": "exact-version",
+      "custody": {
+        "current_location": "SYN-LAB-A/RECEIVING"
+      },
+      "lifecycle": {
+        "aggregate_version": 5,
+        "state": "released"
+      },
+      "measurement": {
+        "analyte": "synthetic-copy-number-marker",
+        "quality_flag": "pass",
+        "unit": "copies",
+        "value": 2.0
+      },
+      "projection_id": "urn:driftframe:lims-eln:golden-specimen-result",
+      "projection_version": "1.0.0",
+      "release": {
+        "approval_receipt_id": "APPROVAL-SYN-QUALITY-001",
+        "released_at": "2026-08-17T14:35:00Z"
+      },
+      "review_resolution": {
+        "decision": "accepted",
+        "resolved_at": "2026-08-17T14:35:00Z",
+        "review_id": "REVIEW-SYN-001"
+      },
+      "specimen_id": "SPM-SYN-0001",
+      "tenant_id": "TENANT-SYN-GENOMICS"
+    }
+  },
+  "scenario_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "scenario_version": "1.0.0",
+  "source": {
+    "configuration_digest": "sha256:f4ab947c2bfe83026fab9b15ea9c712ef70d8051a7cc1eeabf1195534b054c9c",
+    "environment_id": "simulated-final-state",
+    "implementation_commit": "forecast-2028-FR-v1"
+  }
+}

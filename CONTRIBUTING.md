@@ -13,20 +13,24 @@ Release branches freeze profile, fixtures, and schemas. A released comparison de
 uses `hotfix/<defect>`, targets `main`, and returns to `develop`. Reports retain the
 comparator version and profile digest.
 
-Dependabot maintains immutable GitHub Action references on a monthly cadence.
-Minor and patch updates may share one bounded pull request; major updates retain
-separate review and rollback coordinates. Dependabot uses the complete
+Local comparator and admission tests remain the standing proof path. The
+repository allocates 100–300 hosted runner minutes per month. One read-only,
+cancellable Python 3.12 proof accompanies pull requests into `develop` and
+`main`. The confirmed `verify-comparative-evidence` dispatch preserves the
+three-version matrix, generated report, artifact check, and optional one-day
+retention when a named receiver sets `ENABLE_GITHUB_ACTIONS=true` and selects
+`confirm_run`.
+
+`.github/dependabot.yml` supplies monthly GitHub Actions version updates into
+`develop`, with at most two open pull requests. Minor and patch updates share
+one bounded pull request; major updates retain separate review and recovery
+coordinates. Default-branch security updates retain their `main` route.
+Dependabot uses the complete
 `dependabot/github_actions/<dependency-update>` grammar with
 `dependabot[bot]`; Renovate uses `renovate/<dependency-update>` with
-`renovate[bot]`. Either flow targets `main` or `develop`, and all three
-coordinates must agree. Each update runs comparator and admission tests and
-receives human review. A security update accepted on `main` is reconciled into
-`develop`.
-
-The branch-policy workflow receives pull-request metadata through a read-only
-event, checks out the exact protected base SHA into `.base-policy`, and executes
-only that base-controlled checker. Contributor code remains evidence input for
-the ordinary verification workflow.
+`renovate[bot]`. Each branch identity and target agree with the repository
+checker. Each update receives the comparator and admission tests plus human
+review. A security update accepted on `main` is reconciled into `develop`.
 
 Code and documentation state affirmative target behavior. Security and privacy
 boundaries identify the governed continuation path: protected values become

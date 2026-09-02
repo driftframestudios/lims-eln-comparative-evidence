@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/lims-eln-comparative-evidence/calibration-ledger.schema.json",
+  "title": "Observed forecast calibration ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ledger_version",
+    "forecast_family",
+    "entries",
+    "empty_state"
+  ],
+  "properties": {
+    "ledger_version": {
+      "const": "1.0.0"
+    },
+    "forecast_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "forecast_id",
+          "event",
+          "probability",
+          "outcome",
+          "forecasted_at",
+          "resolved_at",
+          "resolution_mode",
+          "resolution_evidence_digest"
+        ],
+        "properties": {
+          "forecast_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "event": {
+            "type": "string",
+            "minLength": 10
+          },
+          "probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "outcome": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "forecasted_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolved_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolution_mode": {
+            "const": "observed"
+          },
+          "resolution_evidence_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "empty_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "statement"
+      ],
+      "properties": {
+        "status": {
+          "const": "awaiting_independently_observed_outcomes"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 20
+        }
+      }
+    }
+  }
+}

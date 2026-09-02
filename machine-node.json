@@ -4,7 +4,7 @@
   "title": "LIMS and ELN comparative evidence control plane",
   "purpose": "Orient collaborators to the canonical selected-future closure, independent observed-evidence path, released comparison rules, and authority boundaries.",
   "control_plane_profile": "0.3.0",
-  "schema_release": "2.0.0",
+  "schema_release": "2.0.1",
   "repository_role": "comparative_evidence",
   "authority": {
     "mode": "orientation_only",
@@ -20,29 +20,29 @@
   "contracts": [
     {
       "contract_id": "CONTRACT-SIMULATED-CLOSURE-001",
-      "version": "2.0.0",
-      "digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9"
+      "version": "2.0.1",
+      "digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5"
     },
     {
       "contract_id": "CONTRACT-COMPARISON-PROFILE-001",
-      "version": "1.0.0",
-      "digest": "sha256:3cd797628c803ce3751ae5117750f972478206c5e74f83d04b5d0e841a34e2ca"
+      "version": "1.2.0",
+      "digest": "sha256:861eb337308f320fc7149015cd363ddd5b7554ff2e1d8624d937a04bb8996ab2"
     }
   ],
   "campaigns": [
     {
       "campaign_id": "LIMS-ELN-OPEN-RECEIPTS",
-      "marking_schema_version": "2.0.0",
+      "marking_schema_version": "2.0.1",
       "status": "settling"
     },
     {
       "campaign_id": "COMPARATIVE-LITERACY-COLLABORATION",
-      "marking_schema_version": "2.0.0",
+      "marking_schema_version": "2.0.1",
       "status": "active"
     },
     {
       "campaign_id": "SITE-READING-SYSTEM",
-      "marking_schema_version": "2.0.0",
+      "marking_schema_version": "2.0.1",
       "status": "active"
     }
   ],
@@ -52,7 +52,7 @@
     "digest": "sha256:f8d79224b74ba45c5160ee9447fca77585ade6bbeb7eda5d6a3b173e1295b6d7"
   },
   "current_provenance": {
-    "release": "candidate-comparison-v0.3.0",
+    "release": "candidate-comparison-v0.3.1",
     "commit": "0000000000000000000000000000000000000000",
     "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
@@ -89,7 +89,7 @@
     }
   ],
   "metadata": {
-    "schema_version": "2.0.0",
+    "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
     "updated_at": "2026-07-28T20:30:00Z",
     "owner": {

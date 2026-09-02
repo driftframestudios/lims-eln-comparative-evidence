@@ -1,0 +1,243 @@
+{
+  "$defs": {
+    "ApprovalDecision": {
+      "enum": [
+        "accept",
+        "revise",
+        "escalate"
+      ],
+      "title": "ApprovalDecision",
+      "type": "string"
+    },
+    "ApprovalDomain": {
+      "enum": [
+        "engineering",
+        "operations",
+        "quality",
+        "regulatory",
+        "scientific",
+        "security"
+      ],
+      "title": "ApprovalDomain",
+      "type": "string"
+    },
+    "AssuranceStage": {
+      "enum": [
+        "specified",
+        "verified",
+        "qualified",
+        "validated",
+        "accepted"
+      ],
+      "title": "AssuranceStage",
+      "type": "string"
+    },
+    "EvidenceMode": {
+      "enum": [
+        "planned",
+        "simulated",
+        "observed"
+      ],
+      "title": "EvidenceMode",
+      "type": "string"
+    },
+    "EvidenceProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "governed_locator": {
+          "description": "Governed evidence reference; protected values stay in their approved store.",
+          "minLength": 1,
+          "title": "Governed Locator",
+          "type": "string"
+        },
+        "performed_by": {
+          "maxLength": 128,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+          "title": "Performed By",
+          "type": "string"
+        },
+        "raw_artifact_digest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Raw Artifact Digest",
+          "type": "string"
+        },
+        "reviewed_by": {
+          "maxLength": 128,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+          "title": "Reviewed By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "raw_artifact_digest",
+        "governed_locator",
+        "performed_by",
+        "reviewed_by"
+      ],
+      "title": "EvidenceProvenance",
+      "type": "object"
+    },
+    "EvidenceSource": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration_digest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Configuration Digest",
+          "type": "string"
+        },
+        "environment_id": {
+          "description": "Environment whose execution produced this observation.",
+          "maxLength": 128,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+          "title": "Environment Id",
+          "type": "string"
+        },
+        "implementation_commit": {
+          "description": "Exact commit for observed evidence or released source coordinate for a simulation.",
+          "minLength": 1,
+          "title": "Implementation Commit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "environment_id",
+        "implementation_commit",
+        "configuration_digest"
+      ],
+      "title": "EvidenceSource",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "ObservationApproval": {
+      "additionalProperties": false,
+      "properties": {
+        "approver": {
+          "maxLength": 128,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+          "title": "Approver",
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/ApprovalDecision"
+        },
+        "domain": {
+          "$ref": "#/$defs/ApprovalDomain"
+        }
+      },
+      "required": [
+        "domain",
+        "decision",
+        "approver"
+      ],
+      "title": "ObservationApproval",
+      "type": "object"
+    },
+    "ObservationClassification": {
+      "additionalProperties": false,
+      "properties": {
+        "data_class": {
+          "$ref": "#/$defs/ObservationDataClass"
+        },
+        "redaction_status": {
+          "$ref": "#/$defs/RedactionStatus"
+        }
+      },
+      "required": [
+        "data_class",
+        "redaction_status"
+      ],
+      "title": "ObservationClassification",
+      "type": "object"
+    },
+    "ObservationDataClass": {
+      "enum": [
+        "approved-synthetic-exemplar",
+        "approved-synthetic-qualification",
+        "redacted-confidential-manifest",
+        "redacted-regulated-manifest",
+        "synthetic"
+      ],
+      "title": "ObservationDataClass",
+      "type": "string"
+    },
+    "RedactionStatus": {
+      "enum": [
+        "generated-identities",
+        "reviewed-redacted-manifest"
+      ],
+      "title": "RedactionStatus",
+      "type": "string"
+    }
+  },
+  "$id": "urn:driftframe:lims-eln:observation-envelope:1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approvals": {
+      "items": {
+        "$ref": "#/$defs/ObservationApproval"
+      },
+      "maxItems": 24,
+      "title": "Approvals",
+      "type": "array"
+    },
+    "assurance_stage": {
+      "$ref": "#/$defs/AssuranceStage"
+    },
+    "classification": {
+      "$ref": "#/$defs/ObservationClassification"
+    },
+    "envelope_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Envelope Version",
+      "type": "string"
+    },
+    "evidence_mode": {
+      "$ref": "#/$defs/EvidenceMode"
+    },
+    "observation_id": {
+      "maxLength": 128,
+      "minLength": 3,
+      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
+      "title": "Observation Id",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/EvidenceProvenance"
+    },
+    "result": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Result",
+      "type": "object"
+    },
+    "scenario_id": {
+      "maxLength": 128,
+      "minLength": 3,
+      "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/EvidenceSource"
+    }
+  },
+  "required": [
+    "observation_id",
+    "evidence_mode",
+    "assurance_stage",
+    "scenario_id",
+    "source",
+    "result",
+    "provenance",
+    "classification"
+  ],
+  "title": "ObservationEnvelope",
+  "type": "object"
+}

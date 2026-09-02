@@ -1,0 +1,96 @@
+{
+  "profile_version": "1.0.0",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "scenario_version": "1.0.0",
+  "scenario_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
+  "projection_id": "urn:driftframe:lims-eln:golden-specimen-result",
+  "projection_version": "1.0.0",
+  "comparison_compatibility": "exact-version",
+  "comparison_paths": [
+    {
+      "path": "$.projection_id",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers selected different result identities; reconcile the shared projection contract before interpreting values."
+    },
+    {
+      "path": "$.projection_version",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers selected different projection versions; introduce a reviewed compatibility adapter before comparison."
+    },
+    {
+      "path": "$.comparison_compatibility",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers declare different compatibility behavior, so the comparison boundary is not shared."
+    },
+    {
+      "path": "$.tenant_id",
+      "divergence_classification": "material_divergence",
+      "rationale": "The results belong to different synthetic tenant coordinates and do not describe one paired journey."
+    },
+    {
+      "path": "$.specimen_id",
+      "divergence_classification": "material_divergence",
+      "rationale": "The results belong to different specimen coordinates and do not describe one paired journey."
+    },
+    {
+      "path": "$.lifecycle.state",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers reached different lifecycle states at the comparison boundary."
+    },
+    {
+      "path": "$.lifecycle.aggregate_version",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers reached different aggregate revisions, so their lifecycle histories require reconciliation."
+    },
+    {
+      "path": "$.custody.current_location",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers report different current custody locations for the shared specimen."
+    },
+    {
+      "path": "$.measurement.analyte",
+      "divergence_classification": "material_divergence",
+      "rationale": "The durable-workbench snapshot and selected-future result name different analytes; an accountable scientific mapping has not joined them."
+    },
+    {
+      "path": "$.measurement.value",
+      "divergence_classification": "material_divergence",
+      "rationale": "The durable-workbench snapshot and selected-future result carry different scientific quantities whose equivalence has not been established."
+    },
+    {
+      "path": "$.measurement.unit",
+      "divergence_classification": "material_divergence",
+      "rationale": "The durable-workbench snapshot expresses concentration in ng/uL, while the selected-future result expresses copy number; they carry different measurement semantics."
+    },
+    {
+      "path": "$.measurement.quality_flag",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers reached different quality dispositions for the shared result."
+    },
+    {
+      "path": "$.review_resolution.review_id",
+      "divergence_classification": "explainable_variation",
+      "rationale": "Each independent simulated execution retains its own review receipt identity while the accepted decision remains directly comparable."
+    },
+    {
+      "path": "$.review_resolution.decision",
+      "divergence_classification": "material_divergence",
+      "rationale": "The producers reached different accountable review decisions."
+    },
+    {
+      "path": "$.review_resolution.resolved_at",
+      "divergence_classification": "explainable_variation",
+      "rationale": "Each independent simulated execution retains its own review instant and chronology remains valid within both sources."
+    },
+    {
+      "path": "$.release.approval_receipt_id",
+      "divergence_classification": "explainable_variation",
+      "rationale": "Each independent simulated execution retains its own approval receipt identity while release remains accountable in both sources."
+    },
+    {
+      "path": "$.release.released_at",
+      "divergence_classification": "explainable_variation",
+      "rationale": "Each independent simulated execution retains its own release instant and review precedes release in both sources."
+    }
+  ]
+}

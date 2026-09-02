@@ -1,0 +1,46 @@
+{
+  "binding_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "authority": "driftframestudios/lims-eln-program-specification",
+  "distribution": {
+    "name": "lims-eln-program-specification",
+    "version": "0.3.1",
+    "python_package": "lims_eln_contracts",
+    "state": "accepted_full_commit_vcs_coordinate",
+    "source_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+    "source_tree": "887e2c12a699105994097e4e9094270453de16ba",
+    "acceptance_lineage_commit": "c155551f5ac2c203fd9d08190d7020bba0cf71f8",
+    "source_identity": {
+      "scope": [
+        "pyproject.toml",
+        "src/lims_eln_contracts"
+      ],
+      "algorithm": "path-length-bytes-sha256-v1",
+      "digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
+    },
+    "requirement": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290"
+  },
+  "runtime_posture": "standalone_snapshot_with_exact_vcs_conformance",
+  "next_distribution_state": "reviewed_full_commit_successor",
+  "resources": {
+    "golden_scenario": {
+      "package_path": "resources/scenarios/golden-specimen.v1.json",
+      "local_path": "contract_resources/golden-specimen.v1.json",
+      "sha256": "sha256:fc2b37ffa0ecd5e45c73a7c949bb13dcc9d69cf728c750d5bd900944836b9149",
+      "canonical_digest": "sha256:d383578b8c55facd4613a8915f3f2137f8dfa14b2530ad9829e879c0db3a7261",
+      "validated_model_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9"
+    },
+    "observation_schema": {
+      "package_path": "resources/schemas/observation-envelope.v1.schema.json",
+      "local_path": "contract_resources/observation-envelope.v1.schema.json",
+      "sha256": "sha256:88de7f800a1b705c46a95cc5b5c7ef74092ce31abf02642c23e0701071856282",
+      "canonical_digest": "sha256:954e5a3643a7a139ec1e7bf40d1d356ba49c0be98953310ffce1b24043a4d47f"
+    },
+    "golden_result_projection_schema": {
+      "package_path": "resources/schemas/golden-specimen-result-projection.v1.schema.json",
+      "local_path": "contract_resources/golden-specimen-result-projection.v1.schema.json",
+      "sha256": "sha256:ab2f3200045b5521b5c9da29c6f2e03a69ced3d5e8531a3107e20d06728f2696",
+      "canonical_digest": "sha256:0519835a178742d52994b1342f3fdf38281b982feca9283782d45489123871fb"
+    }
+  }
+}

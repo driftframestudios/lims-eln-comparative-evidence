@@ -4,10 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lims-eln-comparative-evidence"
-version = "0.3.0"
-description = "Independent comparator for observed and selected-future simulated evidence"
+version = "0.3.1"
+description = "Independent comparator for caller-supplied observed evidence, planned contract shapes, and selected-future simulations"
+authors = [{ name = "Driftframe Studios, Limited Liability Company" }]
 requires-python = ">=3.11"
 dependencies = []
+
+[project.optional-dependencies]
+validation = ["jsonschema==4.26.0"]
+contract-conformance = [
+  "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290",
+]
 
 [project.scripts]
 lims-eln-compare = "comparative_evidence.cli:main"
@@ -17,3 +24,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+comparative_evidence = ["contract_resources/*.json"]

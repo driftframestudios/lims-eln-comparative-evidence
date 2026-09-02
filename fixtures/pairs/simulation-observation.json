@@ -1,13 +1,40 @@
 {
-  "envelope_version": "1.0.0",
+  "envelope_version": "1.2.0",
   "observation_id": "SIM-OBS-GOLDEN-001",
   "evidence_mode": "simulated",
   "assurance_stage": "specified",
-  "scenario_id": "SPEC-GOLDEN-SPECIMEN-E2E-001",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
   "source": {
     "environment_id": "simulated-final-state",
-    "implementation_commit": "forecast-2026-Q3-r1",
-    "configuration_digest": "sha256:e0161b2640abc6b0461414b100f176b8376507e8a6426c2012667daf744ce867"
+    "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d",
+    "simulation_commit": "6194a1c3911a97aa5e29b1861819a55554019488",
+    "configuration_digest": "sha256:e0161b2640abc6b0461414b100f176b8376507e8a6426c2012667daf744ce867",
+    "future_reality_version": "future-reality-2028-06-30-v1",
+    "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
+    "governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+    "aggregate_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
+    "database_release": {
+      "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+      "oracle_version": "1.0.0",
+      "database_release": "database-final-state-v1",
+      "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+      "data_contract_version": "1.0.0",
+      "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+      "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+      "migration_manifest_version": "1.0.0",
+      "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
+      "migration_mechanism_id": "FLYWAY",
+      "migration_mechanism_version": "13.0.0",
+      "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+      "migration_history_relation": "public.flyway_schema_history",
+      "migration_lock_strategy": "flyway_postgresql_history_lock",
+      "migration_transaction_strategy": "one_transaction_per_migration",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+      "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
+      "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
+      "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    }
   },
   "result": {
     "specimen": {
@@ -20,13 +47,13 @@
     "migration": {"semantic_parity": true},
     "restore": {"clean_environment": true, "observed_recovery_seconds": 72},
     "security": {"tenant_boundary": "enforced"},
-    "telemetry": {"vendor_projection_readback": 0.999},
+    "telemetry": {"vendor_projection_readback": 1.0},
     "operations": {"manual_steps": 1},
-    "execution": {"completed_at": "2026-08-17T14:31:00Z", "trace_id": "sim-trace-001"}
+    "execution": {"completed_at": "2026-08-17T14:35:00Z", "trace_id": "sim-trace-001"}
   },
   "provenance": {
-    "raw_artifact_digest": "sha256:daeb30e06dcf80565ac935eca8ec3e87a2cd7194440c14842b470d3cb7fed353",
-    "governed_locator": "simulation://forecast-2026-Q3-r1",
+    "raw_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
+    "governed_locator": "simulation://future-reality-2028-06-30-v1/CLOSURE-SIM-SUBSTANTIVE-2028-V1",
     "performed_by": "simulation-runner",
     "reviewed_by": "simulation-reviewer"
   },
