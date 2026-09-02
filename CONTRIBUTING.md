@@ -1,8 +1,9 @@
 # Comparative evidence contribution guide
 
-Start from `develop` with `feature/<bounded-change>`. A pull request identifies the
-comparison profile, scenario IDs, evidence classes, and expected effect on prior
-reports.
+Start from `develop` with `feature/<bounded-change>`, `fix/<bounded-change>`,
+or `chore/<bounded-change>` as accepted by `tools/check_branch_flow.py`. A pull
+request identifies the comparison profile, scenario IDs, evidence classes, and
+expected effect on prior reports.
 
 Changes to expected results, normalizers, critical paths, tolerances, receipt schemas,
 or the admission gate receive a reviewer independent from the implementation change.

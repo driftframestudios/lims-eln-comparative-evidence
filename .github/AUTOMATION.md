@@ -34,7 +34,7 @@ version-update pull requests back to `develop`.
 
 ## Recovery
 
-Local comparison tests and `python tools/validate_repository.py` remain the
+Local comparison tests and `python3 tools/validate_repository.py` remain the
 standing source-owned evidence. Setting `ENABLE_GITHUB_ACTIONS=false` rests the
 confirmed full proof. Repository settings can pause all hosted execution. A
 reviewed source change can return the dependency schedule to its manual
