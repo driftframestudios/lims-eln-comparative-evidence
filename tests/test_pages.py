@@ -279,6 +279,15 @@ class PagesProjectionTests(unittest.TestCase):
             self.assertIn('aria-describedby="adjudication-instructions"', document)
             self.assertIn('tabindex="0"', document)
             self.assertIn("overflow-x:auto", document)
+            self.assertIn(
+                '.classification-column { min-width:13rem; overflow-wrap:normal; }',
+                document,
+            )
+            self.assertIn(
+                '<th class="classification-column">Classification</th>',
+                document,
+            )
+            self.assertIn("white-space:nowrap", document)
             self.assertLess(
                 document.index(MAPS_CANARY),
                 document.index(BIG_BENCH_CANARY),
