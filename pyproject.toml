@@ -13,7 +13,7 @@ dependencies = []
 [project.optional-dependencies]
 validation = ["jsonschema==4.26.0"]
 contract-conformance = [
-  "lims-eln-program-specification==0.3.1",
+  "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290",
 ]
 
 [project.scripts]

@@ -11,8 +11,8 @@
     "configuration_digest": "sha256:e0161b2640abc6b0461414b100f176b8376507e8a6426c2012667daf744ce867",
     "future_reality_version": "future-reality-2028-06-30-v1",
     "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
-    "governance_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
-    "aggregate_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
+    "governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+    "aggregate_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
     "database_release": {
       "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
       "oracle_version": "1.0.0",
@@ -52,7 +52,7 @@
     "execution": {"completed_at": "2026-08-17T14:35:00Z", "trace_id": "sim-trace-001"}
   },
   "provenance": {
-    "raw_artifact_digest": "sha256:2d8e67ec2da8236fc23de7943e7727d2b74e0e6ee2b15afd9c765443b9c52b61",
+    "raw_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
     "governed_locator": "simulation://future-reality-2028-06-30-v1/CLOSURE-SIM-SUBSTANTIVE-2028-V1",
     "performed_by": "simulation-runner",
     "reviewed_by": "simulation-reviewer"

@@ -16,10 +16,15 @@ sys.path.insert(0, str(ROOT / "src"))
 from comparative_evidence.artifact_boundary import verify_reproducible_reports
 from comparative_evidence.calibration import score_calibration
 from comparative_evidence.compare import compare_synthetic_contract
+from comparative_evidence.contract_v1 import (
+    load_golden_specimen_result_projection_schema,
+    validate_golden_specimen_observation,
+)
 from comparative_evidence.database_release import (
     TRUSTED_SIMULATED_DATABASE_RELEASE,
 )
 from comparative_evidence.model import ObservationEnvelope, digest, strict_json_loads
+from comparative_evidence.golden_verification import compare_golden_specimen
 from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
 from check_automation_contract import validate_automation_contract
@@ -190,6 +195,50 @@ def main() -> int:
             ],
             contract_name=contract_name,
         )
+    golden_profile = _load(
+        "specification/golden-specimen-verification-profile.json"
+    )
+    constellation = _load("constellation.lock.json")
+    implementation_golden_path = (
+        ROOT / "fixtures/pairs/enterprise-postgresql-observation.json"
+    )
+    simulation_golden_path = (
+        ROOT / "fixtures/pairs/simulation-golden-specimen-observation.json"
+    )
+    implementation_golden = validate_golden_specimen_observation(
+        _load("fixtures/pairs/enterprise-postgresql-observation.json")
+    )
+    simulation_golden = validate_golden_specimen_observation(
+        _load("fixtures/pairs/simulation-golden-specimen-observation.json")
+    )
+    golden_projection_schema = load_golden_specimen_result_projection_schema()
+    for contract_name, observation in (
+        ("durable Golden Specimen projection", implementation_golden),
+        ("selected-future Golden Specimen projection", simulation_golden),
+    ):
+        validate_json_contract(
+            schema=golden_projection_schema,
+            instance=observation["result"]["projection"],
+            version_property="projection_version",
+            expected_version="1.0.0",
+            contract_name=contract_name,
+        )
+    golden_report = compare_golden_specimen(
+        implementation_golden,
+        simulation_golden,
+        golden_profile,
+        constellation,
+    )
+    golden_replay_report = compare_golden_specimen(
+        validate_golden_specimen_observation(
+            _load("fixtures/pairs/enterprise-postgresql-observation.json")
+        ),
+        validate_golden_specimen_observation(
+            _load("fixtures/pairs/simulation-golden-specimen-observation.json")
+        ),
+        _load("specification/golden-specimen-verification-profile.json"),
+        _load("constellation.lock.json"),
+    )
     report = compare_synthetic_contract(
         ObservationEnvelope.from_dict(simulation_observation),
         ObservationEnvelope.from_dict(planned_observation),
@@ -213,6 +262,18 @@ def main() -> int:
         write_reports(report, first_path)
         write_reports(replay_report, replay_path)
         report_artifact_inventory = verify_reproducible_reports(
+            first_path,
+            replay_path,
+        )
+    with (
+        tempfile.TemporaryDirectory(prefix="golden-first-") as first_directory,
+        tempfile.TemporaryDirectory(prefix="golden-replay-") as replay_directory,
+    ):
+        first_path = Path(first_directory)
+        replay_path = Path(replay_directory)
+        write_reports(golden_report, first_path)
+        write_reports(golden_replay_report, replay_path)
+        golden_report_artifact_inventory = verify_reproducible_reports(
             first_path,
             replay_path,
         )
@@ -270,12 +331,70 @@ def main() -> int:
         "canonical_closure_bundle_file_sha256": (
             f"sha256:{sha256(bundle_path.read_bytes()).hexdigest()}"
         ),
+        "golden_specimen_verification": {
+            "profile_digest": digest(golden_profile),
+            "report_digest": golden_report["report_digest"],
+            "constellation_lock_digest": digest(constellation),
+            "classification_counts": golden_report["summary"][
+                "classification_counts"
+            ],
+            "implementation": {
+                "fixture_path": (
+                    "fixtures/pairs/enterprise-postgresql-observation.json"
+                ),
+                "fixture_authority": (
+                    "comparative_owned_snapshot_from_accepted_enterprise_source"
+                ),
+                "file_sha256": (
+                    "sha256:"
+                    + sha256(implementation_golden_path.read_bytes()).hexdigest()
+                ),
+                "observation_digest": digest(implementation_golden),
+                "projection_digest": digest(
+                    implementation_golden["result"]["projection"]
+                ),
+            },
+            "simulation": {
+                "fixture_path": (
+                    "fixtures/pairs/simulation-golden-specimen-observation.json"
+                ),
+                "fixture_authority": "accepted_simulation_release_observation",
+                "file_sha256": (
+                    "sha256:"
+                    + sha256(simulation_golden_path.read_bytes()).hexdigest()
+                ),
+                "observation_digest": digest(simulation_golden),
+                "projection_digest": digest(
+                    simulation_golden["result"]["projection"]
+                ),
+            },
+        },
     }
     drift = {
         field: {"manifest": manifest.get(field), "derived": value}
         for field, value in expected.items()
         if manifest.get(field) != value
     }
+    for label, observation_field in (
+        ("implementation", "observation_digest"),
+        ("simulation", "reference_observation_digest"),
+    ):
+        expected_fixture = expected["golden_specimen_verification"][label]
+        expected_lock = {
+            "fixture_path": expected_fixture["fixture_path"],
+            "fixture_authority": expected_fixture["fixture_authority"],
+            "fixture_file_sha256": expected_fixture["file_sha256"],
+            observation_field: expected_fixture["observation_digest"],
+            "projection_digest": expected_fixture["projection_digest"],
+        }
+        observed_lock = {
+            field: constellation[label].get(field) for field in expected_lock
+        }
+        if observed_lock != expected_lock:
+            drift[f"constellation.{label}.fixture_binding"] = {
+                "lock": observed_lock,
+                "derived": expected_lock,
+            }
     if (
         manifest.get("trusted_simulated_database_release")
         != TRUSTED_SIMULATED_DATABASE_RELEASE.as_dict()
@@ -313,12 +432,18 @@ def main() -> int:
                     "observation_envelope_schema"
                 ],
                 "synthetic_contract_report_digest": report["report_digest"],
+                "golden_specimen_verification_report_digest": golden_report[
+                    "report_digest"
+                ],
                 "closure_comparison_digest": bundle_summary[
                     "comparison_digest"
                 ],
                 "calibration_status": calibration["status"],
                 "report_artifact_inventory_digest": digest(
                     report_artifact_inventory
+                ),
+                "golden_report_artifact_inventory_digest": digest(
+                    golden_report_artifact_inventory
                 ),
                 "pages_projection_inventory_digest": digest(pages_inventory),
             },

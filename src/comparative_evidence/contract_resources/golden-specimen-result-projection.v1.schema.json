@@ -1,0 +1,199 @@
+{
+  "$defs": {
+    "GoldenSpecimenCustodyResult": {
+      "additionalProperties": false,
+      "properties": {
+        "current_location": {
+          "minLength": 1,
+          "title": "Current Location",
+          "type": "string"
+        }
+      },
+      "required": [
+        "current_location"
+      ],
+      "title": "GoldenSpecimenCustodyResult",
+      "type": "object"
+    },
+    "GoldenSpecimenLifecycleResult": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregate_version": {
+          "exclusiveMinimum": 0,
+          "title": "Aggregate Version",
+          "type": "integer"
+        },
+        "state": {
+          "const": "released",
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "aggregate_version"
+      ],
+      "title": "GoldenSpecimenLifecycleResult",
+      "type": "object"
+    },
+    "GoldenSpecimenMeasurementResult": {
+      "additionalProperties": false,
+      "properties": {
+        "analyte": {
+          "minLength": 1,
+          "title": "Analyte",
+          "type": "string"
+        },
+        "quality_flag": {
+          "$ref": "#/$defs/QualityFlag"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "analyte",
+        "value",
+        "unit",
+        "quality_flag"
+      ],
+      "title": "GoldenSpecimenMeasurementResult",
+      "type": "object"
+    },
+    "GoldenSpecimenReleaseResult": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_receipt_id": {
+          "maxLength": 128,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+          "title": "Approval Receipt Id",
+          "type": "string"
+        },
+        "released_at": {
+          "maxLength": 27,
+          "minLength": 20,
+          "title": "Released At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approval_receipt_id",
+        "released_at"
+      ],
+      "title": "GoldenSpecimenReleaseResult",
+      "type": "object"
+    },
+    "GoldenSpecimenReviewResolution": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "const": "accepted",
+          "title": "Decision",
+          "type": "string"
+        },
+        "resolved_at": {
+          "maxLength": 27,
+          "minLength": 20,
+          "title": "Resolved At",
+          "type": "string"
+        },
+        "review_id": {
+          "maxLength": 128,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+          "title": "Review Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "decision",
+        "resolved_at"
+      ],
+      "title": "GoldenSpecimenReviewResolution",
+      "type": "object"
+    },
+    "QualityFlag": {
+      "enum": [
+        "pass",
+        "review"
+      ],
+      "title": "QualityFlag",
+      "type": "string"
+    }
+  },
+  "$id": "urn:driftframe:lims-eln:golden-specimen-result:1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Decision-relevant result shared by implementation and simulation.",
+  "properties": {
+    "comparison_compatibility": {
+      "const": "exact-version",
+      "title": "Comparison Compatibility",
+      "type": "string"
+    },
+    "custody": {
+      "$ref": "#/$defs/GoldenSpecimenCustodyResult"
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/GoldenSpecimenLifecycleResult"
+    },
+    "measurement": {
+      "$ref": "#/$defs/GoldenSpecimenMeasurementResult"
+    },
+    "projection_id": {
+      "const": "urn:driftframe:lims-eln:golden-specimen-result",
+      "title": "Projection Id",
+      "type": "string"
+    },
+    "projection_version": {
+      "const": "1.0.0",
+      "title": "Projection Version",
+      "type": "string"
+    },
+    "release": {
+      "$ref": "#/$defs/GoldenSpecimenReleaseResult"
+    },
+    "review_resolution": {
+      "$ref": "#/$defs/GoldenSpecimenReviewResolution"
+    },
+    "specimen_id": {
+      "maxLength": 128,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+      "title": "Specimen Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "maxLength": 128,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{1,126}[A-Za-z0-9]$",
+      "title": "Tenant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "projection_id",
+    "projection_version",
+    "comparison_compatibility",
+    "tenant_id",
+    "specimen_id",
+    "lifecycle",
+    "custody",
+    "measurement",
+    "review_resolution",
+    "release"
+  ],
+  "title": "GoldenSpecimenResultProjection",
+  "type": "object",
+  "x-semantic-invariants": [
+    "review_resolution.resolved_at occurs at or before release.released_at"
+  ]
+}

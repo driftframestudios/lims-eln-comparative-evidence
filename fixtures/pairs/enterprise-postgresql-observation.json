@@ -1,0 +1,89 @@
+{
+  "approvals": [],
+  "assurance_stage": "verified",
+  "classification": {
+    "data_class": "approved-synthetic-exemplar",
+    "redaction_status": "generated-identities"
+  },
+  "envelope_version": "1.0.0",
+  "evidence_mode": "simulated",
+  "observation_id": "OBS-WORKBENCH-A33FB9285DFF11B6",
+  "provenance": {
+    "governed_locator": "postgresql://workbench/TENANT-SYN-GENOMICS/RUN-SHARED-GOLDEN-001",
+    "performed_by": "ACTOR-SYN-TECH-01",
+    "raw_artifact_digest": "sha256:3893d373efc55ee4a5842c4b43857915764178e6ca6f4ac8e44ba6bcfb7f6b90",
+    "reviewed_by": "ACTOR-SYN-SCIENTIST-01"
+  },
+  "result": {
+    "producer_detail": {
+      "configuration": {
+        "contract_version": "1.0.0",
+        "migration_head": "005",
+        "state_adapter": "postgresql",
+        "vendor_gateway": "synthetic-benchling"
+      },
+      "durable_run_coordinate": {
+        "mode": "initial",
+        "receipt_id": "0ec6adce-abe5-58ec-849e-649be8cc78f0"
+      },
+      "instrument_message_id": "RUN-SHARED-GOLDEN-001:instrument",
+      "instrument_raw_digest": "sha256:3893d373efc55ee4a5842c4b43857915764178e6ca6f4ac8e44ba6bcfb7f6b90",
+      "lifecycle_event_ids": [
+        "e63761d0-0b6b-52ed-ad0f-704e9db8dd41",
+        "e41ed0dc-1ba2-5576-abce-6e67ce45c5cb",
+        "da9be254-d89c-5dcb-9060-2e53f3eebdb8",
+        "f72af996-30ad-5ab5-9f8a-43348fceabbd",
+        "04951e65-d826-5391-8768-6f70899a327f"
+      ],
+      "normalized_measurement_digest": "sha256:55296e7ebceefd0b7025dc8848e1d4dbc8839135d7b6060fb69c83a798c5d290",
+      "outbox_topics": [
+        "custody.position.changed"
+      ],
+      "vendor_projection": {
+        "canonical_digest": "5ae3920ac27b45ed1e52b675cf4465b7f73b9166ca194eafd2791206de07ee20",
+        "external_identity": "SPM-SYN-0001",
+        "reconciled": true,
+        "revision": 1,
+        "trace_id": "921fa5e1-cbdc-5c9e-89e4-d8d2c1c873ae",
+        "vendor_name": "synthetic-benchling"
+      }
+    },
+    "projection": {
+      "comparison_compatibility": "exact-version",
+      "custody": {
+        "current_location": "SYN-LAB-A/RECEIVING"
+      },
+      "lifecycle": {
+        "aggregate_version": 5,
+        "state": "released"
+      },
+      "measurement": {
+        "analyte": "SYNTHETIC-DNA",
+        "quality_flag": "pass",
+        "unit": "ng/uL",
+        "value": 12.5
+      },
+      "projection_id": "urn:driftframe:lims-eln:golden-specimen-result",
+      "projection_version": "1.0.0",
+      "release": {
+        "approval_receipt_id": "RUN-SHARED-GOLDEN-001:quality-approval",
+        "released_at": "2026-08-17T14:30:00Z"
+      },
+      "review_resolution": {
+        "decision": "accepted",
+        "resolved_at": "2026-08-17T14:30:00Z",
+        "review_id": "RUN-SHARED-GOLDEN-001:scientific-review"
+      },
+      "specimen_id": "SPM-SYN-0001",
+      "tenant_id": "TENANT-SYN-GENOMICS"
+    }
+  },
+  "scenario_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "scenario_version": "1.0.0",
+  "source": {
+    "configuration_digest": "sha256:8c3fb7b18749c7a78fad0b581090099e202309da68c6dd4671b5ef6653c4838e",
+    "environment_id": "WORKBENCH-SYNTHETIC",
+    "implementation_commit": "lims-eln-enterprise-implementation@0.3.1"
+  }
+}
