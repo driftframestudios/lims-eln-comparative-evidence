@@ -1,0 +1,160 @@
+{
+  "authority_posture": {
+    "environment_observed_closure": "separate_unasserted_state",
+    "evidence_claim": "synthetic_contract_shape_only",
+    "production_authorization_effect": "none"
+  },
+  "comparator_release": "0.3.1",
+  "comparison_contract_version": "1.2.0",
+  "comparison_mode": "synthetic_contract",
+  "database_release_alignment": {
+    "alignment_digest": "sha256:825b7d995e7f3a86e099e4ee3718cfa2a22b3fc06694c38f670afebbae64d019",
+    "data_contract_aligned": true,
+    "migration_execution_aligned": true,
+    "migration_history_aligned": true,
+    "migration_implementation_aligned": true,
+    "migration_manifest_aligned": false,
+    "migration_mechanism_aligned": true,
+    "oracle_aligned": true,
+    "planned_receipt_shapes": {
+      "migration_receipt_digest": "sha256:3bcb9cdf7ffc5d49b73425bf0cb90d023649cb4fc078d95976b73ff3bcae33b5",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-PLAN-001",
+      "release_receipt_digest": "sha256:830a26ef0a1f0617cc71ff8422fc35d17154ad4f2822491beb7d6bdeda87aef5",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-PLAN-001"
+    },
+    "release_path_aligned": false,
+    "schema_aligned": false,
+    "simulated_receipts": {
+      "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+      "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001"
+    },
+    "target_state_aligned": false,
+    "target_status": "target_divergence"
+  },
+  "differences": [
+    {
+      "candidate": 2,
+      "classification": "comparison_inconclusive",
+      "comparison": {
+        "authority": "synthetic_contract_shape",
+        "delta": 1,
+        "mode": "lower_is_better",
+        "outcome": "unfavorable",
+        "relative_delta": 1.0
+      },
+      "contract_exercise_classification": "actual_gap",
+      "critical": false,
+      "expected": 1,
+      "path": "$.operations.manual_steps",
+      "rationale": "Synthetic contract exercise; environment-observed closure remains a separate unasserted state. Planned contract-shape operation requires an additional manual handoff; the team will assess automation and accountable control value.",
+      "value_visibility": "explicit"
+    },
+    {
+      "candidate": 41,
+      "classification": "comparison_inconclusive",
+      "comparison": {
+        "authority": "synthetic_contract_shape",
+        "delta": -31,
+        "mode": "lower_is_better",
+        "outcome": "favorable",
+        "relative_delta": -0.4305555555555556
+      },
+      "contract_exercise_classification": "desired_divergence",
+      "critical": false,
+      "expected": 72,
+      "path": "$.restore.observed_recovery_seconds",
+      "rationale": "Synthetic contract exercise; environment-observed closure remains a separate unasserted state. Planned contract-shape recovery is faster than the conservative forecast and remains within the approved objective.",
+      "value_visibility": "explicit"
+    }
+  ],
+  "observation_contract": {
+    "contract_version": "1.0.0",
+    "distribution_version": "0.3.1",
+    "golden_scenario_document_digest": "sha256:d383578b8c55facd4613a8915f3f2137f8dfa14b2530ad9829e879c0db3a7261",
+    "golden_scenario_validated_model_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
+    "observation_schema_document_digest": "sha256:954e5a3643a7a139ec1e7bf40d1d356ba49c0be98953310ffce1b24043a4d47f"
+  },
+  "profile_digest": "sha256:861eb337308f320fc7149015cd363ddd5b7554ff2e1d8624d937a04bb8996ab2",
+  "report_digest": "sha256:0c05712b106c84847c94051cdad80608b5a2806a792da7cf04f6f06467debb51",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "simulation": {
+    "aggregate_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",
+    "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
+    "database_release": {
+      "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+      "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+      "data_contract_version": "1.0.0",
+      "database_release": "database-final-state-v1",
+      "migration_history_relation": "public.flyway_schema_history",
+      "migration_lock_strategy": "flyway_postgresql_history_lock",
+      "migration_manifest_digest": "sha256:e77fc009d4c7c5da2adc670ba54b699b21f2a2edce5e8c5841c2ff33ea914098",
+      "migration_manifest_id": "MANIFEST-DATABASE-MIGRATION-001",
+      "migration_manifest_version": "1.0.0",
+      "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+      "migration_mechanism_id": "FLYWAY",
+      "migration_mechanism_version": "13.0.0",
+      "migration_receipt_digest": "sha256:bb48765cc0cabf23fa9d78e365f751cc005c441471370c862c2cc4442a840c24",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-SIM-001",
+      "migration_transaction_strategy": "one_transaction_per_migration",
+      "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+      "oracle_version": "1.0.0",
+      "release_receipt_digest": "sha256:2a5ae9db07b7f36bf82878e36d38e795ec81773cf551e22408c947b038d13346",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-SIM-001",
+      "schema_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    "digest": "sha256:c64909ae6bc1b77747ee9852be34f2ccbcd7099badebf5148f63cc216dba4ba4",
+    "evidence_mode": "simulated",
+    "future_reality_version": "future-reality-2028-06-30-v1",
+    "governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+    "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d",
+    "observation_id": "SIM-OBS-GOLDEN-001",
+    "provenance_digest": "sha256:3240026c1e2941e99bb5d5aac0abba8aecb5d08021c44eaf743e1436b8f6ed82",
+    "simulation_commit": "6194a1c3911a97aa5e29b1861819a55554019488",
+    "source_digest": "sha256:ba39786ddc037cb4f1502bef53f1df2d23a7a53d538c81b3b2f8795142f2822c"
+  },
+  "summary": {
+    "classification_counts": {
+      "comparison_inconclusive": 2
+    },
+    "contract_exercise_classification_counts": {
+      "actual_gap": 1,
+      "desired_divergence": 1
+    },
+    "converged_paths": 12,
+    "critical_differences": 0,
+    "leaf_paths_compared": 14,
+    "material_differences": 2
+  },
+  "synthetic_contract": {
+    "assurance_stage": "specified",
+    "database_release": {
+      "data_contract_digest": "sha256:8c50463132809dbcf4bcfee1a1fda94d3c74de532387c13fc68f09603f5f1684",
+      "data_contract_id": "CONTRACT-LABORATORY-CORE-001",
+      "data_contract_version": "1.0.0",
+      "database_release": "database-final-state-v1",
+      "migration_history_relation": "public.flyway_schema_history",
+      "migration_lock_strategy": "flyway_postgresql_history_lock",
+      "migration_manifest_digest": "sha256:2fa1e50a573a0a2fc8b2083c3fcbf2fbaa9b7348f87d1f1a22b6210a4ecb9829",
+      "migration_manifest_id": "PLAN-DATABASE-MIGRATIONS-001",
+      "migration_manifest_version": "1.0.0",
+      "migration_mechanism_digest": "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+      "migration_mechanism_id": "FLYWAY",
+      "migration_mechanism_version": "13.0.0",
+      "migration_receipt_digest": "sha256:3bcb9cdf7ffc5d49b73425bf0cb90d023649cb4fc078d95976b73ff3bcae33b5",
+      "migration_receipt_id": "RECEIPT-DATABASE-MIGRATION-PLAN-001",
+      "migration_transaction_strategy": "one_transaction_per_migration",
+      "oracle_id": "ORACLE-DATABASE-FINAL-STATE-001",
+      "oracle_version": "1.0.0",
+      "release_receipt_digest": "sha256:830a26ef0a1f0617cc71ff8422fc35d17154ad4f2822491beb7d6bdeda87aef5",
+      "release_receipt_id": "RECEIPT-DATABASE-RELEASE-PLAN-001",
+      "schema_digest": "sha256:6a260a2bc4b153a0ed3087e8bd9e953ea8129ddd6ce9e208d4ba8cbaa8828233"
+    },
+    "digest": "sha256:8abdb852d294d1305c62658d0c7f47cd656ce97b8930f83ff12a4fa34d69fb38",
+    "evidence_mode": "planned",
+    "observation_id": "PLAN-CONTRACT-GOLDEN-001",
+    "provenance_digest": "sha256:b22052716cb3fb87d366a937ad2c2da776056fda69a768837c16e8d8ce9b2ba5",
+    "source_digest": "sha256:f984220fe06824acb1c7ae4d3f7be10190e7983848ef3c7c9369a3994a1ef787"
+  }
+}

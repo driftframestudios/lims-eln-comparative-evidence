@@ -1,0 +1,219 @@
+{
+  "authority_posture": {
+    "environment_observed_closure": "separate_unasserted_state",
+    "evidence_claim": "simulated_producer_verification",
+    "production_authorization_effect": "none"
+  },
+  "comparison_compatibility": "exact-version",
+  "comparison_contract_version": "1.0.0",
+  "comparison_mode": "simulated_verification",
+  "comparisons": [
+    {
+      "classification": "agreement",
+      "implementation": "urn:driftframe:lims-eln:golden-specimen-result",
+      "path": "$.projection_id",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "urn:driftframe:lims-eln:golden-specimen-result"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "1.0.0",
+      "path": "$.projection_version",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "1.0.0"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "exact-version",
+      "path": "$.comparison_compatibility",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "exact-version"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "TENANT-SYN-GENOMICS",
+      "path": "$.tenant_id",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "TENANT-SYN-GENOMICS"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "SPM-SYN-0001",
+      "path": "$.specimen_id",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "SPM-SYN-0001"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "released",
+      "path": "$.lifecycle.state",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "released"
+    },
+    {
+      "classification": "agreement",
+      "implementation": 5,
+      "path": "$.lifecycle.aggregate_version",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": 5
+    },
+    {
+      "classification": "agreement",
+      "implementation": "SYN-LAB-A/RECEIVING",
+      "path": "$.custody.current_location",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "SYN-LAB-A/RECEIVING"
+    },
+    {
+      "classification": "material_divergence",
+      "implementation": "SYNTHETIC-DNA",
+      "path": "$.measurement.analyte",
+      "rationale": "The durable-workbench snapshot and selected-future result name different analytes; an accountable scientific mapping has not joined them.",
+      "simulation": "synthetic-copy-number-marker"
+    },
+    {
+      "classification": "material_divergence",
+      "implementation": 12.5,
+      "path": "$.measurement.value",
+      "rationale": "The durable-workbench snapshot and selected-future result carry different scientific quantities whose equivalence has not been established.",
+      "simulation": 2.0
+    },
+    {
+      "classification": "material_divergence",
+      "implementation": "ng/uL",
+      "path": "$.measurement.unit",
+      "rationale": "The durable-workbench snapshot expresses concentration in ng/uL, while the selected-future result expresses copy number; they carry different measurement semantics.",
+      "simulation": "copies"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "pass",
+      "path": "$.measurement.quality_flag",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "pass"
+    },
+    {
+      "classification": "explainable_variation",
+      "implementation": "RUN-SHARED-GOLDEN-001:scientific-review",
+      "path": "$.review_resolution.review_id",
+      "rationale": "Each independent simulated execution retains its own review receipt identity while the accepted decision remains directly comparable.",
+      "simulation": "REVIEW-SYN-001"
+    },
+    {
+      "classification": "agreement",
+      "implementation": "accepted",
+      "path": "$.review_resolution.decision",
+      "rationale": "Both producers report the same released projection value.",
+      "simulation": "accepted"
+    },
+    {
+      "classification": "explainable_variation",
+      "implementation": "2026-08-17T14:30:00Z",
+      "path": "$.review_resolution.resolved_at",
+      "rationale": "Each independent simulated execution retains its own review instant and chronology remains valid within both sources.",
+      "simulation": "2026-08-17T14:35:00Z"
+    },
+    {
+      "classification": "explainable_variation",
+      "implementation": "RUN-SHARED-GOLDEN-001:quality-approval",
+      "path": "$.release.approval_receipt_id",
+      "rationale": "Each independent simulated execution retains its own approval receipt identity while release remains accountable in both sources.",
+      "simulation": "APPROVAL-SYN-QUALITY-001"
+    },
+    {
+      "classification": "explainable_variation",
+      "implementation": "2026-08-17T14:30:00Z",
+      "path": "$.release.released_at",
+      "rationale": "Each independent simulated execution retains its own release instant and review precedes release in both sources.",
+      "simulation": "2026-08-17T14:35:00Z"
+    }
+  ],
+  "implementation": {
+    "assurance_stage": "verified",
+    "coordinate": {
+      "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174",
+      "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+      "coordinate_status": "release_observed",
+      "digest": "git-tree-sha1:cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+      "fixture_authority": "comparative_owned_snapshot_from_accepted_enterprise_source",
+      "fixture_file_sha256": "sha256:c4d6c47bb58c14b187426f1182be3df0467ca2ed65f84f76d430d348075e3b28",
+      "fixture_path": "fixtures/pairs/enterprise-postgresql-observation.json",
+      "hosted_durable_proof_commit": "205401a530e984e031bb2c52a1654c6b5f82bc6d",
+      "hosted_durable_proof_run": "33581976426",
+      "observation_carrier_commit": "7e17bb9840f2936d7c83d63f36bfdb08b768ecb5",
+      "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+      "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e",
+      "release": "v0.3.1",
+      "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6"
+    },
+    "evidence_mode": "simulated",
+    "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+    "observation_id": "OBS-WORKBENCH-A33FB9285DFF11B6",
+    "producer_detail_digest": "sha256:ec6689116c229c785e7758e0fa55a736141bb0700fbbee5ab73d23fb86a8741a",
+    "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e",
+    "provenance": {
+      "governed_locator": "postgresql://workbench/TENANT-SYN-GENOMICS/RUN-SHARED-GOLDEN-001",
+      "performed_by": "ACTOR-SYN-TECH-01",
+      "raw_artifact_digest": "sha256:3893d373efc55ee4a5842c4b43857915764178e6ca6f4ac8e44ba6bcfb7f6b90",
+      "reviewed_by": "ACTOR-SYN-SCIENTIST-01"
+    },
+    "provenance_digest": "sha256:9063e7bfbc073184e4b9b0514b7b18aeca353f444618aea4b5c5f1d2b55289ff",
+    "source": {
+      "configuration_digest": "sha256:8c3fb7b18749c7a78fad0b581090099e202309da68c6dd4671b5ef6653c4838e",
+      "environment_id": "WORKBENCH-SYNTHETIC",
+      "implementation_commit": "lims-eln-enterprise-implementation@0.3.1"
+    },
+    "source_digest": "sha256:0dfa7bd7a1fd1c50954ce10d4261f21a046f4f5a6e6334ac47c1f2537e6a5b62"
+  },
+  "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
+  "projection_id": "urn:driftframe:lims-eln:golden-specimen-result",
+  "projection_version": "1.0.0",
+  "report_digest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
+  "scenario_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
+  "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+  "scenario_version": "1.0.0",
+  "simulation": {
+    "assurance_stage": "specified",
+    "coordinate": {
+      "archive_digest": "sha256:c6a062a6efb6786c53dc9e7298a9dd881fcc2301d807db5cecf84663c98438e2",
+      "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+      "commit": "37c3861b5411db8e772feedf41e4abf1fb7829bc",
+      "coordinate_status": "release_observed",
+      "digest": "git-tree-sha1:595ae59f25f522732577c5f8e00709f023464a6d",
+      "fixture_authority": "accepted_simulation_release_observation",
+      "fixture_file_sha256": "sha256:72773f06611ad98f89c298f44a9043f12427991ff9c43f7c437c658c08640975",
+      "fixture_path": "fixtures/pairs/simulation-golden-specimen-observation.json",
+      "projection_digest": "sha256:cead042eaf3ca8f72b9c30c41d9acb0bd9255027448f3b28e3451305bed1aef1",
+      "reference_observation_digest": "sha256:30b9384464bd5832085158a8a0f4f7bae6b0874f1774c82a5b2edb4cf4c758e3",
+      "release": "forecast-2028-FR-v1",
+      "tag_object_oid": "73fc89690b6cc9df7a99ea495e580e7f4e2caedc"
+    },
+    "evidence_mode": "simulated",
+    "observation_digest": "sha256:30b9384464bd5832085158a8a0f4f7bae6b0874f1774c82a5b2edb4cf4c758e3",
+    "observation_id": "SIM-OBS-GOLDEN-001",
+    "producer_detail_digest": "sha256:95f0a266036fbfa0933aca3129cc7f733b1379a270b7e3c8d19188a7397beb4f",
+    "projection_digest": "sha256:cead042eaf3ca8f72b9c30c41d9acb0bd9255027448f3b28e3451305bed1aef1",
+    "provenance": {
+      "governed_locator": "simulation://forecast-2028-FR-v1/golden-specimen",
+      "performed_by": "simulation-runner",
+      "raw_artifact_digest": "sha256:fd850581374bbf024eb97861a55f84251287e5b61c83c6df0c42aee6d38ca4de",
+      "reviewed_by": "simulation-reviewer"
+    },
+    "provenance_digest": "sha256:2e424bd6c3cb5eefb11f13c8f5e1226c0ce8453fb19efa9ec612b2a35354d15a",
+    "source": {
+      "configuration_digest": "sha256:f4ab947c2bfe83026fab9b15ea9c712ef70d8051a7cc1eeabf1195534b054c9c",
+      "environment_id": "simulated-final-state",
+      "implementation_commit": "forecast-2028-FR-v1"
+    },
+    "source_digest": "sha256:46093fc4af8e351d9a154bf30a4c1fb5c2531fce39314888dbdde5b6567017b7"
+  },
+  "source_constellation_digest": "sha256:8048a485b443469f98350c26dbea4fd4067371e619ed210dec5fd61a3ecdf9d4",
+  "summary": {
+    "classification_counts": {
+      "agreement": 10,
+      "explainable_variation": 4,
+      "material_divergence": 3
+    },
+    "leaf_paths_compared": 17
+  }
+}

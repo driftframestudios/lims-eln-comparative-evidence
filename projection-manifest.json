@@ -1,0 +1,77 @@
+{
+  "canonicalOrigin": "https://cometspectrum.io/",
+  "cname": "cometspectrum.io",
+  "fileScope": "Every projection file except projection-manifest.json; the manifest is the bounded identity carrier and cannot contain its own digest.",
+  "files": [
+    {
+      "byteRelation": "deterministic_pages_builder_output",
+      "bytes": 0,
+      "path": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "deterministic_pages_builder_output",
+      "bytes": 17,
+      "path": "CNAME",
+      "sha256": "87d970d23146a88ae4ea9d16ed350b1868cf4e35f58eda48af7dff81fdcd6b3c",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "deterministic_pages_builder_output",
+      "bytes": 2491,
+      "path": "assets/site.css",
+      "sha256": "1b41eab419257aaf6941f5f6904fc68523fdd197de631d6c390ba89c01e6d94c",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "deterministic_pages_builder_output",
+      "bytes": 2273,
+      "path": "data-use.html",
+      "sha256": "a660f6ee6a9d23f9422ccd5fd768c6d4a17be8b8d4af4197ad0bbe84712f0a0c",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "deterministic_pages_builder_output",
+      "bytes": 6388,
+      "path": "index.html",
+      "sha256": "de105bc5d2ae8039e856db6ffa0613018d01c9df2718a8d3d8b699bf5ecbd0af",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "exact_comparator_runtime_output",
+      "bytes": 23507,
+      "path": "reports/golden-specimen/comparison.html",
+      "sha256": "f1b0909c710e28325a4e172f46f06e5c7794e78d796973438318311628c5dfd8",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "exact_comparator_runtime_output",
+      "bytes": 10458,
+      "path": "reports/golden-specimen/comparison.json",
+      "sha256": "0397385f48155a6ba77ab0b4fd8d7885fc3a69a37d72c26dee3f10799cd513d3",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "exact_comparator_runtime_output",
+      "bytes": 15878,
+      "path": "reports/reference/comparison.html",
+      "sha256": "3b62c2e86e745b17ae0cda04b685b372648b77baf9513e9fd6589d29d5c2c39b",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    },
+    {
+      "byteRelation": "exact_comparator_runtime_output",
+      "bytes": 8312,
+      "path": "reports/reference/comparison.json",
+      "sha256": "773ff42d45c1c40829cc42c85226f596dafbb735350c471f845401c46800de17",
+      "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+    }
+  ],
+  "goldenSpecimenReportDigest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
+  "manifestVersion": "1.0.0",
+  "projectionOwner": "comparative-evidence-pages-builder",
+  "reportDigest": "sha256:0c05712b106c84847c94051cdad80608b5a2806a792da7cf04f6f06467debb51",
+  "repositoryUrl": "https://github.com/driftframestudios/lims-eln-comparative-evidence",
+  "sourceRevision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430",
+  "sourceStanding": "clean_exact_revision"
+}

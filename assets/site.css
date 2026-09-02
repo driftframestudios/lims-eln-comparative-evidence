@@ -1,0 +1,42 @@
+:root {
+  color-scheme: light;
+  --ink: #14243a;
+  --paper: #f5f1e8;
+  --surface: #fffdf7;
+  --accent: #2357d9;
+  --line: #aebbc8;
+  --muted: #526276;
+}
+* { box-sizing: border-box; }
+html { background: var(--paper); color: var(--ink); font: 16px/1.55 ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; }
+a { color: var(--accent); text-underline-offset: .18em; }
+a:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+.skip-link { position: absolute; inset: .75rem auto auto .75rem; transform: translateY(-180%); padding: .55rem .8rem; background: var(--surface); z-index: 2; }
+.skip-link:focus { transform: none; }
+.page-shell { width: min(72rem, calc(100% - 2rem)); margin: 0 auto; }
+header { padding: clamp(3rem, 8vw, 7rem) 0 2rem; }
+.kicker { color: var(--accent); font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+h1 { max-width: 13ch; margin: .35rem 0 1rem; font-size: clamp(2.6rem, 8vw, 6rem); line-height: .92; letter-spacing: -.045em; }
+h2 { margin-top: 0; }
+.lede { max-width: 45rem; font-size: clamp(1.1rem, 2.5vw, 1.35rem); }
+.actions { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1.5rem 0 0; }
+.button { display: inline-block; border: 1px solid currentColor; border-radius: 99rem; padding: .6rem .9rem; font-weight: 700; text-decoration: none; }
+main { display: grid; gap: 1rem; padding-bottom: 2rem; }
+.panel { border: 1px solid var(--line); border-radius: 1rem; padding: clamp(1rem, 3vw, 1.5rem); background: var(--surface); }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+.metric { min-width: 0; border-left: .2rem solid var(--accent); padding-left: .75rem; }
+.metric strong { display: block; font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.1; }
+.source-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1.2rem; padding-left: 1.2rem; }
+code { overflow-wrap: anywhere; }
+.public-boundary { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.public-boundary pre { margin: .55rem 0; white-space: pre-wrap; overflow-wrap: anywhere; font: .78rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.attribution { color: var(--muted); font-size: .9rem; }
+footer { padding: 0 0 2rem; }
+@media (max-width: 52rem) {
+  .metrics, .source-list { grid-template-columns: 1fr; }
+  .page-shell { width: min(100% - 1.25rem, 72rem); }
+}
+@media (forced-colors: active) {
+  .panel, .button { border-color: CanvasText; }
+}
