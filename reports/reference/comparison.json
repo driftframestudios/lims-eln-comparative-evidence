@@ -4,7 +4,7 @@
     "evidence_claim": "synthetic_contract_shape_only",
     "production_authorization_effect": "none"
   },
-  "comparator_release": "0.3.1",
+  "comparator_release": "0.3.2",
   "comparison_contract_version": "1.2.0",
   "comparison_mode": "synthetic_contract",
   "database_release_alignment": {
@@ -77,7 +77,7 @@
     "observation_schema_document_digest": "sha256:954e5a3643a7a139ec1e7bf40d1d356ba49c0be98953310ffce1b24043a4d47f"
   },
   "profile_digest": "sha256:861eb337308f320fc7149015cd363ddd5b7554ff2e1d8624d937a04bb8996ab2",
-  "report_digest": "sha256:0c05712b106c84847c94051cdad80608b5a2806a792da7cf04f6f06467debb51",
+  "report_digest": "sha256:5f66ed1a3023b00bc7779f8810c0440f594dd5fe10e90a475b073eaa438f741b",
   "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
   "simulation": {
     "aggregate_artifact_digest": "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b",

@@ -131,23 +131,23 @@
   "implementation": {
     "assurance_stage": "verified",
     "coordinate": {
-      "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174",
-      "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+      "archive_digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+      "commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
       "coordinate_status": "release_observed",
-      "digest": "git-tree-sha1:cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+      "digest": "git-tree-sha1:eb8eadb27a9e07c6069a1946f115a0083d94af5c",
       "fixture_authority": "comparative_owned_snapshot_from_accepted_enterprise_source",
-      "fixture_file_sha256": "sha256:c4d6c47bb58c14b187426f1182be3df0467ca2ed65f84f76d430d348075e3b28",
+      "fixture_file_sha256": "sha256:700918758844eb7fb2ce4367412fc2eb920b348f66f8d376e695d0ae2e354341",
       "fixture_path": "fixtures/pairs/enterprise-postgresql-observation.json",
       "hosted_durable_proof_commit": "205401a530e984e031bb2c52a1654c6b5f82bc6d",
       "hosted_durable_proof_run": "33581976426",
-      "observation_carrier_commit": "7e17bb9840f2936d7c83d63f36bfdb08b768ecb5",
-      "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+      "observation_carrier_commit": "b3fcf07445bc0c049daa00b03d6fe583962085cf",
+      "observation_digest": "sha256:be341711a5697436dbc56bd61cf83b3f97f88ab2d7c4532d1eb54df6986499a8",
       "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e",
-      "release": "v0.3.1",
-      "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6"
+      "release": "v0.3.2",
+      "tag_object_oid": "c3db01079b88622f06e8714c8bcbdf0dc1803a10"
     },
     "evidence_mode": "simulated",
-    "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+    "observation_digest": "sha256:be341711a5697436dbc56bd61cf83b3f97f88ab2d7c4532d1eb54df6986499a8",
     "observation_id": "OBS-WORKBENCH-A33FB9285DFF11B6",
     "producer_detail_digest": "sha256:ec6689116c229c785e7758e0fa55a736141bb0700fbbee5ab73d23fb86a8741a",
     "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e",
@@ -161,14 +161,14 @@
     "source": {
       "configuration_digest": "sha256:8c3fb7b18749c7a78fad0b581090099e202309da68c6dd4671b5ef6653c4838e",
       "environment_id": "WORKBENCH-SYNTHETIC",
-      "implementation_commit": "lims-eln-enterprise-implementation@0.3.1"
+      "implementation_commit": "lims-eln-enterprise-implementation@0.3.2"
     },
-    "source_digest": "sha256:0dfa7bd7a1fd1c50954ce10d4261f21a046f4f5a6e6334ac47c1f2537e6a5b62"
+    "source_digest": "sha256:cfb0ab2b75d6fb556ec6f5ad9c1433d6e22cd17d7decff2867ebbd23927a7454"
   },
   "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
   "projection_id": "urn:driftframe:lims-eln:golden-specimen-result",
   "projection_version": "1.0.0",
-  "report_digest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
+  "report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
   "scenario_digest": "sha256:fea95444dbbfbd3e26f5fb8d3975038541bf75bb1e4a7ffb748dd2cefdf173e9",
   "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
   "scenario_version": "1.0.0",
@@ -207,7 +207,7 @@
     },
     "source_digest": "sha256:46093fc4af8e351d9a154bf30a4c1fb5c2531fce39314888dbdde5b6567017b7"
   },
-  "source_constellation_digest": "sha256:8048a485b443469f98350c26dbea4fd4067371e619ed210dec5fd61a3ecdf9d4",
+  "source_constellation_digest": "sha256:6547340f075d5ab60a767ba32f1584054c30edf839239e196748a68118c641e2",
   "summary": {
     "classification_counts": {
       "agreement": 10,
