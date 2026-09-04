@@ -1198,7 +1198,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         machine_node = load("machine-node.json")
         first_receipt = load("first-receipt.json")
         coordination_horizon = load("COORDINATION-HORIZON.json")
-        self.assertEqual(__version__, "0.3.1")
+        self.assertEqual(__version__, "0.3.2")
         self.assertEqual(manifest["repository_release"], __version__)
         self.assertEqual(manifest["repository_role"], "comparative_evidence")
         self.assertEqual(manifest["contract_bindings"]["governance_schema"], "2.0.1")
@@ -1322,12 +1322,12 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             machine_node["current_provenance"],
             {
-                "release": "comparison-v0.3.1",
-                "commit": "b5c13689a32739d29437e209816bf0cd6a878976",
-                "digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
+                "release": "candidate-comparison-v0.3.2",
+                "commit": "0" * 40,
+                "digest": "sha256:" + "0" * 64,
             },
         )
-        self.assertEqual(machine_node["lifecycle_state"], "reference_ready")
+        self.assertEqual(machine_node["lifecycle_state"], "settling")
         self.assertEqual(
             {
                 (item["campaign_id"], item["marking_schema_version"])
@@ -1341,7 +1341,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             machine_node["open_receipts"],
-            [],
+            ["RCP-COMPARATIVE-PROMOTION-004"],
         )
         self.assertEqual(
             first_receipt["open_receipts"],
@@ -1355,7 +1355,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 coordination_horizon["as_of"],
                 coordination_horizon["metadata"]["updated_at"],
             },
-            {"2026-09-02T17:18:30Z"},
+            {"2026-09-04T04:02:50Z"},
         )
         source_permissions = {
             item["source"]: item for item in first_receipt["source_permissions"]
@@ -1376,11 +1376,15 @@ class ComparativeEvidenceTests(unittest.TestCase):
         }
         self.assertEqual(
             coordination_horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PUBLICATION-017"],
+            ["WORK-COMPARATIVE-PROMOTION-004"],
         )
         self.assertEqual(
             promotion_items["WORK-COMPARATIVE-PROMOTION-003"]["state"],
             "complete",
+        )
+        self.assertEqual(
+            promotion_items["WORK-COMPARATIVE-PROMOTION-004"]["state"],
+            "settling",
         )
         publication_item = next(
             item
@@ -1390,8 +1394,8 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(publication_item["state"], "complete")
         self.assertGreaterEqual(len(publication_item["completion_evidence"]), 3)
         self.assertEqual(
-            manifest["promotion_coordinates"]["settled_receipt_id"],
-            "RCP-COMPARATIVE-PROMOTION-003",
+            manifest["promotion_coordinates"]["open_receipt_id"],
+            "RCP-COMPARATIVE-PROMOTION-004",
         )
         self.assertEqual(
             manifest["publication_coordinates"]["source_coordinate_kind"],
@@ -1403,7 +1407,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["publication_coordinates"]["release_subject_commit_oid"],
-            machine_node["current_provenance"]["commit"],
+            manifest["promotion_coordinates"]["prior_release"]["commit_oid"],
         )
         vocabulary_binding = manifest["external_contract_bindings"][
             "receipt_family_vocabulary_map"
@@ -1443,7 +1447,11 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 item["external_release"]
                 for item in manifest["historical_external_releases"]
             },
-            {"comparison-v0.1.0", "comparison-v0.2.0"},
+            {
+                "comparison-v0.1.0",
+                "comparison-v0.2.0",
+                "comparison-v0.3.1",
+            },
         )
 
     def test_redacted_receipt_uses_canonical_family_vocabulary(self) -> None:

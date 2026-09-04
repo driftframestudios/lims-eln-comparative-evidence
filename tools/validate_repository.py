@@ -72,6 +72,7 @@ _SKILL_REQUIRED_SECTIONS = (
 _GIT_OID = re.compile(r"[0-9a-f]{40}")
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 PUBLICATION_OBSERVATION_TIME = "2026-09-02T17:18:30Z"
+CANDIDATE_OBSERVATION_TIME = "2026-09-04T04:02:50Z"
 ACCEPTED_MAIN_SOURCE_REVISION = "fadbb1aba21a828eb56ee35c0abb4bb32b7f498c"
 ACCEPTED_DOCS_REVISION = "ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1"
 ACCEPTED_PROJECTION_MANIFEST_SHA256 = (
@@ -95,6 +96,12 @@ from comparative_evidence.promotion_receipt import (
     canonical_digest as promotion_receipt_digest,
     file_digest as promotion_file_digest,
     validate_promotion_receipt,
+)
+from comparative_evidence.promotion_candidate import (
+    CANDIDATE_COORDINATE,
+    PRIOR_RELEASE_COORDINATE,
+    canonical_json_digest_from_path as promotion_candidate_digest,
+    validate_promotion_candidate,
 )
 from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
@@ -209,20 +216,24 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
         first_receipt.get("metadata", {}).get("updated_at"),
         machine_node.get("metadata", {}).get("updated_at"),
     }
-    if timestamps != {PUBLICATION_OBSERVATION_TIME}:
-        findings.append("living carriers require one accepted publication observation time")
+    if timestamps != {CANDIDATE_OBSERVATION_TIME}:
+        findings.append("living carriers require one candidate observation time")
     work_items = {
         item.get("item_id"): item
         for item in horizon.get("work_items", [])
         if isinstance(item, dict)
     }
     publication_item = work_items.get("WORK-COMPARATIVE-PUBLICATION-017", {})
+    candidate_item = work_items.get("WORK-COMPARATIVE-PROMOTION-004", {})
     if (
         horizon.get("current_item_ids")
-        != ["WORK-COMPARATIVE-PUBLICATION-017"]
+        != ["WORK-COMPARATIVE-PROMOTION-004"]
         or publication_item.get("state") != "complete"
+        or candidate_item.get("state") != "settling"
     ):
-        findings.append("the stable public comparison baseline must remain complete")
+        findings.append(
+            "the 0.3.2 candidate must remain current beside the complete public baseline"
+        )
     publication_sources = [
         item
         for item in first_receipt.get("source_permissions", [])
@@ -239,7 +250,7 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
     handoff = first_receipt.get("handoff", {})
     if (
         handoff.get("recipient_role")
-        != "Future comparison or publication receiver"
+        != "Comparative evidence release steward"
         or handoff.get("next_safe_action")
         != horizon.get("reentry_capsule", {}).get("next_safe_action")
     ):
@@ -390,8 +401,16 @@ def main() -> int:
     manifest = _load("release/repository-role.json")
     promotion_schema_path = ROOT / "schemas/promotion-receipt.schema.json"
     promotion_receipt_path = ROOT / "receipts/promotion-receipt.json"
+    promotion_candidate_schema_path = (
+        ROOT / "schemas/promotion-candidate.schema.json"
+    )
+    promotion_candidate_path = ROOT / "receipts/promotion-candidate.json"
     promotion_schema = _load("schemas/promotion-receipt.schema.json")
     promotion_receipt = _load("receipts/promotion-receipt.json")
+    promotion_candidate_schema = _load(
+        "schemas/promotion-candidate.schema.json"
+    )
+    promotion_candidate = _load("receipts/promotion-candidate.json")
     validate_json_contract(
         schema=promotion_schema,
         instance=promotion_receipt,
@@ -400,6 +419,14 @@ def main() -> int:
         contract_name="promotion receipt",
     )
     validate_promotion_receipt(promotion_receipt)
+    validate_json_contract(
+        schema=promotion_candidate_schema,
+        instance=promotion_candidate,
+        version_property="schema_version",
+        expected_version="1.0.0",
+        contract_name="promotion candidate",
+    )
+    validate_promotion_candidate(promotion_candidate)
     expected_promotion_binding = {
         "schema_path": "schemas/promotion-receipt.schema.json",
         "schema_version": "1.0.0",
@@ -407,6 +434,21 @@ def main() -> int:
         "receipt_path": "receipts/promotion-receipt.json",
         "receipt_canonical_json_digest": promotion_receipt_digest(
             promotion_receipt
+        ),
+    }
+    expected_candidate_binding = {
+        "schema_path": "schemas/promotion-candidate.schema.json",
+        "schema_version": "1.0.0",
+        "schema_file_sha256": (
+            "sha256:"
+            + sha256(promotion_candidate_schema_path.read_bytes()).hexdigest()
+        ),
+        "receipt_path": "receipts/promotion-candidate.json",
+        "receipt_file_sha256": (
+            "sha256:" + sha256(promotion_candidate_path.read_bytes()).hexdigest()
+        ),
+        "receipt_canonical_json_digest": promotion_candidate_digest(
+            promotion_candidate_path
         ),
     }
     release_subject = promotion_receipt["release_subject"]
@@ -445,32 +487,23 @@ def main() -> int:
         raise ValueError(
             "promotion receipt requires the reviewed comparison-v0.3.1 release evidence"
         )
-    carrier_observation_time = PUBLICATION_OBSERVATION_TIME
+    carrier_observation_time = CANDIDATE_OBSERVATION_TIME
     publication_source_name = "accepted-main-observation-carrier"
     release_commit = release_subject["commit_oid"]
     golden_report_digest = (
-        "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa"
+        "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c"
     )
+    candidate_receipt_bytes = promotion_candidate_path.read_bytes()
     expected_promotion_coordinates = {
-        "status": "settled",
-        "settled_receipt_id": promotion_receipt["promotion_receipt_id"],
-        "receipt_path": "receipts/promotion-receipt.json",
-        "candidate_source": promotion_receipt["candidate_source"],
-        "reviewed_candidate": {
-            "commit_oid": "59d58c46d27a77150d399870ecebef2635c38dc5",
-            "tree_oid": release_subject["tree_oid"],
-        },
-        "observed_release": {
-            field: release_subject[field]
-            for field in (
-                "tag",
-                "tag_object_oid",
-                "commit_oid",
-                "tree_oid",
-                "archive_digest",
-                "promoted_at",
-            )
-        },
+        "status": "pending_release_promotion",
+        "open_receipt_id": promotion_candidate["promotion_receipt_id"],
+        "candidate_receipt": "receipts/promotion-candidate.json",
+        "candidate_receipt_file_sha256": (
+            "sha256:" + sha256(candidate_receipt_bytes).hexdigest()
+        ),
+        "target_release": promotion_candidate["target_release"],
+        "candidate_coordinate": promotion_candidate["candidate_coordinate"],
+        "prior_release": promotion_candidate["prior_release_coordinate"],
         "required_roles": [
             "site_reading_governance",
             "program_specification",
@@ -516,7 +549,7 @@ def main() -> int:
             ACCEPTED_PROJECTION_MANIFEST_SHA256
         ),
         "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
-        "observed_at": carrier_observation_time,
+        "observed_at": PUBLICATION_OBSERVATION_TIME,
         "receiver_issue": 17,
         "target_branch": "docs",
     }
@@ -598,30 +631,32 @@ def main() -> int:
         raise ValueError(
             "constellation comparison coordinate requires the observed release subject"
         )
-    expected_provenance = {
-        "release": release_subject["tag"],
-        "commit": release_subject["commit_oid"],
-        "digest": release_subject["archive_digest"],
-    }
     campaign_states = {
         item["campaign_id"]: item["status"]
         for item in machine_node.get("campaigns", [])
     }
     if (
-        machine_node.get("lifecycle_state") != "reference_ready"
-        or machine_node.get("current_provenance") != expected_provenance
-        or machine_node.get("open_receipts") != []
-        or first_receipt.get("open_receipts") != []
+        machine_node.get("lifecycle_state") != "settling"
+        or machine_node.get("current_provenance")
+        != {
+            "release": "candidate-comparison-v0.3.2",
+            "commit": "0" * 40,
+            "digest": "sha256:" + "0" * 64,
+        }
+        or machine_node.get("open_receipts")
+        != ["RCP-COMPARATIVE-PROMOTION-004"]
+        or first_receipt.get("open_receipts")
+        != ["RCP-COMPARATIVE-PROMOTION-004"]
         or campaign_states.get("LIMS-ELN-OPEN-RECEIPTS") != "active"
     ):
         raise ValueError(
-            "release observation requires reference-ready provenance and one closed promotion receipt"
+            "release candidate requires settling provenance and one open promotion receipt"
         )
     if datetime.fromisoformat(carrier_observation_time) <= datetime.fromisoformat(
         release_subject["promoted_at"]
     ):
         raise ValueError(
-            "the observation carrier timestamp follows the signed release promotion"
+            "the candidate observation timestamp follows the prior signed release"
         )
     if (
         machine_node.get("metadata", {}).get("updated_at")
@@ -647,6 +682,7 @@ def main() -> int:
         and item.get("source") == publication_source_name
     ]
     publication_item = horizon_items.get("WORK-COMPARATIVE-PUBLICATION-017", {})
+    candidate_item = horizon_items.get("WORK-COMPARATIVE-PROMOTION-004", {})
     reentry = coordination_horizon.get("reentry_capsule", {})
     handoff = first_receipt.get("handoff", {})
     publication_source = (
@@ -668,7 +704,7 @@ def main() -> int:
 
     if (
         coordination_horizon.get("current_item_ids")
-        != ["WORK-COMPARATIVE-PUBLICATION-017"]
+        != ["WORK-COMPARATIVE-PROMOTION-004"]
         or not meaningful_text(coordination_horizon.get("objective"))
         or horizon_items.get("WORK-COMPARATIVE-PROMOTION-003", {}).get(
             "state"
@@ -681,11 +717,18 @@ def main() -> int:
         != "Comparative evidence publication receiver"
         or publication_item.get("dependency_ids")
         != ["WORK-COMPARATIVE-PROMOTION-003"]
+        or not isinstance(candidate_item, dict)
+        or candidate_item.get("sequence") != 5
+        or candidate_item.get("state") != "settling"
+        or candidate_item.get("owner_role")
+        != "Comparative evidence release steward"
+        or candidate_item.get("dependency_ids")
+        != ["WORK-COMPARATIVE-PUBLICATION-017"]
         or len(publication_sources) != 1
         or publication_source.get("permission") != "read"
         or not meaningful_text(source_verification)
         or handoff.get("recipient_role")
-        != "Future comparison or publication receiver"
+        != "Comparative evidence release steward"
         or handoff.get("next_safe_action") != next_action
         or not meaningful_text(next_action)
         or not meaningful_text(reentry.get("current_state"))
@@ -697,7 +740,7 @@ def main() -> int:
         or any(not meaningful_text(value) for value in completion_evidence)
     ):
         raise ValueError(
-            "Coordination Horizon requires the settled public baseline and future receiver"
+            "Coordination Horizon requires the 0.3.2 candidate beside the settled public baseline"
         )
     implementation_golden_path = (
         ROOT / "fixtures/pairs/enterprise-postgresql-observation.json"
@@ -825,6 +868,9 @@ def main() -> int:
         _load("fixtures/calibration/observed-outcomes.json")
     )
     expected = {
+        "repository_release": "0.3.2",
+        "release_state": "release_candidate",
+        "external_release": "comparison-v0.3.2",
         "synthetic_contract_report_digest": report["report_digest"],
         "canonical_governance_closure_digest": bundle_summary[
             "governance_closure_digest"
@@ -894,6 +940,12 @@ def main() -> int:
         drift["promotion_receipt_contract"] = {
             "manifest": promotion_binding,
             "derived": expected_promotion_binding,
+        }
+    candidate_binding = manifest.get("promotion_candidate_contract")
+    if candidate_binding != expected_candidate_binding:
+        drift["promotion_candidate_contract"] = {
+            "manifest": candidate_binding,
+            "derived": expected_candidate_binding,
         }
     if manifest.get("promotion_coordinates") != expected_promotion_coordinates:
         drift["promotion_coordinates"] = {
@@ -979,6 +1031,9 @@ def main() -> int:
                 "collaboration_skills": len(PUBLIC_POSSIBLE_SKILL_METADATA),
                 "promotion_receipt_digest": promotion_receipt_digest(
                     promotion_receipt
+                ),
+                "promotion_candidate_digest": promotion_candidate_digest(
+                    promotion_candidate_path
                 ),
             },
             sort_keys=True,

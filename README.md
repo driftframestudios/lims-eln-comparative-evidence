@@ -141,6 +141,21 @@ Enterprise release artifact. Both inputs retain simulated authority, so this rep
 supports design and implementation decisions while the observed-evidence lane keeps
 its independent provenance and acceptance route.
 
+The 0.3.2 candidate receives Enterprise `v0.3.2` through its signed tag and exact
+commit, tree, and archive identities. That release changes the emitted
+implementation coordinate from `@0.3.1` to `@0.3.2`; its complete result, shared
+projection, producer detail, and provenance remain byte-identical across those
+Enterprise releases. The regenerated comparison retains the same classifications
+across all 17 paths: 10 agreement, 4 explainable variation, and 3 material
+divergence. Source, observation, source-constellation, and report identities advance
+so a reader can distinguish the new lineage from the unchanged compared result.
+
+A tag-to-tag Git tree comparison found identical blobs in the database, SQL,
+fixtures, PostgreSQL adapter, service, and domain paths. The earlier hosted proof
+continues to cover those paths, and the accepted Enterprise `v0.3.2` shared-contract
+source establishes the updated implementation coordinate. A future change in those
+behavior paths receives its own environment-bound proof.
+
 ## Run it
 
 ```bash
@@ -233,6 +248,11 @@ The candidate contains:
 `python3 tools/validate_repository.py` builds two isolated candidates and compares
 the complete inventories byte for byte. Publication remains a separate receiver
 action.
+The current 0.3.2 candidate is content-addressed by its constellation lock, both
+report digests, and source-constellation digest. The accepted release commit, signed
+tag, release archive, and successor Pages projection will add their coordinates
+after each artifact exists and can be verified.
+
 The signed tag `comparison-v0.3.1` at
 `b5c13689a32739d29437e209816bf0cd6a878976` remains the immutable release subject.
 The accepted main observation carrier is
@@ -332,11 +352,10 @@ completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
 [`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects. The
-promotion and publication work items are complete. The current re-entry route
-preserves the signed release, accepted main source carrier, docs revision,
-manifest identity, canonical origin, and non-authorizing evidence posture. A
-future report, release, or public-presentation change reopens the corresponding
-source and receiving checks.
+0.3.1 promotion and publication work items are complete, and the Enterprise 0.3.2
+comparison refresh is the current work item. The re-entry route preserves the prior
+signed release and public projection while the new candidate moves through review,
+signed release observation, and a source-bound Pages rebuild.
 
 ## Comparative literacy
 
