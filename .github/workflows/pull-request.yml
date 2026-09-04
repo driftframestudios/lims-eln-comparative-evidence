@@ -40,5 +40,5 @@ jobs:
       - name: Validate repository evidence contracts
         run: python tools/validate_repository.py
 
-      - name: Verify signed release coordinate
-        run: python tools/verify_release_coordinate.py --require-observed
+      - name: Verify signed release history
+        run: python tools/verify_release_history.py

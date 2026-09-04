@@ -23,8 +23,11 @@ from comparative_evidence.promotion_receipt import (  # noqa: E402
     validate_promotion_receipt,
 )
 from comparative_evidence.promotion_candidate import (  # noqa: E402
-    CANDIDATE_COORDINATE,
     PRIOR_RELEASE_COORDINATE,
+)
+from comparative_evidence.promotion_observation import (  # noqa: E402
+    CANDIDATE_COORDINATE as OBSERVED_CANDIDATE_COORDINATE,
+    RELEASE_COORDINATE,
 )
 
 
@@ -216,8 +219,18 @@ class PromotionLifecycleTests(unittest.TestCase):
         promotion_candidate = strict_json_loads(
             promotion_candidate_path.read_text(encoding="utf-8")
         )
+        promotion_observation_path = (
+            ROOT / "receipts/promotion-observation-v0.3.2.json"
+        )
+        promotion_observation_schema_path = (
+            ROOT / "schemas/promotion-observation-v0.3.2.schema.json"
+        )
+        promotion_observation = strict_json_loads(
+            promotion_observation_path.read_text(encoding="utf-8")
+        )
         assert isinstance(manifest, dict)
         assert isinstance(promotion_candidate, dict)
+        assert isinstance(promotion_observation, dict)
         self.assertRegex(file_digest(schema_path), r"^sha256:[a-f0-9]{64}$")
         self.assertRegex(
             canonical_digest(self.receipt),
@@ -237,17 +250,56 @@ class PromotionLifecycleTests(unittest.TestCase):
             },
         )
         self.assertEqual(
+            manifest["promotion_observation_contract"],
+            {
+                "schema_path": (
+                    "schemas/promotion-observation-v0.3.2.schema.json"
+                ),
+                "schema_version": "1.0.0",
+                "schema_file_sha256": (
+                    "sha256:"
+                    + sha256(
+                        promotion_observation_schema_path.read_bytes()
+                    ).hexdigest()
+                ),
+                "receipt_path": (
+                    "receipts/promotion-observation-v0.3.2.json"
+                ),
+                "receipt_file_sha256": (
+                    "sha256:"
+                    + sha256(promotion_observation_path.read_bytes()).hexdigest()
+                ),
+                "receipt_canonical_json_digest": canonical_digest(
+                    promotion_observation
+                ),
+            },
+        )
+        self.assertEqual(
             manifest["promotion_coordinates"],
             {
-                "status": "pending_release_promotion",
-                "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+                "status": "release_observed",
+                "settled_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+                "observation_receipt": (
+                    "receipts/promotion-observation-v0.3.2.json"
+                ),
+                "observation_receipt_file_sha256": (
+                    "sha256:"
+                    + sha256(promotion_observation_path.read_bytes()).hexdigest()
+                ),
+                "observation_receipt_canonical_json_digest": canonical_digest(
+                    promotion_observation
+                ),
                 "candidate_receipt": "receipts/promotion-candidate.json",
                 "candidate_receipt_file_sha256": (
                     "sha256:"
                     + sha256(promotion_candidate_path.read_bytes()).hexdigest()
                 ),
+                "candidate_receipt_canonical_json_digest": canonical_digest(
+                    promotion_candidate
+                ),
                 "target_release": "comparison-v0.3.2",
-                "candidate_coordinate": CANDIDATE_COORDINATE,
+                "candidate_coordinate": OBSERVED_CANDIDATE_COORDINATE,
+                "release_subject": RELEASE_COORDINATE,
                 "prior_release": PRIOR_RELEASE_COORDINATE,
                 "required_roles": [
                     "site_reading_governance",
@@ -259,7 +311,7 @@ class PromotionLifecycleTests(unittest.TestCase):
             },
         )
 
-    def test_control_plane_routes_the_candidate_beside_prior_publication(self) -> None:
+    def test_control_plane_routes_the_observed_release_to_publication(self) -> None:
         constellation = strict_json_loads(
             (ROOT / "constellation.lock.json").read_text(encoding="utf-8")
         )
@@ -289,14 +341,11 @@ class PromotionLifecycleTests(unittest.TestCase):
             },
         )
         self.assertEqual(machine["lifecycle_state"], "settling")
-        self.assertEqual(
-            machine["open_receipts"],
-            ["RCP-COMPARATIVE-PROMOTION-004"],
-        )
+        self.assertEqual(machine["open_receipts"], [])
         self.assertEqual(first_receipt["open_receipts"], machine["open_receipts"])
         self.assertEqual(
             horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PROMOTION-004"],
+            ["WORK-COMPARATIVE-PUBLICATION-031"],
         )
         self.assertEqual(
             {
@@ -306,7 +355,7 @@ class PromotionLifecycleTests(unittest.TestCase):
                 horizon["as_of"],
                 horizon["metadata"]["updated_at"],
             },
-            {"2026-09-04T04:02:50Z"},
+            {"2026-09-04T04:34:49Z"},
         )
         self.assertEqual(
             self.receipt["release_subject"]["promoted_at"],
@@ -335,17 +384,28 @@ class PromotionLifecycleTests(unittest.TestCase):
         }
         publication_item = publication_items["WORK-COMPARATIVE-PUBLICATION-017"]
         candidate_item = publication_items["WORK-COMPARATIVE-PROMOTION-004"]
+        successor_publication_item = publication_items[
+            "WORK-COMPARATIVE-PUBLICATION-031"
+        ]
         self.assertEqual("complete", publication_item["state"])
-        self.assertEqual("settling", candidate_item["state"])
+        self.assertEqual("complete", candidate_item["state"])
+        self.assertEqual("settling", successor_publication_item["state"])
         self.assertEqual(
             ["WORK-COMPARATIVE-PUBLICATION-017"],
             candidate_item["dependency_ids"],
         )
-        self.assertGreaterEqual(len(publication_item["completion_evidence"]), 3)
+        self.assertEqual(
+            ["WORK-COMPARATIVE-PROMOTION-004"],
+            successor_publication_item["dependency_ids"],
+        )
+        self.assertGreaterEqual(
+            len(successor_publication_item["completion_evidence"]),
+            3,
+        )
         self.assertTrue(
             all(
                 len(value.strip()) >= 40
-                for value in publication_item["completion_evidence"]
+                for value in successor_publication_item["completion_evidence"]
             )
         )
         self.assertEqual(

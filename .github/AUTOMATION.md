@@ -12,6 +12,11 @@ safety together. A dependency-free automation check parses the admitted YAML
 subset, derives its effective controls, and requires them to agree with the
 release manifest.
 
+The final step verifies both retained signed release coordinates. It runs the
+unchanged 0.3.1 receipt verifier, then checks the 0.3.2 tag signature, archive
+digest, candidate/release tree equality, candidate-receipt digests, and observation
+carrier.
+
 Repository settings remain the authority for enabling Actions and selecting a
 required check after its exact hosted name has been observed.
 

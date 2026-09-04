@@ -195,7 +195,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("fetch-depth: 0", workflow)
         self.assertIn(
-            "python tools/verify_release_coordinate.py --require-observed",
+            "python tools/verify_release_history.py",
             workflow,
         )
         jobs = runner_job_blocks(workflow)
@@ -222,7 +222,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(10, controls["pull_request_timeout_minutes"])
         self.assertIn("fetch-depth: 0", workflow)
         self.assertIn(
-            "python tools/verify_release_coordinate.py --require-observed",
+            "python tools/verify_release_history.py",
             workflow,
         )
 
@@ -256,8 +256,8 @@ class BranchFlowTests(unittest.TestCase):
                 "        continue-on-error: true\n        run:",
             ),
             "release verification can fail open": workflow.replace(
-                "      - name: Verify signed release coordinate\n        run:",
-                "      - name: Verify signed release coordinate\n"
+                "      - name: Verify signed release history\n        run:",
+                "      - name: Verify signed release history\n"
                 "        continue-on-error: true\n        run:",
             ),
             "cancellation comment decoy": workflow.replace(
@@ -322,7 +322,7 @@ class BranchFlowTests(unittest.TestCase):
                 "          fetch-depth: 1",
             ),
             "release verifier command drift": workflow.replace(
-                "        run: python tools/verify_release_coordinate.py --require-observed",
+                "        run: python tools/verify_release_history.py",
                 "        run: python tools/validate_repository.py",
             ),
         }
@@ -353,17 +353,17 @@ class BranchFlowTests(unittest.TestCase):
                 1,
             )
         )
-        command = "python tools/verify_release_coordinate.py --require-observed"
+        command = "python tools/verify_release_history.py"
         mutations = {
             "verification step disabled": manual_workflow.replace(
-                "      - name: Verify signed release coordinate\n        run:",
-                "      - name: Verify signed release coordinate\n"
+                "      - name: Verify signed release history\n        run:",
+                "      - name: Verify signed release history\n"
                 "        if: false\n"
                 "        run:",
             ),
             "verification can fail open": manual_workflow.replace(
-                "      - name: Verify signed release coordinate\n        run:",
-                "      - name: Verify signed release coordinate\n"
+                "      - name: Verify signed release history\n        run:",
+                "      - name: Verify signed release history\n"
                 "        continue-on-error: true\n"
                 "        run:",
             ),
@@ -380,7 +380,7 @@ class BranchFlowTests(unittest.TestCase):
             "wrong job owns full history": wrong_job_shallow_checkout,
             "verification command drift": manual_workflow.replace(
                 command,
-                "python tools/verify_release_coordinate.py",
+                "python tools/verify_release_coordinate.py --require-observed",
             ),
         }
         for name, mutated in mutations.items():
@@ -510,8 +510,12 @@ class BranchFlowTests(unittest.TestCase):
             "/tools/check_branch_flow.py",
             "/tools/check_artifacts.py",
             "/tools/verify_release_coordinate.py",
+            "/tools/verify_promotion_observation.py",
+            "/tools/verify_release_history.py",
             "/tests/test_branch_flow.py",
             "/tests/test_release_coordinate.py",
+            "/tests/test_promotion_observation.py",
+            "/tests/test_release_history.py",
             "/machine-node.json",
             "/first-receipt.json",
             "/COORDINATION-HORIZON.json",

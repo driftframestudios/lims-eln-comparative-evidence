@@ -17,9 +17,13 @@
 /tools/check_branch_flow.py @driftframestudios
 /tools/check_artifacts.py @driftframestudios
 /tools/verify_release_coordinate.py @driftframestudios
+/tools/verify_promotion_observation.py @driftframestudios
+/tools/verify_release_history.py @driftframestudios
 /tools/build_pages.py @driftframestudios
 /tests/test_branch_flow.py @driftframestudios
 /tests/test_release_coordinate.py @driftframestudios
+/tests/test_promotion_observation.py @driftframestudios
+/tests/test_release_history.py @driftframestudios
 /tests/test_pages.py @driftframestudios
 /src/comparative_evidence/publication.py @driftframestudios
 

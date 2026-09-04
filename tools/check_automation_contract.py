@@ -21,9 +21,7 @@ CHECKOUT_ACTION = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 SETUP_PYTHON_ACTION = (
     "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97"
 )
-RELEASE_COORDINATE_COMMAND = (
-    "python tools/verify_release_coordinate.py --require-observed"
-)
+RELEASE_COORDINATE_COMMAND = "python tools/verify_release_history.py"
 MANUAL_VALIDATION_JOB = "comparative-validation"
 
 
@@ -372,7 +370,7 @@ def _validate_manual_full_proof_workflow(workflow_text: str) -> None:
     _require_equal(
         verify_release,
         {
-            "name": "Verify signed release coordinate",
+            "name": "Verify signed release history",
             "run": RELEASE_COORDINATE_COMMAND,
         },
         "manual signed-release verification step",
@@ -469,7 +467,7 @@ def _validate_pull_request_workflow(document: Mapping[str, object]) -> dict[str,
     _require_equal(
         verify_release,
         {
-            "name": "Verify signed release coordinate",
+            "name": "Verify signed release history",
             "run": RELEASE_COORDINATE_COMMAND,
         },
         "signed-release verification step",

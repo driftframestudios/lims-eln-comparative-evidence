@@ -1,10 +1,10 @@
 {
   "horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
   "title": "Governance-bound selected-future evidence",
-  "objective": "Advance the comparison to the accepted Enterprise v0.3.2 source while retaining the prior signed release, the existing classifications across all 17 compared paths, and the public projection as independently recoverable evidence.",
-  "as_of": "2026-09-04T04:02:50Z",
+  "objective": "Publish a deterministic 0.3.2 Pages projection from an accepted observation carrier that descends from signed release comparison-v0.3.2, while retaining the prior signed release, the 0.3.1 classification on each of the 17 compared paths, and the current public projection as independently recoverable evidence.",
+  "as_of": "2026-09-04T04:34:49Z",
   "current_item_ids": [
-    "WORK-COMPARATIVE-PROMOTION-004"
+    "WORK-COMPARATIVE-PUBLICATION-031"
   ],
   "work_items": [
     {
@@ -85,33 +85,55 @@
       "item_id": "WORK-COMPARATIVE-PROMOTION-004",
       "horizon_label": "Enterprise 0.3.2 comparison refresh and promotion",
       "sequence": 5,
-      "state": "settling",
-      "desired_state": "The comparison-v0.3.2 release binds the accepted Enterprise v0.3.2 source and new report identity while retaining the existing classifications across all 17 compared paths and the recoverable 0.3.1 public baseline.",
+      "state": "complete",
+      "desired_state": "The comparison-v0.3.2 release binds the accepted Enterprise v0.3.2 source and new contract-shape and Golden Specimen report identities while retaining the 0.3.1 classification on each of the 17 compared paths and the recoverable 0.3.1 public baseline.",
       "entry_evidence": [
         "Enterprise v0.3.2 has an observed signed release coordinate and version-specific shared-contract observation.",
         "The Enterprise database, SQL, fixture, PostgreSQL adapter, service, and domain paths are unchanged across v0.3.1 and v0.3.2.",
         "The candidate receipt binds the changed source identities, unchanged projection digest, stable 10/4/3 classification counts, and recoverable comparison-v0.3.1 release."
       ],
       "completion_evidence": [
-        "The reviewed release candidate and accepted main release share one Git tree.",
-        "A signed annotated comparison-v0.3.2 tag identifies the accepted release and reproducible archive.",
-        "A successor observation records hosted checks, review scope, exact release objects, and the retained non-authorizing comparison posture.",
-        "The docs branch receives and exposes one deterministic projection built from the accepted 0.3.2 observation carrier."
+        "Accepted develop source abcb3d295938f047d58ffc754eeabdeeefa52873 and accepted main release 0289ff835c790693a769347e69da0abdcfaa47de share Git tree 60c85e4206e2d487dac83d521401816dec0f34ae.",
+        "Signed annotated tag comparison-v0.3.2 identifies the accepted release commit.",
+        "A deterministic Git archive of that commit reproduces sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e.",
+        "The successor promotion observation records hosted check 33836962288, the scope of the separate architecture-review pass, exact release objects, and the retained non-authorizing comparison posture."
       ],
       "owner_role": "Comparative evidence release steward",
       "dependency_ids": [
         "WORK-COMPARATIVE-PUBLICATION-017"
       ]
+    },
+    {
+      "item_id": "WORK-COMPARATIVE-PUBLICATION-031",
+      "horizon_label": "Stable 0.3.2 public comparison baseline",
+      "sequence": 6,
+      "state": "settling",
+      "desired_state": "The docs branch exposes one deterministic projection built from the accepted 0.3.2 observation carrier while the 0.3.1 release and publication coordinates remain recoverable.",
+      "entry_evidence": [
+        "Local Git objects reproduce the signed comparison-v0.3.2 tag, release commit and tree, archive digest, and candidate/release tree equality.",
+        "The typed promotion observation records the hosted validation and review observations alongside those reproducible coordinates.",
+        "The comparison-v0.3.1 Pages projection remains the current hosted baseline until the successor bytes are accepted."
+      ],
+      "completion_evidence": [
+        "The accepted main observation carrier contains the exact promotion-observation blob and descends from signed release 0289ff835c790693a769347e69da0abdcfaa47de.",
+        "The docs branch receives one deterministic projection whose sourceRevision equals that observation carrier.",
+        "The projection manifest binds every public file and preserves Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c.",
+        "Hosted verification confirms the canonical location, responsive report surface, and byte equality with the generated projection."
+      ],
+      "owner_role": "Comparative evidence publication receiver",
+      "dependency_ids": [
+        "WORK-COMPARATIVE-PROMOTION-004"
+      ]
     }
   ],
   "reentry_capsule": {
-    "current_state": "The signed comparison-v0.3.1 release and docs revision ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1 remain the accepted public baseline. A content-addressed 0.3.2 candidate now receives Enterprise v0.3.2 while preserving the compared result and classification counts.",
+    "current_state": "Signed release comparison-v0.3.2 now binds Enterprise v0.3.2 and the updated report identities while retaining the 0.3.1 classification on each of the 17 compared paths. Docs revision ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1 remains the accepted 0.3.1 public baseline until the successor projection is verified.",
     "recent_decisions": [
       "DECISION-GOVERNANCE-CLOSURE-AS-AUTHORITY-BOUNDARY-001",
       "DECISION-OBSERVED-EVIDENCE-AS-INDEPENDENT-COMPARISON-001"
     ],
-    "next_safe_action": "Review and merge the exact 0.3.2 candidate, assemble release/0.3.2 from accepted develop, and promote it through main before recording the signed release coordinate and rebuilding the docs projection.",
-    "verification": "Confirm the Enterprise v0.3.2 release objects, the single-byte version-string change in the source envelope, unchanged result and projection identities, stable 10/4/3 classification counts, new deterministic report digests, exact candidate receipt, and preserved comparison-v0.3.1 release and Pages coordinates."
+    "next_safe_action": "Accept this release observation on main, resolve that accepted commit as the 0.3.2 Pages source revision, and publish one deterministic docs projection before verifying its manifest and hosted bytes.",
+    "verification": "Confirm the comparison-v0.3.2 signed tag, accepted commit, shared candidate tree, reproducible archive, hosted release check, exact candidate and observation receipts, stable 10/4/3 classifications, and retained comparison-v0.3.1 release and Pages coordinates."
   },
   "retained_effects": [
     "The selected future remains definitive only inside its declared simulation reality.",
@@ -124,7 +146,7 @@
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-09-04T04:02:50Z",
+    "updated_at": "2026-09-04T04:34:49Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-HORIZON-001",
       "display_name": "Comparative evidence stewardship role",
