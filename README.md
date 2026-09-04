@@ -352,10 +352,13 @@ repository-wide credential-shape scan after the complete Python test matrix succ
 
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) describes current focus,
 completion evidence, retained effects, and the re-entry path in a
-planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
-[`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
-orientation-only entry surfaces; neither artifact authorizes runtime effects. The
-0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
+planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json),
+[`first-receipt.json`](first-receipt.json), and the Coordination Horizon use
+Governance 2.2 to validate their current orientation records, while the 0.3.2
+[`constellation.lock.json`](constellation.lock.json) retains Governance 2.1 as the
+source coordinate for the accepted Golden report. Released admission policy,
+bounded operations, and accountable roles continue to authorize runtime effects.
+The 0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
 and source-bound Pages publication are also complete. The current re-entry route
 carries the signed release, observation carrier, report digest, and public
 projection into the Program specification constellation while preserving the
