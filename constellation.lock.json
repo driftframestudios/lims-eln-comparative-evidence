@@ -1,7 +1,7 @@
 {
-  "constellation_version": "0.3.1",
-  "recorded_at": "2026-09-02",
-  "content_identity": "Accepted Program, Governance, Enterprise, and Simulation coordinates remain distinct from the observed Comparative release; the Comparator-owned durable snapshot and accepted selected-future observation retain exact SHA-256 bindings.",
+  "constellation_version": "0.3.2",
+  "recorded_at": "2026-09-04",
+  "content_identity": "Accepted Program, Governance, Enterprise, and Simulation coordinates bind the 0.3.2 report candidate. comparison-v0.3.1 remains the observed Comparative release, and both compared observations retain exact SHA-256 bindings.",
   "specification": {
     "release": null,
     "package_version": "0.3.1",
@@ -15,19 +15,19 @@
     "golden_result_projection_schema_digest": "sha256:0519835a178742d52994b1342f3fdf38281b982feca9283782d45489123871fb"
   },
   "implementation": {
-    "release": "v0.3.1",
-    "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
-    "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
-    "digest": "git-tree-sha1:cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
-    "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174",
-    "observation_carrier_commit": "7e17bb9840f2936d7c83d63f36bfdb08b768ecb5",
+    "release": "v0.3.2",
+    "tag_object_oid": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+    "commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+    "digest": "git-tree-sha1:eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+    "archive_digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+    "observation_carrier_commit": "b3fcf07445bc0c049daa00b03d6fe583962085cf",
     "hosted_durable_proof_commit": "205401a530e984e031bb2c52a1654c6b5f82bc6d",
     "hosted_durable_proof_run": "33581976426",
     "coordinate_status": "release_observed",
     "fixture_authority": "comparative_owned_snapshot_from_accepted_enterprise_source",
     "fixture_path": "fixtures/pairs/enterprise-postgresql-observation.json",
-    "fixture_file_sha256": "sha256:c4d6c47bb58c14b187426f1182be3df0467ca2ed65f84f76d430d348075e3b28",
-    "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+    "fixture_file_sha256": "sha256:700918758844eb7fb2ce4367412fc2eb920b348f66f8d376e695d0ae2e354341",
+    "observation_digest": "sha256:be341711a5697436dbc56bd61cf83b3f97f88ab2d7c4532d1eb54df6986499a8",
     "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e"
   },
   "simulation": {

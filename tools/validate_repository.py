@@ -4,6 +4,7 @@ from datetime import datetime
 from hashlib import sha1, sha256
 import json
 from pathlib import Path
+import re
 import sys
 import tempfile
 
@@ -13,6 +14,71 @@ from jsonschema.exceptions import SchemaError
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+
+PUBLIC_POSSIBLE_SKILL_METADATA = {
+    ".agents/skills/contextual-jargon-scan/SKILL.md": {
+        "name": "contextual-jargon-scan",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/contextual-jargon-scan/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "3c3a94db99152385253e0281c8afa8fea8208ac5",
+        "upstream_sha256": (
+            "da383f99eaff364d7e17c3bff93d8da618ec95894a45ff78a9620d8d7fc81523"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/deterministic-comparison-report-projection/SKILL.md": {
+        "name": "deterministic-comparison-report-projection",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "origin": "repository_native",
+    },
+    ".agents/skills/repository-reentry/SKILL.md": {
+        "name": "repository-reentry",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/repository-reentry/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "ac2c3732826c515b236598af10e0a204dbe14ace",
+        "upstream_sha256": (
+            "c60bb1bac3a993c78d94b1d05aaa7a97761b99275fc9acdc8285acba6f688f02"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/source-authority-mapping/SKILL.md": {
+        "name": "source-authority-mapping",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/source-authority-mapping/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "112830e9b70540b0bc9a8535ab77c7a04c1a5926",
+        "upstream_sha256": (
+            "1420eaee7f6d58805c29eaff23644d4982fdf1f12d2f6ce3cc39c65791939aff"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+}
+
+_SKILL_REQUIRED_SECTIONS = (
+    "## Contract",
+    "## Rules",
+    "## Operating sequence",
+    "## Completion",
+)
+_GIT_OID = re.compile(r"[0-9a-f]{40}")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
+PUBLICATION_OBSERVATION_TIME = "2026-09-02T17:18:30Z"
+CANDIDATE_OBSERVATION_TIME = "2026-09-04T04:02:50Z"
+ACCEPTED_MAIN_SOURCE_REVISION = "fadbb1aba21a828eb56ee35c0abb4bb32b7f498c"
+ACCEPTED_DOCS_REVISION = "ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1"
+ACCEPTED_PROJECTION_MANIFEST_SHA256 = (
+    "sha256:9a577fc95c31f4cffa40ebce51dd6b9f1738a3f70c595c3de59e9d80de4a69bf"
+)
+ACCEPTED_CANONICAL_ORIGIN = "https://cometspectrum.io/"
 
 from comparative_evidence.artifact_boundary import verify_reproducible_reports
 from comparative_evidence.calibration import score_calibration
@@ -31,6 +97,12 @@ from comparative_evidence.promotion_receipt import (
     file_digest as promotion_file_digest,
     validate_promotion_receipt,
 )
+from comparative_evidence.promotion_candidate import (
+    CANDIDATE_COORDINATE,
+    PRIOR_RELEASE_COORDINATE,
+    canonical_json_digest_from_path as promotion_candidate_digest,
+    validate_promotion_candidate,
+)
 from comparative_evidence.report import write_reports
 from comparative_evidence.simulated_closure import validate_simulated_closure_bundle
 from check_automation_contract import validate_automation_contract
@@ -40,6 +112,175 @@ from build_pages import (
     build_projection,
     verify_reproducible_projections,
 )
+
+
+def parse_skill_source(path: Path) -> tuple[dict[str, str], str]:
+    """Return the simple scalar front matter and complete skill source."""
+    content = path.read_text(encoding="utf-8")
+    lines = content.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError(f"{path} requires YAML front matter")
+    try:
+        closing = lines.index("---", 1)
+    except ValueError as error:
+        raise ValueError(f"{path} has unclosed YAML front matter") from error
+    metadata: dict[str, str] = {}
+    for line in lines[1:closing]:
+        if not line.strip():
+            continue
+        if ":" not in line:
+            raise ValueError(f"{path} has unsupported front-matter line {line!r}")
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip().strip('"')
+    return metadata, content
+
+
+def validate_collaboration_workbench(root: Path = ROOT) -> list[str]:
+    """Validate the exact copy-local skill workbench and orientation routes."""
+    findings: list[str] = []
+    skills_root = root / ".agents" / "skills"
+    actual_paths = {
+        str(path.relative_to(root)) for path in skills_root.glob("*/SKILL.md")
+    }
+    expected_paths = set(PUBLIC_POSSIBLE_SKILL_METADATA)
+    if actual_paths != expected_paths:
+        findings.append(
+            "public-possible skill inventory differs: expected "
+            f"{sorted(expected_paths)!r}; received {sorted(actual_paths)!r}"
+        )
+    for relative_path, expected in PUBLIC_POSSIBLE_SKILL_METADATA.items():
+        path = root / relative_path
+        if not path.is_file():
+            continue
+        try:
+            metadata, content = parse_skill_source(path)
+        except ValueError as error:
+            findings.append(str(error))
+            continue
+        observed = {key: metadata.get(key) for key in expected}
+        if observed != expected:
+            findings.append(
+                f"{relative_path} metadata differs: expected {expected!r}; "
+                f"received {observed!r}"
+            )
+        if path.parent.name != metadata.get("name"):
+            findings.append(f"{relative_path} directory and skill name must match")
+        if metadata.get("adaptation_relation") == "repository_local_derivative":
+            if not _GIT_OID.fullmatch(metadata.get("upstream_revision", "")):
+                findings.append(f"{relative_path} requires a full upstream revision")
+            if not _GIT_OID.fullmatch(metadata.get("upstream_blob_sha1", "")):
+                findings.append(f"{relative_path} requires an upstream blob identity")
+            if not _SHA256.fullmatch(metadata.get("upstream_sha256", "")):
+                findings.append(f"{relative_path} requires an upstream SHA-256 identity")
+        for heading in _SKILL_REQUIRED_SECTIONS:
+            if heading not in content:
+                findings.append(f"{relative_path} requires {heading}")
+        if "notion.so" in content or "app.notion.com" in content:
+            findings.append(
+                f"{relative_path} must remain usable through repository-local "
+                "guidance; private workspace locator found"
+            )
+    for orientation_name in ("README.md", "AGENTS.md"):
+        orientation_path = root / orientation_name
+        if not orientation_path.is_file():
+            findings.append(f"{orientation_name} is required for workbench routing")
+            continue
+        orientation = orientation_path.read_text(encoding="utf-8")
+        for relative_path in expected_paths:
+            if relative_path not in orientation:
+                findings.append(
+                    f"{orientation_name} must link the exact skill path {relative_path}"
+                )
+    return findings
+
+
+def validate_living_publication_state(root: Path = ROOT) -> list[str]:
+    """Check that living carriers describe the accepted public baseline."""
+    findings: list[str] = []
+    horizon = json.loads(
+        (root / "COORDINATION-HORIZON.json").read_text(encoding="utf-8")
+    )
+    first_receipt = json.loads(
+        (root / "first-receipt.json").read_text(encoding="utf-8")
+    )
+    machine_node = json.loads(
+        (root / "machine-node.json").read_text(encoding="utf-8")
+    )
+    repository_role = json.loads(
+        (root / "release/repository-role.json").read_text(encoding="utf-8")
+    )
+    timestamps = {
+        horizon.get("as_of"),
+        horizon.get("metadata", {}).get("updated_at"),
+        first_receipt.get("as_of"),
+        first_receipt.get("metadata", {}).get("updated_at"),
+        machine_node.get("metadata", {}).get("updated_at"),
+    }
+    if timestamps != {CANDIDATE_OBSERVATION_TIME}:
+        findings.append("living carriers require one candidate observation time")
+    work_items = {
+        item.get("item_id"): item
+        for item in horizon.get("work_items", [])
+        if isinstance(item, dict)
+    }
+    publication_item = work_items.get("WORK-COMPARATIVE-PUBLICATION-017", {})
+    candidate_item = work_items.get("WORK-COMPARATIVE-PROMOTION-004", {})
+    if (
+        horizon.get("current_item_ids")
+        != ["WORK-COMPARATIVE-PROMOTION-004"]
+        or publication_item.get("state") != "complete"
+        or candidate_item.get("state") != "settling"
+    ):
+        findings.append(
+            "the 0.3.2 candidate must remain current beside the complete public baseline"
+        )
+    publication_sources = [
+        item
+        for item in first_receipt.get("source_permissions", [])
+        if isinstance(item, dict)
+        and item.get("source") == "accepted-main-observation-carrier"
+    ]
+    if (
+        len(publication_sources) != 1
+        or publication_sources[0].get("permission") != "read"
+        or ACCEPTED_MAIN_SOURCE_REVISION
+        not in publication_sources[0].get("verification", "")
+    ):
+        findings.append("First Receipt must retain the accepted main source carrier")
+    handoff = first_receipt.get("handoff", {})
+    if (
+        handoff.get("recipient_role")
+        != "Comparative evidence release steward"
+        or handoff.get("next_safe_action")
+        != horizon.get("reentry_capsule", {}).get("next_safe_action")
+    ):
+        findings.append("living carriers must share one future receiving action")
+    publication = repository_role.get("publication_coordinates", {})
+    expected_fields = {
+        "status": "published",
+        "source_coordinate_kind": "accepted_main_publication_carrier",
+        "initial_source_revision": (
+            "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+        ),
+        "initial_docs_revision": "17636bb3587ad768d5422439af57240141d5cb9c",
+        "initial_projection_manifest_sha256": (
+            "sha256:0e5e73f183b993aa740f2979a463518ec65f9dcce8405f17ffa5b910e22ed221"
+        ),
+        "source_revision": ACCEPTED_MAIN_SOURCE_REVISION,
+        "source_revision_relation": (
+            "presentation_follow_up_preserving_golden_report_digest"
+        ),
+        "docs_revision": ACCEPTED_DOCS_REVISION,
+        "projection_manifest_sha256": ACCEPTED_PROJECTION_MANIFEST_SHA256,
+        "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
+        "observed_at": PUBLICATION_OBSERVATION_TIME,
+        "receiver_issue": 17,
+        "target_branch": "docs",
+    }
+    observed_fields = {key: publication.get(key) for key in expected_fields}
+    if observed_fields != expected_fields:
+        findings.append("release role differs from the accepted public coordinates")
+    return findings
 
 
 def _load(relative: str) -> dict:
@@ -136,6 +377,18 @@ def validate_json_contract(
 
 
 def main() -> int:
+    workbench_findings = validate_collaboration_workbench()
+    if workbench_findings:
+        raise ValueError(
+            "collaboration workbench differs from its local contract: "
+            + "; ".join(workbench_findings)
+        )
+    publication_findings = validate_living_publication_state()
+    if publication_findings:
+        raise ValueError(
+            "living publication state differs from its accepted baseline: "
+            + "; ".join(publication_findings)
+        )
     json_count = _repository_json_documents()
     bundle_path = (
         ROOT
@@ -148,8 +401,16 @@ def main() -> int:
     manifest = _load("release/repository-role.json")
     promotion_schema_path = ROOT / "schemas/promotion-receipt.schema.json"
     promotion_receipt_path = ROOT / "receipts/promotion-receipt.json"
+    promotion_candidate_schema_path = (
+        ROOT / "schemas/promotion-candidate.schema.json"
+    )
+    promotion_candidate_path = ROOT / "receipts/promotion-candidate.json"
     promotion_schema = _load("schemas/promotion-receipt.schema.json")
     promotion_receipt = _load("receipts/promotion-receipt.json")
+    promotion_candidate_schema = _load(
+        "schemas/promotion-candidate.schema.json"
+    )
+    promotion_candidate = _load("receipts/promotion-candidate.json")
     validate_json_contract(
         schema=promotion_schema,
         instance=promotion_receipt,
@@ -158,6 +419,14 @@ def main() -> int:
         contract_name="promotion receipt",
     )
     validate_promotion_receipt(promotion_receipt)
+    validate_json_contract(
+        schema=promotion_candidate_schema,
+        instance=promotion_candidate,
+        version_property="schema_version",
+        expected_version="1.0.0",
+        contract_name="promotion candidate",
+    )
+    validate_promotion_candidate(promotion_candidate)
     expected_promotion_binding = {
         "schema_path": "schemas/promotion-receipt.schema.json",
         "schema_version": "1.0.0",
@@ -165,6 +434,21 @@ def main() -> int:
         "receipt_path": "receipts/promotion-receipt.json",
         "receipt_canonical_json_digest": promotion_receipt_digest(
             promotion_receipt
+        ),
+    }
+    expected_candidate_binding = {
+        "schema_path": "schemas/promotion-candidate.schema.json",
+        "schema_version": "1.0.0",
+        "schema_file_sha256": (
+            "sha256:"
+            + sha256(promotion_candidate_schema_path.read_bytes()).hexdigest()
+        ),
+        "receipt_path": "receipts/promotion-candidate.json",
+        "receipt_file_sha256": (
+            "sha256:" + sha256(promotion_candidate_path.read_bytes()).hexdigest()
+        ),
+        "receipt_canonical_json_digest": promotion_candidate_digest(
+            promotion_candidate_path
         ),
     }
     release_subject = promotion_receipt["release_subject"]
@@ -203,32 +487,23 @@ def main() -> int:
         raise ValueError(
             "promotion receipt requires the reviewed comparison-v0.3.1 release evidence"
         )
-    carrier_observation_time = "2026-09-02T06:59:11Z"
+    carrier_observation_time = CANDIDATE_OBSERVATION_TIME
     publication_source_name = "accepted-main-observation-carrier"
     release_commit = release_subject["commit_oid"]
     golden_report_digest = (
-        "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa"
+        "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c"
     )
+    candidate_receipt_bytes = promotion_candidate_path.read_bytes()
     expected_promotion_coordinates = {
-        "status": "settled",
-        "settled_receipt_id": promotion_receipt["promotion_receipt_id"],
-        "receipt_path": "receipts/promotion-receipt.json",
-        "candidate_source": promotion_receipt["candidate_source"],
-        "reviewed_candidate": {
-            "commit_oid": "59d58c46d27a77150d399870ecebef2635c38dc5",
-            "tree_oid": release_subject["tree_oid"],
-        },
-        "observed_release": {
-            field: release_subject[field]
-            for field in (
-                "tag",
-                "tag_object_oid",
-                "commit_oid",
-                "tree_oid",
-                "archive_digest",
-                "promoted_at",
-            )
-        },
+        "status": "pending_release_promotion",
+        "open_receipt_id": promotion_candidate["promotion_receipt_id"],
+        "candidate_receipt": "receipts/promotion-candidate.json",
+        "candidate_receipt_file_sha256": (
+            "sha256:" + sha256(candidate_receipt_bytes).hexdigest()
+        ),
+        "target_release": promotion_candidate["target_release"],
+        "candidate_coordinate": promotion_candidate["candidate_coordinate"],
+        "prior_release": promotion_candidate["prior_release_coordinate"],
         "required_roles": [
             "site_reading_governance",
             "program_specification",
@@ -240,10 +515,8 @@ def main() -> int:
     receipt_file_bytes = (ROOT / "receipts/promotion-receipt.json").read_bytes()
     receipt_blob_header = f"blob {len(receipt_file_bytes)}\0".encode("ascii")
     expected_publication_coordinates = {
-        "status": "awaiting_accepted_carrier",
-        "source_coordinate_kind": (
-            "first_parent_main_commit_carrying_receipt_blob"
-        ),
+        "status": "published",
+        "source_coordinate_kind": "accepted_main_publication_carrier",
         "accepted_branch_ref": "refs/remotes/origin/main",
         "release_subject_commit_oid": release_commit,
         "receipt_path": "receipts/promotion-receipt.json",
@@ -255,8 +528,28 @@ def main() -> int:
         "receipt_file_sha256": (
             "sha256:" + sha256(receipt_file_bytes).hexdigest()
         ),
+        "initial_source_revision": (
+            "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+        ),
+        "initial_docs_revision": "17636bb3587ad768d5422439af57240141d5cb9c",
+        "initial_projection_manifest_sha256": (
+            "sha256:0e5e73f183b993aa740f2979a463518ec65f9dcce8405f17ffa5b910e22ed221"
+        ),
+        "source_revision": ACCEPTED_MAIN_SOURCE_REVISION,
+        "source_revision_relation": (
+            "presentation_follow_up_preserving_golden_report_digest"
+        ),
         "publication_revision_role": "pages_source_revision",
         "projection_manifest_field": "sourceRevision",
+        "docs_revision": ACCEPTED_DOCS_REVISION,
+        "projection_manifest_blob_oid": (
+            "c7ba848af3920b4d6b4d8d67d71778595b643d53"
+        ),
+        "projection_manifest_sha256": (
+            ACCEPTED_PROJECTION_MANIFEST_SHA256
+        ),
+        "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
+        "observed_at": PUBLICATION_OBSERVATION_TIME,
         "receiver_issue": 17,
         "target_branch": "docs",
     }
@@ -338,30 +631,32 @@ def main() -> int:
         raise ValueError(
             "constellation comparison coordinate requires the observed release subject"
         )
-    expected_provenance = {
-        "release": release_subject["tag"],
-        "commit": release_subject["commit_oid"],
-        "digest": release_subject["archive_digest"],
-    }
     campaign_states = {
         item["campaign_id"]: item["status"]
         for item in machine_node.get("campaigns", [])
     }
     if (
-        machine_node.get("lifecycle_state") != "reference_ready"
-        or machine_node.get("current_provenance") != expected_provenance
-        or machine_node.get("open_receipts") != []
-        or first_receipt.get("open_receipts") != []
+        machine_node.get("lifecycle_state") != "settling"
+        or machine_node.get("current_provenance")
+        != {
+            "release": "candidate-comparison-v0.3.2",
+            "commit": "0" * 40,
+            "digest": "sha256:" + "0" * 64,
+        }
+        or machine_node.get("open_receipts")
+        != ["RCP-COMPARATIVE-PROMOTION-004"]
+        or first_receipt.get("open_receipts")
+        != ["RCP-COMPARATIVE-PROMOTION-004"]
         or campaign_states.get("LIMS-ELN-OPEN-RECEIPTS") != "active"
     ):
         raise ValueError(
-            "release observation requires reference-ready provenance and one closed promotion receipt"
+            "release candidate requires settling provenance and one open promotion receipt"
         )
     if datetime.fromisoformat(carrier_observation_time) <= datetime.fromisoformat(
         release_subject["promoted_at"]
     ):
         raise ValueError(
-            "the observation carrier timestamp follows the signed release promotion"
+            "the candidate observation timestamp follows the prior signed release"
         )
     if (
         machine_node.get("metadata", {}).get("updated_at")
@@ -387,6 +682,7 @@ def main() -> int:
         and item.get("source") == publication_source_name
     ]
     publication_item = horizon_items.get("WORK-COMPARATIVE-PUBLICATION-017", {})
+    candidate_item = horizon_items.get("WORK-COMPARATIVE-PROMOTION-004", {})
     reentry = coordination_horizon.get("reentry_capsule", {})
     handoff = first_receipt.get("handoff", {})
     publication_source = (
@@ -408,7 +704,7 @@ def main() -> int:
 
     if (
         coordination_horizon.get("current_item_ids")
-        != ["WORK-COMPARATIVE-PUBLICATION-017"]
+        != ["WORK-COMPARATIVE-PROMOTION-004"]
         or not meaningful_text(coordination_horizon.get("objective"))
         or horizon_items.get("WORK-COMPARATIVE-PROMOTION-003", {}).get(
             "state"
@@ -416,15 +712,23 @@ def main() -> int:
         != "complete"
         or not isinstance(publication_item, dict)
         or publication_item.get("sequence") != 4
-        or publication_item.get("state") != "ready"
+        or publication_item.get("state") != "complete"
         or publication_item.get("owner_role")
         != "Comparative evidence publication receiver"
         or publication_item.get("dependency_ids")
         != ["WORK-COMPARATIVE-PROMOTION-003"]
+        or not isinstance(candidate_item, dict)
+        or candidate_item.get("sequence") != 5
+        or candidate_item.get("state") != "settling"
+        or candidate_item.get("owner_role")
+        != "Comparative evidence release steward"
+        or candidate_item.get("dependency_ids")
+        != ["WORK-COMPARATIVE-PUBLICATION-017"]
         or len(publication_sources) != 1
-        or publication_source.get("permission") != "execute_bounded"
+        or publication_source.get("permission") != "read"
         or not meaningful_text(source_verification)
-        or handoff.get("recipient_role") != "GitHub Pages publication receiver"
+        or handoff.get("recipient_role")
+        != "Comparative evidence release steward"
         or handoff.get("next_safe_action") != next_action
         or not meaningful_text(next_action)
         or not meaningful_text(reentry.get("current_state"))
@@ -436,7 +740,7 @@ def main() -> int:
         or any(not meaningful_text(value) for value in completion_evidence)
     ):
         raise ValueError(
-            "Coordination Horizon requires the typed observation-carrier publication handoff"
+            "Coordination Horizon requires the 0.3.2 candidate beside the settled public baseline"
         )
     implementation_golden_path = (
         ROOT / "fixtures/pairs/enterprise-postgresql-observation.json"
@@ -542,6 +846,13 @@ def main() -> int:
             first_pages,
             replay_pages,
         )
+        if any(
+            ".agents" in path.parts or path.name == "AGENTS.md"
+            for path in first_pages.rglob("*")
+        ):
+            raise ValueError(
+                "public-possible collaboration skills remain outside Pages"
+            )
     if report.get("comparison_mode") != "synthetic_contract" or report.get(
         "authority_posture"
     ) != {
@@ -557,6 +868,9 @@ def main() -> int:
         _load("fixtures/calibration/observed-outcomes.json")
     )
     expected = {
+        "repository_release": "0.3.2",
+        "release_state": "release_candidate",
+        "external_release": "comparison-v0.3.2",
         "synthetic_contract_report_digest": report["report_digest"],
         "canonical_governance_closure_digest": bundle_summary[
             "governance_closure_digest"
@@ -626,6 +940,12 @@ def main() -> int:
         drift["promotion_receipt_contract"] = {
             "manifest": promotion_binding,
             "derived": expected_promotion_binding,
+        }
+    candidate_binding = manifest.get("promotion_candidate_contract")
+    if candidate_binding != expected_candidate_binding:
+        drift["promotion_candidate_contract"] = {
+            "manifest": candidate_binding,
+            "derived": expected_candidate_binding,
         }
     if manifest.get("promotion_coordinates") != expected_promotion_coordinates:
         drift["promotion_coordinates"] = {
@@ -708,8 +1028,12 @@ def main() -> int:
                     golden_report_artifact_inventory
                 ),
                 "pages_projection_inventory_digest": digest(pages_inventory),
+                "collaboration_skills": len(PUBLIC_POSSIBLE_SKILL_METADATA),
                 "promotion_receipt_digest": promotion_receipt_digest(
                     promotion_receipt
+                ),
+                "promotion_candidate_digest": promotion_candidate_digest(
+                    promotion_candidate_path
                 ),
             },
             sort_keys=True,

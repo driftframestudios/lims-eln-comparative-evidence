@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+- Receive Enterprise `v0.3.2` through its signed tag and exact release coordinate,
+  then advance the Comparator-owned observation, source constellation, and
+  deterministic report identities.
+- Preserve the complete Golden Specimen result, projection, 17 field judgments,
+  and 10/4/3 classification counts while making the source-lineage change explicit.
+- Add a content-addressed 0.3.2 promotion candidate that tracks the remaining
+  release and Pages observations separately from the immutable 0.3.1 receipt and
+  public projection.
+- Record that a tag-to-tag Git tree comparison found identical blobs in the
+  database, SQL, fixture, PostgreSQL adapter, service, and domain paths. The earlier
+  hosted proof continues to cover those paths, and the accepted Enterprise 0.3.2
+  shared-contract source establishes the updated implementation coordinate.
+- Add a copy-local collaboration workbench for repository re-entry, source
+  authority mapping, deterministic report projection, and contextual language
+  review. Keep each skill public-possible while repository use and review
+  establish whether it is ready for a separate public projection.
+- Reconcile living orientation with the accepted main observation carrier,
+  deterministic docs revision, canonical public origin, and closed Issue #17
+  while preserving the signed release and report identities.
+- Align local Python examples and branch guidance with the repository's current
+  executable contracts.
+
 ## 0.3.1
 
 - Add a named Golden Specimen verification that validates both producer envelopes

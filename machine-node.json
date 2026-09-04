@@ -15,7 +15,7 @@
       "Scoped approval and acceptance records"
     ]
   },
-  "lifecycle_state": "reference_ready",
+  "lifecycle_state": "settling",
   "coordination_horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
   "contracts": [
     {
@@ -52,12 +52,14 @@
     "digest": "sha256:f8d79224b74ba45c5160ee9447fca77585ade6bbeb7eda5d6a3b173e1295b6d7"
   },
   "current_provenance": {
-    "release": "comparison-v0.3.1",
-    "commit": "b5c13689a32739d29437e209816bf0cd6a878976",
-    "digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
+    "release": "candidate-comparison-v0.3.2",
+    "commit": "0000000000000000000000000000000000000000",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "first_receipt_contract_id": "FIRST-RECEIPT-COMPARATIVE-EVIDENCE-001",
-  "open_receipts": [],
+  "open_receipts": [
+    "RCP-COMPARATIVE-PROMOTION-004"
+  ],
   "invalidation_conditions": [
     "The governance schema, selected-future assumptions, or canonical closure digest changes.",
     "A detailed receipt no longer reproduces its governance projection or aggregate artifact.",
@@ -89,7 +91,7 @@
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-09-02T06:59:11Z",
+    "updated_at": "2026-09-04T04:02:50Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-NODE-001",
       "display_name": "Comparative evidence stewardship role",

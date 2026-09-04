@@ -94,7 +94,7 @@ def observation(*, producer: str) -> dict:
             "source": {
                 "environment_id": "WORKBENCH-SYNTHETIC",
                 "implementation_commit": (
-                    "lims-eln-enterprise-implementation@0.3.1"
+                    "lims-eln-enterprise-implementation@0.3.2"
                 ),
                 "configuration_digest": "sha256:" + "4" * 64,
             },
@@ -152,7 +152,7 @@ def observation(*, producer: str) -> dict:
 
 def constellation() -> dict:
     return {
-        "constellation_version": "0.3.1",
+        "constellation_version": "0.3.2",
         "specification": {
             "package_version": "0.3.1",
             "commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
@@ -166,12 +166,12 @@ def constellation() -> dict:
             "coordinate_status": "release_observed",
         },
         "implementation": {
-            "release": "v0.3.1",
-            "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
-            "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
-            "digest": "git-tree-sha1:cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+            "release": "v0.3.2",
+            "tag_object_oid": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+            "commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+            "digest": "git-tree-sha1:eb8eadb27a9e07c6069a1946f115a0083d94af5c",
             "archive_digest": (
-                "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
+                "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
             ),
             "coordinate_status": "release_observed",
             "observation_digest": canonical_digest(
@@ -195,9 +195,13 @@ def constellation() -> dict:
         },
         "comparison": {
             "release": "comparison-v0.3.1",
-            "commit": "0" * 40,
-            "digest": "git-tree-sha1:" + "0" * 40,
-            "coordinate_status": "pending_release_commit",
+            "tag_object_oid": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+            "commit": "b5c13689a32739d29437e209816bf0cd6a878976",
+            "digest": "git-tree-sha1:10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+            "archive_digest": (
+                "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
+            ),
+            "coordinate_status": "release_observed",
         },
     }
 
@@ -300,6 +304,65 @@ class GoldenSpecimenVerificationTests(unittest.TestCase):
         self.assertNotIn("implementation-only-marker", rendered_comparisons)
         self.assertNotIn("new_local_fact", rendered_comparisons)
 
+    def test_source_release_advance_preserves_the_compared_result(self) -> None:
+        current_implementation = observation(producer="implementation")
+        current_coordinate = constellation()
+        current = self.compare(
+            implementation=current_implementation,
+            constellation_value=current_coordinate,
+        )
+
+        prior_implementation = deepcopy(current_implementation)
+        prior_implementation["source"]["implementation_commit"] = (
+            "lims-eln-enterprise-implementation@0.3.1"
+        )
+        prior_coordinate = deepcopy(current_coordinate)
+        prior_coordinate["constellation_version"] = "0.3.1"
+        prior_coordinate["implementation"].update(
+            {
+                "release": "v0.3.1",
+                "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
+                "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+                "digest": "git-tree-sha1:cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+                "archive_digest": (
+                    "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
+                ),
+                "observation_digest": canonical_digest(prior_implementation),
+            }
+        )
+        prior = self.compare(
+            implementation=prior_implementation,
+            constellation_value=prior_coordinate,
+        )
+
+        self.assertEqual(current["comparisons"], prior["comparisons"])
+        self.assertEqual(current["summary"], prior["summary"])
+        self.assertEqual(
+            current["implementation"]["projection_digest"],
+            prior["implementation"]["projection_digest"],
+        )
+        self.assertNotEqual(
+            current["implementation"]["source_digest"],
+            prior["implementation"]["source_digest"],
+        )
+        self.assertNotEqual(
+            current["source_constellation_digest"],
+            prior["source_constellation_digest"],
+        )
+        self.assertNotEqual(current["report_digest"], prior["report_digest"])
+
+    def test_implementation_source_must_match_its_release_coordinate(self) -> None:
+        implementation = observation(producer="implementation")
+        implementation["source"]["implementation_commit"] = (
+            "lims-eln-enterprise-implementation@0.3.1"
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "implementation observation source differs from the accepted release",
+        ):
+            self.compare(implementation=implementation)
+
     def test_report_retains_source_and_accepted_coordinate_context(self) -> None:
         implementation = observation(producer="implementation")
         simulation = observation(producer="simulation")
@@ -339,18 +402,27 @@ class GoldenSpecimenVerificationTests(unittest.TestCase):
         )
 
     def test_receiving_coordinate_stays_outside_source_report_identity(self) -> None:
-        pending = constellation()
+        prior = constellation()
+        pending = deepcopy(prior)
+        pending["comparison"] = {
+            "release": "comparison-v0.3.2",
+            "commit": "0" * 40,
+            "digest": "git-tree-sha1:" + "0" * 40,
+            "coordinate_status": "pending_release_commit",
+        }
         accepted = deepcopy(pending)
         accepted["comparison"] = {
-            "release": "comparison-v0.3.1",
+            "release": "comparison-v0.3.2",
             "commit": "a" * 40,
             "digest": "git-tree-sha1:" + "b" * 40,
             "coordinate_status": "release_observed",
         }
 
+        prior_report = self.compare(constellation_value=prior)
         pending_report = self.compare(constellation_value=pending)
         accepted_report = self.compare(constellation_value=accepted)
 
+        self.assertEqual(prior_report, pending_report)
         self.assertEqual(pending_report, accepted_report)
 
         changed_source = deepcopy(pending)

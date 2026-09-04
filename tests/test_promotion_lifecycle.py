@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from hashlib import sha256
 from pathlib import Path
 import sys
 import unittest
@@ -20,6 +21,10 @@ from comparative_evidence.promotion_receipt import (  # noqa: E402
     canonical_digest,
     file_digest,
     validate_promotion_receipt,
+)
+from comparative_evidence.promotion_candidate import (  # noqa: E402
+    CANDIDATE_COORDINATE,
+    PRIOR_RELEASE_COORDINATE,
 )
 
 
@@ -207,7 +212,12 @@ class PromotionLifecycleTests(unittest.TestCase):
         manifest = strict_json_loads(
             (ROOT / "release/repository-role.json").read_text(encoding="utf-8")
         )
+        promotion_candidate_path = ROOT / "receipts/promotion-candidate.json"
+        promotion_candidate = strict_json_loads(
+            promotion_candidate_path.read_text(encoding="utf-8")
+        )
         assert isinstance(manifest, dict)
+        assert isinstance(promotion_candidate, dict)
         self.assertRegex(file_digest(schema_path), r"^sha256:[a-f0-9]{64}$")
         self.assertRegex(
             canonical_digest(self.receipt),
@@ -229,25 +239,16 @@ class PromotionLifecycleTests(unittest.TestCase):
         self.assertEqual(
             manifest["promotion_coordinates"],
             {
-                "status": "settled",
-                "settled_receipt_id": self.receipt["promotion_receipt_id"],
-                "receipt_path": "receipts/promotion-receipt.json",
-                "candidate_source": self.receipt["candidate_source"],
-                "reviewed_candidate": {
-                    "commit_oid": "59d58c46d27a77150d399870ecebef2635c38dc5",
-                    "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
-                },
-                "observed_release": {
-                    field: self.receipt["release_subject"][field]
-                    for field in (
-                        "tag",
-                        "tag_object_oid",
-                        "commit_oid",
-                        "tree_oid",
-                        "archive_digest",
-                        "promoted_at",
-                    )
-                },
+                "status": "pending_release_promotion",
+                "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+                "candidate_receipt": "receipts/promotion-candidate.json",
+                "candidate_receipt_file_sha256": (
+                    "sha256:"
+                    + sha256(promotion_candidate_path.read_bytes()).hexdigest()
+                ),
+                "target_release": "comparison-v0.3.2",
+                "candidate_coordinate": CANDIDATE_COORDINATE,
+                "prior_release": PRIOR_RELEASE_COORDINATE,
                 "required_roles": [
                     "site_reading_governance",
                     "program_specification",
@@ -258,7 +259,7 @@ class PromotionLifecycleTests(unittest.TestCase):
             },
         )
 
-    def test_control_plane_closes_the_promotion_and_routes_publication(self) -> None:
+    def test_control_plane_routes_the_candidate_beside_prior_publication(self) -> None:
         constellation = strict_json_loads(
             (ROOT / "constellation.lock.json").read_text(encoding="utf-8")
         )
@@ -287,12 +288,15 @@ class PromotionLifecycleTests(unittest.TestCase):
                 "receipt_schema": "2.0.1",
             },
         )
-        self.assertEqual(machine["lifecycle_state"], "reference_ready")
-        self.assertEqual(machine["open_receipts"], [])
-        self.assertEqual(first_receipt["open_receipts"], [])
+        self.assertEqual(machine["lifecycle_state"], "settling")
+        self.assertEqual(
+            machine["open_receipts"],
+            ["RCP-COMPARATIVE-PROMOTION-004"],
+        )
+        self.assertEqual(first_receipt["open_receipts"], machine["open_receipts"])
         self.assertEqual(
             horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PUBLICATION-017"],
+            ["WORK-COMPARATIVE-PROMOTION-004"],
         )
         self.assertEqual(
             {
@@ -302,7 +306,7 @@ class PromotionLifecycleTests(unittest.TestCase):
                 horizon["as_of"],
                 horizon["metadata"]["updated_at"],
             },
-            {"2026-09-02T06:59:11Z"},
+            {"2026-09-04T04:02:50Z"},
         )
         self.assertEqual(
             self.receipt["release_subject"]["promoted_at"],
@@ -321,7 +325,7 @@ class PromotionLifecycleTests(unittest.TestCase):
             if item["source"] == "accepted-main-observation-carrier"
         ]
         self.assertEqual(1, len(publication_source))
-        self.assertEqual("execute_bounded", publication_source[0]["permission"])
+        self.assertEqual("read", publication_source[0]["permission"])
         self.assertGreaterEqual(
             len(publication_source[0]["verification"].strip()),
             40,
@@ -330,7 +334,13 @@ class PromotionLifecycleTests(unittest.TestCase):
             item["item_id"]: item for item in horizon["work_items"]
         }
         publication_item = publication_items["WORK-COMPARATIVE-PUBLICATION-017"]
-        self.assertEqual("ready", publication_item["state"])
+        candidate_item = publication_items["WORK-COMPARATIVE-PROMOTION-004"]
+        self.assertEqual("complete", publication_item["state"])
+        self.assertEqual("settling", candidate_item["state"])
+        self.assertEqual(
+            ["WORK-COMPARATIVE-PUBLICATION-017"],
+            candidate_item["dependency_ids"],
+        )
         self.assertGreaterEqual(len(publication_item["completion_evidence"]), 3)
         self.assertTrue(
             all(
@@ -341,10 +351,8 @@ class PromotionLifecycleTests(unittest.TestCase):
         self.assertEqual(
             repository_role["publication_coordinates"],
             {
-                "status": "awaiting_accepted_carrier",
-                "source_coordinate_kind": (
-                    "first_parent_main_commit_carrying_receipt_blob"
-                ),
+                "status": "published",
+                "source_coordinate_kind": "accepted_main_publication_carrier",
                 "accepted_branch_ref": "refs/remotes/origin/main",
                 "release_subject_commit_oid": (
                     "b5c13689a32739d29437e209816bf0cd6a878976"
@@ -357,8 +365,34 @@ class PromotionLifecycleTests(unittest.TestCase):
                 "receipt_file_sha256": (
                     "sha256:733261cf52339f7f6b3e650302ab4b8b51c37eef57c752b0f5e2d2c4e27485ff"
                 ),
+                "initial_source_revision": (
+                    "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+                ),
+                "initial_docs_revision": (
+                    "17636bb3587ad768d5422439af57240141d5cb9c"
+                ),
+                "initial_projection_manifest_sha256": (
+                    "sha256:0e5e73f183b993aa740f2979a463518ec65f9dcce8405f17ffa5b910e22ed221"
+                ),
+                "source_revision": (
+                    "fadbb1aba21a828eb56ee35c0abb4bb32b7f498c"
+                ),
+                "source_revision_relation": (
+                    "presentation_follow_up_preserving_golden_report_digest"
+                ),
                 "publication_revision_role": "pages_source_revision",
                 "projection_manifest_field": "sourceRevision",
+                "docs_revision": (
+                    "ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1"
+                ),
+                "projection_manifest_blob_oid": (
+                    "c7ba848af3920b4d6b4d8d67d71778595b643d53"
+                ),
+                "projection_manifest_sha256": (
+                    "sha256:9a577fc95c31f4cffa40ebce51dd6b9f1738a3f70c595c3de59e9d80de4a69bf"
+                ),
+                "canonical_origin": "https://cometspectrum.io/",
+                "observed_at": "2026-09-02T17:18:30Z",
                 "receiver_issue": 17,
                 "target_branch": "docs",
             },
