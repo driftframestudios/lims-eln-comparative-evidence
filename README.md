@@ -356,8 +356,9 @@ planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json),
 [`first-receipt.json`](first-receipt.json), and the Coordination Horizon use
 Governance 2.2 to validate their current orientation records, while the 0.3.2
 [`constellation.lock.json`](constellation.lock.json) retains Governance 2.1 as the
-source coordinate for the accepted Golden report. The
-0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
+source coordinate for the accepted Golden report. Released admission policy,
+bounded operations, and accountable roles continue to authorize runtime effects.
+The 0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
 and source-bound Pages publication are also complete. The current re-entry route
 carries the signed release, observation carrier, report digest, and public
 projection into the Program specification constellation while preserving the
