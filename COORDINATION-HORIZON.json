@@ -94,8 +94,9 @@
       ],
       "completion_evidence": [
         "Accepted develop source abcb3d295938f047d58ffc754eeabdeeefa52873 and accepted main release 0289ff835c790693a769347e69da0abdcfaa47de share Git tree 60c85e4206e2d487dac83d521401816dec0f34ae.",
-        "Signed annotated tag comparison-v0.3.2 identifies the accepted release and reproducible archive sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e.",
-        "The successor promotion observation records hosted check 33836962288, independent review scope, exact release objects, and the retained non-authorizing comparison posture."
+        "Signed annotated tag comparison-v0.3.2 identifies the accepted release commit.",
+        "A deterministic Git archive of that commit reproduces sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e.",
+        "The successor promotion observation records hosted check 33836962288, the scope of the separate architecture-review pass, exact release objects, and the retained non-authorizing comparison posture."
       ],
       "owner_role": "Comparative evidence release steward",
       "dependency_ids": [

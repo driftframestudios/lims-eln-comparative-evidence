@@ -11,8 +11,8 @@
   release and Pages observations separately from the immutable 0.3.1 receipt and
   public projection.
 - Record the accepted comparison-v0.3.2 commit, signed tag, reproducible archive,
-  hosted validation, and independent review in an additive promotion observation;
-  retain the 0.3.1 receipt, verifier, and public Pages bytes unchanged.
+  hosted validation, and separate architecture-review pass in an additive promotion
+  observation; retain the 0.3.1 receipt, verifier, and public Pages bytes unchanged.
 - Add one release-history command that runs the existing 0.3.1 verifier and the
   focused 0.3.2 observation verifier against both signed release coordinates.
 - Record that a tag-to-tag Git tree comparison found identical blobs in the

@@ -58,7 +58,7 @@
     "The repository retains the exact 0.3.2 candidate receipt and immutable 0.3.1 release receipt; the recorded docs revision keeps the 0.3.1 public projection recoverable."
   ],
   "limitations": [
-    "The deputized constructive architecture review is the independent review evidence for this release; GitHub records no formal review submission.",
+    "A separate architecture-review pass within the collaboration supplies the review evidence for this release; GitHub records no formal review submission.",
     "The public Pages projection remains on comparison-v0.3.1 until a successor build is created from the accepted observation carrier and verified at the canonical origin.",
     "The comparison remains a simulated-verification instrument and grants no production authorization."
   ],
