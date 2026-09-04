@@ -355,11 +355,11 @@ completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
 [`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects. The
-0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion is
-also complete, and its source-bound Pages rebuild is the current work item. The
-re-entry route preserves both signed releases and the current public projection
-while the successor projection moves through deterministic build and hosted
-verification.
+0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
+and source-bound Pages publication are also complete. The current re-entry route
+carries the signed release, observation carrier, report digest, and public
+projection into the Program specification constellation while preserving the
+0.3.1 release and publication as recoverable history.
 
 ## Comparative literacy
 
