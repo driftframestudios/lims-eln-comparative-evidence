@@ -60,6 +60,18 @@ class ReleaseHistoryTests(unittest.TestCase):
                 check=True,
                 capture_output=True,
             )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(repository),
+                    "update-ref",
+                    "refs/remotes/origin/main",
+                    "HEAD",
+                ],
+                check=True,
+                capture_output=True,
+            )
             signer_path = repository / "release" / "trusted-release-signers"
 
             def mutate_shared_signer(*_args, **_kwargs):
@@ -93,6 +105,18 @@ class ReleaseHistoryTests(unittest.TestCase):
                     "--no-hardlinks",
                     str(Path(__file__).resolve().parents[1]),
                     str(repository),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(repository),
+                    "update-ref",
+                    "refs/remotes/origin/main",
+                    "HEAD",
                 ],
                 check=True,
                 capture_output=True,
