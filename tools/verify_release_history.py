@@ -13,9 +13,13 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from tools.verify_promotion_observation import verify_promotion_observation  # noqa: E402
+from tools.verify_promotion_observation import (  # noqa: E402
+    DEFAULT_OBSERVATION,
+    verify_promotion_observation,
+)
 from tools.verify_release_coordinate import (  # noqa: E402
     DEFAULT_ACCEPTED_REF,
+    DEFAULT_RECEIPT,
     DEFAULT_TRUSTED_SIGNERS,
     ReleaseCoordinateError,
     _RepositoryIdentity,
@@ -40,6 +44,7 @@ class _HistorySnapshot:
     carrier_commit: str
     accepted_commit: str
     tag_objects: tuple[tuple[str, str], ...]
+    evidence_carriers: tuple[tuple[Path, bytes], ...]
     trusted_signers_path: Path
     trusted_signers_bytes: bytes
 
@@ -67,10 +72,24 @@ def _capture_history_snapshot(
         DEFAULT_TRUSTED_SIGNERS,
         "trusted release signers",
     )
+    evidence_carriers = []
+    for relative in (DEFAULT_RECEIPT, DEFAULT_OBSERVATION):
+        evidence_path = _repository_file(
+            identity.worktree_root,
+            relative,
+            f"release evidence {relative}",
+        )
+        evidence_carriers.append(
+            (
+                evidence_path,
+                _read_regular_bytes(evidence_path, f"release evidence {relative}"),
+            )
+        )
     return identity, _HistorySnapshot(
         carrier_commit=carrier_commit,
         accepted_commit=accepted_commit,
         tag_objects=tag_objects,
+        evidence_carriers=tuple(evidence_carriers),
         trusted_signers_path=trusted_signers_path,
         trusted_signers_bytes=_read_regular_bytes(
             trusted_signers_path,
@@ -98,6 +117,18 @@ def _require_history_snapshot(
         snapshot.accepted_commit,
         label="accepted history ref",
     )
+    for evidence_path, evidence_bytes in snapshot.evidence_carriers:
+        if (
+            _read_regular_bytes(
+                evidence_path,
+                f"release evidence {evidence_path.name} final history snapshot",
+            )
+            != evidence_bytes
+        ):
+            raise ReleaseCoordinateError(
+                f"working release evidence carrier {evidence_path.name} remains at "
+                "the exact captured bytes during release-history verification"
+            )
     if (
         _read_regular_bytes(
             snapshot.trusted_signers_path,

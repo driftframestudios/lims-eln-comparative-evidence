@@ -82,6 +82,41 @@ class ReleaseHistoryTests(unittest.TestCase):
             ):
                 history.verify_release_history(repository)
 
+    def test_history_rechecks_prior_receipt_after_current_verification(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparison-history-") as temporary:
+            repository = Path(temporary) / "repository"
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--local",
+                    "--no-hardlinks",
+                    str(Path(__file__).resolve().parents[1]),
+                    str(repository),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            prior_receipt = repository / "receipts" / "promotion-receipt.json"
+
+            def mutate_prior_receipt(*_args, **_kwargs):
+                prior_receipt.write_bytes(prior_receipt.read_bytes() + b"\n")
+                return {"status": "passed", "tag": "comparison-v0.3.2"}
+
+            with patch.object(
+                history,
+                "verify_release_coordinate",
+                return_value={"status": "passed", "tag": "comparison-v0.3.1"},
+            ), patch.object(
+                history,
+                "verify_promotion_observation",
+                side_effect=mutate_prior_receipt,
+            ), self.assertRaisesRegex(
+                history.ReleaseCoordinateError,
+                "promotion-receipt.json remains at the exact captured bytes",
+            ):
+                history.verify_release_history(repository)
+
     def test_history_returns_a_verifier_failure(self) -> None:
         with patch.object(
             history,
