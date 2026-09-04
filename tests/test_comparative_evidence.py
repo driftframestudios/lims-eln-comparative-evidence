@@ -39,7 +39,7 @@ from comparative_evidence.simulated_closure import (
     admit_simulated_closure,
     validate_simulated_closure_bundle,
 )
-from validate_repository import validate_json_contract
+from validate_repository import PRIOR_PUBLICATION_COORDINATES, validate_json_contract
 
 
 def load(path: str) -> dict:
@@ -1352,7 +1352,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 coordination_horizon["as_of"],
                 coordination_horizon["metadata"]["updated_at"],
             },
-            {"2026-09-04T04:34:49Z"},
+            {"2026-09-04T05:24:33Z"},
         )
         source_permissions = {
             item["source"]: item for item in first_receipt["source_permissions"]
@@ -1395,7 +1395,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
             for item in coordination_horizon["work_items"]
             if item["item_id"] == "WORK-COMPARATIVE-PUBLICATION-031"
         )
-        self.assertEqual(successor_publication_item["state"], "settling")
+        self.assertEqual(successor_publication_item["state"], "complete")
         self.assertEqual(
             successor_publication_item["dependency_ids"],
             ["WORK-COMPARATIVE-PROMOTION-004"],
@@ -1410,12 +1410,30 @@ class ComparativeEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["publication_coordinates"]["receipt_blob_oid"],
-            "4b2f41fe86fb4050d2d3f7da984baa78463c0c12",
+            "c6318597b4d038cd59c897d4041c7e0178e60e15",
         )
         self.assertEqual(
             manifest["publication_coordinates"]["release_subject_commit_oid"],
-            manifest["promotion_coordinates"]["prior_release"]["commit_oid"],
+            manifest["promotion_coordinates"]["release_subject"]["commit_oid"],
         )
+        self.assertEqual(
+            manifest["publication_coordinates"]["source_revision"],
+            "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+        )
+        self.assertEqual(
+            manifest["publication_coordinates"]["docs_revision"],
+            "6ccc087875b439eb70304771f534434acae3f01c",
+        )
+        self.assertEqual(
+            manifest["publication_coordinates"]["projection_manifest_sha256"],
+            "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea",
+        )
+        prior_publication = next(
+            item["publication_coordinates"]
+            for item in manifest["historical_external_releases"]
+            if item["external_release"] == "comparison-v0.3.1"
+        )
+        self.assertEqual(prior_publication, PRIOR_PUBLICATION_COORDINATES)
         vocabulary_binding = manifest["external_contract_bindings"][
             "receipt_family_vocabulary_map"
         ]
