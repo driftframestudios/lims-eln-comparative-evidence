@@ -13,6 +13,11 @@
 - Record the accepted comparison-v0.3.2 commit, signed tag, reproducible archive,
   hosted validation, and separate architecture-review pass in an additive promotion
   observation; retain the 0.3.1 receipt, verifier, and public Pages bytes unchanged.
+- Publish the deterministic 0.3.2 projection from accepted observation carrier
+  `2cca88982444ebc8280f9eb2891d97bf25dbeb95` through docs revision
+  `6ccc087875b439eb70304771f534434acae3f01c`; record its manifest identity,
+  successful Pages run, hosted byte equality, and responsive report review while
+  retaining the complete 0.3.1 publication history.
 - Add one release-history command that runs the existing 0.3.1 verifier and the
   focused 0.3.2 observation verifier against both signed release coordinates.
 - Record that a tag-to-tag Git tree comparison found identical blobs in the

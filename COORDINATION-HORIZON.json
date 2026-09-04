@@ -2,7 +2,7 @@
   "horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
   "title": "Governance-bound selected-future evidence",
   "objective": "Publish a deterministic 0.3.2 Pages projection from an accepted observation carrier that descends from signed release comparison-v0.3.2, while retaining the prior signed release, the 0.3.1 classification on each of the 17 compared paths, and the current public projection as independently recoverable evidence.",
-  "as_of": "2026-09-04T04:34:49Z",
+  "as_of": "2026-09-04T05:24:33Z",
   "current_item_ids": [
     "WORK-COMPARATIVE-PUBLICATION-031"
   ],
@@ -107,7 +107,7 @@
       "item_id": "WORK-COMPARATIVE-PUBLICATION-031",
       "horizon_label": "Stable 0.3.2 public comparison baseline",
       "sequence": 6,
-      "state": "settling",
+      "state": "complete",
       "desired_state": "The docs branch exposes one deterministic projection built from the accepted 0.3.2 observation carrier while the 0.3.1 release and publication coordinates remain recoverable.",
       "entry_evidence": [
         "Local Git objects reproduce the signed comparison-v0.3.2 tag, release commit and tree, archive digest, and candidate/release tree equality.",
@@ -115,10 +115,11 @@
         "The comparison-v0.3.1 Pages projection remains the current hosted baseline until the successor bytes are accepted."
       ],
       "completion_evidence": [
-        "The accepted main observation carrier contains the exact promotion-observation blob and descends from signed release 0289ff835c790693a769347e69da0abdcfaa47de.",
-        "The docs branch receives one deterministic projection whose sourceRevision equals that observation carrier.",
-        "The projection manifest binds every public file and preserves Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c.",
-        "Hosted verification confirms the canonical location, responsive report surface, and byte equality with the generated projection."
+        "Accepted main observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95 contains promotion-observation blob c6318597b4d038cd59c897d4041c7e0178e60e15 and descends from signed release 0289ff835c790693a769347e69da0abdcfaa47de.",
+        "Docs revision 6ccc087875b439eb70304771f534434acae3f01c carries manifest blob 2c701af256c74c5ec73dd266c0e62aeb554b11a6, whose sourceRevision is the accepted observation carrier and whose SHA-256 is 38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea.",
+        "Pages run 33839764767 completed successfully at https://cometspectrum.io/, and every hosted file matched the deterministic docs projection byte for byte.",
+        "Browser review at 1440 by 1000 and 390 by 844 found a page-contained, keyboard-focusable report scroller; the narrow table moved through its full comparison width and kept each Classification value on one line.",
+        "The published projection preserves Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c while the complete 0.3.1 release and publication coordinates remain recoverable."
       ],
       "owner_role": "Comparative evidence publication receiver",
       "dependency_ids": [
@@ -127,13 +128,13 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "Signed release comparison-v0.3.2 now binds Enterprise v0.3.2 and the updated report identities while retaining the 0.3.1 classification on each of the 17 compared paths. Docs revision ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1 remains the accepted 0.3.1 public baseline until the successor projection is verified.",
+    "current_state": "Signed release comparison-v0.3.2 and its bounded Pages publication are complete. Accepted observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95 supplies the source revision for docs revision 6ccc087875b439eb70304771f534434acae3f01c at https://cometspectrum.io/, while the complete 0.3.1 release and publication remain recoverable.",
     "recent_decisions": [
       "DECISION-GOVERNANCE-CLOSURE-AS-AUTHORITY-BOUNDARY-001",
       "DECISION-OBSERVED-EVIDENCE-AS-INDEPENDENT-COMPARISON-001"
     ],
-    "next_safe_action": "Accept this release observation on main, resolve that accepted commit as the 0.3.2 Pages source revision, and publish one deterministic docs projection before verifying its manifest and hosted bytes.",
-    "verification": "Confirm the comparison-v0.3.2 signed tag, accepted commit, shared candidate tree, reproducible archive, hosted release check, exact candidate and observation receipts, stable 10/4/3 classifications, and retained comparison-v0.3.1 release and Pages coordinates."
+    "next_safe_action": "Carry the signed 0.3.2 release, accepted observation carrier, Golden report digest, and publication coordinates into the Program specification constellation while preserving the release subject, observation carrier, and public projection as distinct identities.",
+    "verification": "Confirm signed release 0289ff835c790693a769347e69da0abdcfaa47de, observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95, docs revision 6ccc087875b439eb70304771f534434acae3f01c, manifest SHA-256 38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea, Pages run 33839764767, Golden report digest, hosted byte equality, responsive report behavior, and retained 0.3.1 coordinates."
   },
   "retained_effects": [
     "The selected future remains definitive only inside its declared simulation reality.",
@@ -146,7 +147,7 @@
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-09-04T04:34:49Z",
+    "updated_at": "2026-09-04T05:24:33Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-HORIZON-001",
       "display_name": "Comparative evidence stewardship role",

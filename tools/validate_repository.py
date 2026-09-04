@@ -71,14 +71,50 @@ _SKILL_REQUIRED_SECTIONS = (
 )
 _GIT_OID = re.compile(r"[0-9a-f]{40}")
 _SHA256 = re.compile(r"[0-9a-f]{64}")
-PUBLICATION_OBSERVATION_TIME = "2026-09-02T17:18:30Z"
-RELEASE_OBSERVATION_TIME = "2026-09-04T04:34:49Z"
-ACCEPTED_MAIN_SOURCE_REVISION = "fadbb1aba21a828eb56ee35c0abb4bb32b7f498c"
-ACCEPTED_DOCS_REVISION = "ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1"
+CURRENT_PUBLICATION_OBSERVATION_TIME = "2026-09-04T05:24:33Z"
+ACCEPTED_MAIN_SOURCE_REVISION = "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+ACCEPTED_DOCS_REVISION = "6ccc087875b439eb70304771f534434acae3f01c"
+ACCEPTED_PROJECTION_MANIFEST_BLOB_OID = (
+    "2c701af256c74c5ec73dd266c0e62aeb554b11a6"
+)
 ACCEPTED_PROJECTION_MANIFEST_SHA256 = (
-    "sha256:9a577fc95c31f4cffa40ebce51dd6b9f1738a3f70c595c3de59e9d80de4a69bf"
+    "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea"
 )
 ACCEPTED_CANONICAL_ORIGIN = "https://cometspectrum.io/"
+ACCEPTED_PAGES_RUN_ID = "33839764767"
+ACCEPTED_PAGES_DEPLOY_JOB_ID = "100919655445"
+PRIOR_PUBLICATION_COORDINATES = {
+    "status": "published",
+    "source_coordinate_kind": "accepted_main_publication_carrier",
+    "accepted_branch_ref": "refs/remotes/origin/main",
+    "release_subject_commit_oid": "b5c13689a32739d29437e209816bf0cd6a878976",
+    "receipt_path": "receipts/promotion-receipt.json",
+    "receipt_state": "release_observed",
+    "receipt_blob_oid": "4b2f41fe86fb4050d2d3f7da984baa78463c0c12",
+    "receipt_file_sha256": (
+        "sha256:733261cf52339f7f6b3e650302ab4b8b51c37eef57c752b0f5e2d2c4e27485ff"
+    ),
+    "initial_source_revision": "9012a03d1e5175c7794c4c8d5c5e620b5943a430",
+    "initial_docs_revision": "17636bb3587ad768d5422439af57240141d5cb9c",
+    "initial_projection_manifest_sha256": (
+        "sha256:0e5e73f183b993aa740f2979a463518ec65f9dcce8405f17ffa5b910e22ed221"
+    ),
+    "source_revision": "fadbb1aba21a828eb56ee35c0abb4bb32b7f498c",
+    "source_revision_relation": (
+        "presentation_follow_up_preserving_golden_report_digest"
+    ),
+    "publication_revision_role": "pages_source_revision",
+    "projection_manifest_field": "sourceRevision",
+    "docs_revision": "ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1",
+    "projection_manifest_blob_oid": "c7ba848af3920b4d6b4d8d67d71778595b643d53",
+    "projection_manifest_sha256": (
+        "sha256:9a577fc95c31f4cffa40ebce51dd6b9f1738a3f70c595c3de59e9d80de4a69bf"
+    ),
+    "canonical_origin": "https://cometspectrum.io/",
+    "observed_at": "2026-09-02T17:18:30Z",
+    "receiver_issue": 17,
+    "target_branch": "docs",
+}
 
 from comparative_evidence.artifact_boundary import verify_reproducible_reports
 from comparative_evidence.calibration import score_calibration
@@ -221,8 +257,8 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
         first_receipt.get("metadata", {}).get("updated_at"),
         machine_node.get("metadata", {}).get("updated_at"),
     }
-    if timestamps != {RELEASE_OBSERVATION_TIME}:
-        findings.append("living carriers require one release observation time")
+    if timestamps != {CURRENT_PUBLICATION_OBSERVATION_TIME}:
+        findings.append("living carriers require one publication observation time")
     work_items = {
         item.get("item_id"): item
         for item in horizon.get("work_items", [])
@@ -238,10 +274,10 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
         != ["WORK-COMPARATIVE-PUBLICATION-031"]
         or publication_item.get("state") != "complete"
         or candidate_item.get("state") != "complete"
-        or successor_publication_item.get("state") != "settling"
+        or successor_publication_item.get("state") != "complete"
     ):
         findings.append(
-            "the 0.3.2 release must route to its successor public projection"
+            "the 0.3.2 public projection must remain a completed work item"
         )
     publication_sources = [
         item
@@ -259,7 +295,7 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
     handoff = first_receipt.get("handoff", {})
     if (
         handoff.get("recipient_role")
-        != "Comparative evidence publication receiver"
+        != "Program specification constellation receiver"
         or handoff.get("next_safe_action")
         != horizon.get("reentry_capsule", {}).get("next_safe_action")
     ):
@@ -268,27 +304,51 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
     expected_fields = {
         "status": "published",
         "source_coordinate_kind": "accepted_main_publication_carrier",
-        "initial_source_revision": (
-            "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
+        "accepted_branch_ref": "refs/remotes/origin/main",
+        "release_subject_commit_oid": (
+            "0289ff835c790693a769347e69da0abdcfaa47de"
         ),
-        "initial_docs_revision": "17636bb3587ad768d5422439af57240141d5cb9c",
-        "initial_projection_manifest_sha256": (
-            "sha256:0e5e73f183b993aa740f2979a463518ec65f9dcce8405f17ffa5b910e22ed221"
+        "receipt_path": "receipts/promotion-observation-v0.3.2.json",
+        "receipt_state": "release_observed",
+        "receipt_blob_oid": "c6318597b4d038cd59c897d4041c7e0178e60e15",
+        "receipt_file_sha256": (
+            "sha256:acccb507f0675cdc079aa56bc12299bd4ce533344cb150e42dba1c991c024fd4"
         ),
         "source_revision": ACCEPTED_MAIN_SOURCE_REVISION,
         "source_revision_relation": (
-            "presentation_follow_up_preserving_golden_report_digest"
+            "accepted_observation_carrier_descending_from_signed_release"
         ),
+        "publication_revision_role": "pages_source_revision",
+        "projection_manifest_field": "sourceRevision",
         "docs_revision": ACCEPTED_DOCS_REVISION,
+        "projection_manifest_blob_oid": ACCEPTED_PROJECTION_MANIFEST_BLOB_OID,
         "projection_manifest_sha256": ACCEPTED_PROJECTION_MANIFEST_SHA256,
         "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
-        "observed_at": PUBLICATION_OBSERVATION_TIME,
-        "receiver_issue": 17,
+        "observed_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+        "receiver_issue": 31,
         "target_branch": "docs",
+        "hosted_observation": {
+            "pages_run_id": ACCEPTED_PAGES_RUN_ID,
+            "deploy_job_id": ACCEPTED_PAGES_DEPLOY_JOB_ID,
+            "pages_run_head_revision": ACCEPTED_DOCS_REVISION,
+            "pages_run_conclusion": "success",
+            "pages_run_completed_at": "2026-09-04T05:15:41Z",
+            "verified_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+            "byte_parity": "verified_against_docs_projection",
+            "responsive_report_surface": "narrow_and_desktop_verified",
+        },
     }
     observed_fields = {key: publication.get(key) for key in expected_fields}
     if observed_fields != expected_fields:
         findings.append("release role differs from the accepted public coordinates")
+    prior_publications = [
+        item.get("publication_coordinates")
+        for item in repository_role.get("historical_external_releases", [])
+        if isinstance(item, dict)
+        and item.get("external_release") == "comparison-v0.3.1"
+    ]
+    if prior_publications != [PRIOR_PUBLICATION_COORDINATES]:
+        findings.append("release role must retain the complete 0.3.1 publication")
     return findings
 
 
@@ -530,7 +590,7 @@ def main() -> int:
         raise ValueError(
             "promotion receipt requires the reviewed comparison-v0.3.1 release evidence"
         )
-    carrier_observation_time = RELEASE_OBSERVATION_TIME
+    carrier_observation_time = CURRENT_PUBLICATION_OBSERVATION_TIME
     publication_source_name = "accepted-main-observation-carrier"
     release_commit = release_subject["commit_oid"]
     golden_report_digest = (
@@ -567,46 +627,46 @@ def main() -> int:
             "comparative_evidence",
         ],
     }
-    receipt_file_bytes = (ROOT / "receipts/promotion-receipt.json").read_bytes()
-    receipt_blob_header = f"blob {len(receipt_file_bytes)}\0".encode("ascii")
+    observation_blob_header = (
+        f"blob {len(promotion_observation_bytes)}\0".encode("ascii")
+    )
     expected_publication_coordinates = {
         "status": "published",
         "source_coordinate_kind": "accepted_main_publication_carrier",
         "accepted_branch_ref": "refs/remotes/origin/main",
-        "release_subject_commit_oid": release_commit,
-        "receipt_path": "receipts/promotion-receipt.json",
+        "release_subject_commit_oid": CURRENT_RELEASE_COORDINATE["commit_oid"],
+        "receipt_path": "receipts/promotion-observation-v0.3.2.json",
         "receipt_state": "release_observed",
         "receipt_blob_oid": sha1(
-            receipt_blob_header + receipt_file_bytes,
+            observation_blob_header + promotion_observation_bytes,
             usedforsecurity=False,
         ).hexdigest(),
         "receipt_file_sha256": (
-            "sha256:" + sha256(receipt_file_bytes).hexdigest()
-        ),
-        "initial_source_revision": (
-            "9012a03d1e5175c7794c4c8d5c5e620b5943a430"
-        ),
-        "initial_docs_revision": "17636bb3587ad768d5422439af57240141d5cb9c",
-        "initial_projection_manifest_sha256": (
-            "sha256:0e5e73f183b993aa740f2979a463518ec65f9dcce8405f17ffa5b910e22ed221"
+            "sha256:" + sha256(promotion_observation_bytes).hexdigest()
         ),
         "source_revision": ACCEPTED_MAIN_SOURCE_REVISION,
         "source_revision_relation": (
-            "presentation_follow_up_preserving_golden_report_digest"
+            "accepted_observation_carrier_descending_from_signed_release"
         ),
         "publication_revision_role": "pages_source_revision",
         "projection_manifest_field": "sourceRevision",
         "docs_revision": ACCEPTED_DOCS_REVISION,
-        "projection_manifest_blob_oid": (
-            "c7ba848af3920b4d6b4d8d67d71778595b643d53"
-        ),
-        "projection_manifest_sha256": (
-            ACCEPTED_PROJECTION_MANIFEST_SHA256
-        ),
+        "projection_manifest_blob_oid": ACCEPTED_PROJECTION_MANIFEST_BLOB_OID,
+        "projection_manifest_sha256": ACCEPTED_PROJECTION_MANIFEST_SHA256,
         "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
-        "observed_at": PUBLICATION_OBSERVATION_TIME,
-        "receiver_issue": 17,
+        "observed_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+        "receiver_issue": 31,
         "target_branch": "docs",
+        "hosted_observation": {
+            "pages_run_id": ACCEPTED_PAGES_RUN_ID,
+            "deploy_job_id": ACCEPTED_PAGES_DEPLOY_JOB_ID,
+            "pages_run_head_revision": ACCEPTED_DOCS_REVISION,
+            "pages_run_conclusion": "success",
+            "pages_run_completed_at": "2026-09-04T05:15:41Z",
+            "verified_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+            "byte_parity": "verified_against_docs_projection",
+            "responsive_report_surface": "narrow_and_desktop_verified",
+        },
     }
     if manifest.get("automation_controls") != {
         "pull_request_workflow": ".github/workflows/pull-request.yml",
@@ -784,7 +844,7 @@ def main() -> int:
         != ["WORK-COMPARATIVE-PUBLICATION-017"]
         or not isinstance(successor_publication_item, dict)
         or successor_publication_item.get("sequence") != 6
-        or successor_publication_item.get("state") != "settling"
+        or successor_publication_item.get("state") != "complete"
         or successor_publication_item.get("owner_role")
         != "Comparative evidence publication receiver"
         or successor_publication_item.get("dependency_ids")
@@ -793,7 +853,7 @@ def main() -> int:
         or publication_source.get("permission") != "read"
         or not meaningful_text(source_verification)
         or handoff.get("recipient_role")
-        != "Comparative evidence publication receiver"
+        != "Program specification constellation receiver"
         or handoff.get("next_safe_action") != next_action
         or not meaningful_text(next_action)
         or not meaningful_text(reentry.get("current_state"))
@@ -805,7 +865,7 @@ def main() -> int:
         or any(not meaningful_text(value) for value in completion_evidence)
     ):
         raise ValueError(
-            "Coordination Horizon routes the observed 0.3.2 release to publication"
+            "Coordination Horizon routes the published 0.3.2 baseline to Program"
         )
     implementation_golden_path = (
         ROOT / "fixtures/pairs/enterprise-postgresql-observation.json"
@@ -1027,6 +1087,17 @@ def main() -> int:
         drift["publication_coordinates"] = {
             "manifest": manifest.get("publication_coordinates"),
             "derived": expected_publication_coordinates,
+        }
+    prior_publications = [
+        item.get("publication_coordinates")
+        for item in manifest.get("historical_external_releases", [])
+        if isinstance(item, dict)
+        and item.get("external_release") == "comparison-v0.3.1"
+    ]
+    if prior_publications != [PRIOR_PUBLICATION_COORDINATES]:
+        drift["historical_0.3.1_publication"] = {
+            "manifest": prior_publications,
+            "derived": [PRIOR_PUBLICATION_COORDINATES],
         }
     for label, observation_field in (
         ("implementation", "observation_digest"),

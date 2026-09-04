@@ -311,7 +311,7 @@ class PromotionLifecycleTests(unittest.TestCase):
             },
         )
 
-    def test_control_plane_routes_the_observed_release_to_publication(self) -> None:
+    def test_control_plane_records_publication_and_program_handoff(self) -> None:
         constellation = strict_json_loads(
             (ROOT / "constellation.lock.json").read_text(encoding="utf-8")
         )
@@ -355,7 +355,7 @@ class PromotionLifecycleTests(unittest.TestCase):
                 horizon["as_of"],
                 horizon["metadata"]["updated_at"],
             },
-            {"2026-09-04T04:34:49Z"},
+            {"2026-09-04T05:24:33Z"},
         )
         self.assertEqual(
             self.receipt["release_subject"]["promoted_at"],
@@ -366,6 +366,10 @@ class PromotionLifecycleTests(unittest.TestCase):
         self.assertEqual(
             first_receipt["handoff"]["next_safe_action"],
             expected_next_action,
+        )
+        self.assertEqual(
+            first_receipt["handoff"]["recipient_role"],
+            "Program specification constellation receiver",
         )
         self.assertGreaterEqual(len(expected_next_action.strip()), 40)
         publication_source = [
@@ -389,7 +393,7 @@ class PromotionLifecycleTests(unittest.TestCase):
         ]
         self.assertEqual("complete", publication_item["state"])
         self.assertEqual("complete", candidate_item["state"])
-        self.assertEqual("settling", successor_publication_item["state"])
+        self.assertEqual("complete", successor_publication_item["state"])
         self.assertEqual(
             ["WORK-COMPARATIVE-PUBLICATION-017"],
             candidate_item["dependency_ids"],
@@ -410,6 +414,61 @@ class PromotionLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(
             repository_role["publication_coordinates"],
+            {
+                "status": "published",
+                "source_coordinate_kind": "accepted_main_publication_carrier",
+                "accepted_branch_ref": "refs/remotes/origin/main",
+                "release_subject_commit_oid": (
+                    "0289ff835c790693a769347e69da0abdcfaa47de"
+                ),
+                "receipt_path": "receipts/promotion-observation-v0.3.2.json",
+                "receipt_state": "release_observed",
+                "receipt_blob_oid": (
+                    "c6318597b4d038cd59c897d4041c7e0178e60e15"
+                ),
+                "receipt_file_sha256": (
+                    "sha256:acccb507f0675cdc079aa56bc12299bd4ce533344cb150e42dba1c991c024fd4"
+                ),
+                "source_revision": (
+                    "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+                ),
+                "source_revision_relation": (
+                    "accepted_observation_carrier_descending_from_signed_release"
+                ),
+                "publication_revision_role": "pages_source_revision",
+                "projection_manifest_field": "sourceRevision",
+                "docs_revision": (
+                    "6ccc087875b439eb70304771f534434acae3f01c"
+                ),
+                "projection_manifest_blob_oid": (
+                    "2c701af256c74c5ec73dd266c0e62aeb554b11a6"
+                ),
+                "projection_manifest_sha256": (
+                    "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea"
+                ),
+                "canonical_origin": "https://cometspectrum.io/",
+                "observed_at": "2026-09-04T05:24:33Z",
+                "receiver_issue": 31,
+                "target_branch": "docs",
+                "hosted_observation": {
+                    "pages_run_id": "33839764767",
+                    "deploy_job_id": "100919655445",
+                    "pages_run_head_revision": (
+                        "6ccc087875b439eb70304771f534434acae3f01c"
+                    ),
+                    "pages_run_conclusion": "success",
+                    "pages_run_completed_at": "2026-09-04T05:15:41Z",
+                    "verified_at": "2026-09-04T05:24:33Z",
+                    "byte_parity": "verified_against_docs_projection",
+                    "responsive_report_surface": "narrow_and_desktop_verified",
+                },
+            },
+        )
+        prior_publication = repository_role["historical_external_releases"][0][
+            "publication_coordinates"
+        ]
+        self.assertEqual(
+            prior_publication,
             {
                 "status": "published",
                 "source_coordinate_kind": "accepted_main_publication_carrier",
