@@ -1,9 +1,10 @@
 {
   "manifest_version": "2.0.0",
   "repository_role": "comparative_evidence",
-  "repository_release": "0.3.1",
-  "external_release": "comparison-v0.3.1",
-  "synthetic_contract_report_digest": "sha256:0c05712b106c84847c94051cdad80608b5a2806a792da7cf04f6f06467debb51",
+  "repository_release": "0.3.2",
+  "release_state": "release_candidate",
+  "external_release": "comparison-v0.3.2",
+  "synthetic_contract_report_digest": "sha256:5f66ed1a3023b00bc7779f8810c0440f594dd5fe10e90a475b073eaa438f741b",
   "reference_simulation_observation_digest": "sha256:c64909ae6bc1b77747ee9852be34f2ccbcd7099badebf5148f63cc216dba4ba4",
   "canonical_governance_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "simulated_closure_comparison_digest": "sha256:0743cc1829bdb662824918feb99e2610540fc46ee0bbb1b40c564ffb75abd34d",
@@ -15,9 +16,9 @@
   "canonical_closure_bundle_file_sha256": "sha256:a72810e850c88f7a06c6e86fb94c1026a22d859089ee70ef31d4413b086fd098",
   "golden_specimen_verification": {
     "profile_digest": "sha256:df82f5fb197a721d40c77b647ff7f438019eab99f34d77cfdf0b670699dab1e0",
-    "report_digest": "sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa",
-    "constellation_lock_digest": "sha256:044058e9cabe10c5c7569fb0707ac3338b4c30aee7f8d6b2f2f3f7fdf2f49c98",
-    "source_constellation_digest": "sha256:8048a485b443469f98350c26dbea4fd4067371e619ed210dec5fd61a3ecdf9d4",
+    "report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
+    "constellation_lock_digest": "sha256:a0f5a59dc032b7771e1c90b42942e7ac0a5a894fbc989fd14cadc42a8d81608e",
+    "source_constellation_digest": "sha256:6547340f075d5ab60a767ba32f1584054c30edf839239e196748a68118c641e2",
     "classification_counts": {
       "agreement": 10,
       "explainable_variation": 4,
@@ -26,8 +27,8 @@
     "implementation": {
       "fixture_path": "fixtures/pairs/enterprise-postgresql-observation.json",
       "fixture_authority": "comparative_owned_snapshot_from_accepted_enterprise_source",
-      "file_sha256": "sha256:c4d6c47bb58c14b187426f1182be3df0467ca2ed65f84f76d430d348075e3b28",
-      "observation_digest": "sha256:2844c2eeae476daac0982d9f415a9ad1908e6bb5ad30c5f85d23633269e19e7b",
+      "file_sha256": "sha256:700918758844eb7fb2ce4367412fc2eb920b348f66f8d376e695d0ae2e354341",
+      "observation_digest": "sha256:be341711a5697436dbc56bd61cf83b3f97f88ab2d7c4532d1eb54df6986499a8",
       "projection_digest": "sha256:5b7efa556dfd3773623bf65ee28a1912702c73992cb7eb007e118421aca4078e"
     },
     "simulation": {
@@ -94,9 +95,23 @@
     "receipt_path": "receipts/promotion-receipt.json",
     "receipt_canonical_json_digest": "sha256:b9ae327dec49bff8e38a72e180f6b77752119c61f295d60f1d80e1046537445d"
   },
+  "promotion_candidate_contract": {
+    "schema_path": "schemas/promotion-candidate.schema.json",
+    "schema_version": "1.0.0",
+    "schema_file_sha256": "sha256:792189114d335e0e4a3ec26238a73f67360198623e1ceaa5121ae071445b8918",
+    "receipt_path": "receipts/promotion-candidate.json",
+    "receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
+    "receipt_canonical_json_digest": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227"
+  },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
   "historical_external_releases": [
+    {
+      "repository_release": "0.3.1",
+      "external_release": "comparison-v0.3.1",
+      "status": "preserved_signed_and_published_baseline",
+      "promotion_receipt": "receipts/promotion-receipt.json"
+    },
     {
       "repository_release": "0.2.0",
       "external_release": "comparison-v0.2.0",
@@ -168,25 +183,28 @@
     "settings_state": "pending_source_acceptance_and_observed_check_name"
   },
   "promotion_coordinates": {
-    "status": "settled",
-    "settled_receipt_id": "RCP-COMPARATIVE-PROMOTION-003",
-    "receipt_path": "receipts/promotion-receipt.json",
-    "candidate_source": {
-      "coordinate_kind": "accepted_develop_merge_source",
-      "commit_oid": "daae956379cf00f5008672d19765aee6bec7eb4a",
-      "tree_oid": "ba1c8b3dcc7a0c3233b0d5b8c9f74765152dade3"
+    "status": "pending_release_promotion",
+    "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+    "candidate_receipt": "receipts/promotion-candidate.json",
+    "candidate_receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
+    "target_release": "comparison-v0.3.2",
+    "candidate_coordinate": {
+      "release": "candidate-comparison-v0.3.2",
+      "repository_release": "0.3.2",
+      "constellation_lock": "constellation.lock.json",
+      "constellation_lock_canonical_json_digest": "sha256:a0f5a59dc032b7771e1c90b42942e7ac0a5a894fbc989fd14cadc42a8d81608e",
+      "synthetic_contract_report_digest": "sha256:5f66ed1a3023b00bc7779f8810c0440f594dd5fe10e90a475b073eaa438f741b",
+      "golden_specimen_report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
+      "golden_source_constellation_digest": "sha256:6547340f075d5ab60a767ba32f1584054c30edf839239e196748a68118c641e2"
     },
-    "reviewed_candidate": {
-      "commit_oid": "59d58c46d27a77150d399870ecebef2635c38dc5",
-      "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b"
-    },
-    "observed_release": {
+    "prior_release": {
+      "promotion_receipt": "receipts/promotion-receipt.json",
+      "promotion_receipt_file_sha256": "sha256:733261cf52339f7f6b3e650302ab4b8b51c37eef57c752b0f5e2d2c4e27485ff",
       "tag": "comparison-v0.3.1",
       "tag_object_oid": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
       "commit_oid": "b5c13689a32739d29437e209816bf0cd6a878976",
       "tree_oid": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
-      "archive_digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e",
-      "promoted_at": "2026-09-02T06:27:41Z"
+      "archive_digest": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
     },
     "required_roles": [
       "site_reading_governance",

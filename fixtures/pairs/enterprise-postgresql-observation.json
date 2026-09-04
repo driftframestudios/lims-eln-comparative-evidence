@@ -84,6 +84,6 @@
   "source": {
     "configuration_digest": "sha256:8c3fb7b18749c7a78fad0b581090099e202309da68c6dd4671b5ef6653c4838e",
     "environment_id": "WORKBENCH-SYNTHETIC",
-    "implementation_commit": "lims-eln-enterprise-implementation@0.3.1"
+    "implementation_commit": "lims-eln-enterprise-implementation@0.3.2"
   }
 }

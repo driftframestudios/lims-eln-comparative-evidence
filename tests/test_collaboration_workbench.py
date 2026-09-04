@@ -95,12 +95,21 @@ class CollaborationWorkbenchTests(unittest.TestCase):
         ):
             self.assertIn(material_rule, skill)
 
-    def test_living_carriers_name_the_accepted_public_baseline(self) -> None:
+    def test_living_carriers_separate_candidate_from_public_baseline(self) -> None:
         self.assertEqual([], validation.validate_living_publication_state())
         role = json.loads(
             (ROOT / "release/repository-role.json").read_text(encoding="utf-8")
         )
         publication = role["publication_coordinates"]
+        self.assertEqual("release_candidate", role["release_state"])
+        self.assertEqual(
+            "pending_release_promotion",
+            role["promotion_coordinates"]["status"],
+        )
+        self.assertEqual(
+            "comparison-v0.3.1",
+            role["promotion_coordinates"]["prior_release"]["tag"],
+        )
         self.assertEqual("published", publication["status"])
         self.assertEqual(
             validation.ACCEPTED_MAIN_SOURCE_REVISION,

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lims-eln-comparative-evidence"
-version = "0.3.1"
+version = "0.3.2"
 description = "Independent comparator for caller-supplied observed evidence, planned contract shapes, and selected-future simulations"
 authors = [{ name = "Driftframe Studios, Limited Liability Company" }]
 requires-python = ">=3.11"
