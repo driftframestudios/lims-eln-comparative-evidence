@@ -34,7 +34,7 @@
     }
   ],
   "coordination_horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
-  "current_horizon_summary": "The signed comparison-v0.3.2 release now binds the Enterprise v0.3.2 source and new report identities while retaining the same 17 path classifications. The comparison-v0.3.1 Pages projection remains the public baseline until the successor projection is verified.",
+  "current_horizon_summary": "The signed comparison-v0.3.2 release now binds the Enterprise v0.3.2 source and new report identities while retaining the 0.3.1 classification on each of the 17 compared paths. The comparison-v0.3.1 Pages projection remains the public baseline until the successor projection is verified.",
   "open_receipts": [],
   "invalidation_conditions": [
     "The governance schema, selected-future assumptions, or canonical closure digest changes.",

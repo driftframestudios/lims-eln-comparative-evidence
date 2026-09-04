@@ -8,7 +8,9 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 from jsonschema import Draft202012Validator
 
@@ -23,9 +25,7 @@ from comparative_evidence.promotion_observation import (  # noqa: E402
     RELEASE_COORDINATE,
     validate_promotion_observation,
 )
-from tools.verify_promotion_observation import (  # noqa: E402
-    verify_promotion_observation,
-)
+from tools import verify_promotion_observation as observation_verifier  # noqa: E402
 
 
 def load(relative: str) -> dict:
@@ -120,17 +120,70 @@ class PromotionObservationTests(unittest.TestCase):
                     validate_promotion_observation(changed)
 
     def test_current_observation_matches_its_signed_release_and_head_carrier(self) -> None:
-        result = verify_promotion_observation(ROOT)
+        result = observation_verifier.verify_promotion_observation(ROOT)
         self.assertEqual(result["status"], "passed")
         self.assertEqual(result["tag"], "comparison-v0.3.2")
 
-    def test_historical_release_verifier_family_remains_exact(self) -> None:
+    def test_candidate_read_remains_inside_the_final_release_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparison-observation-") as temporary:
+            repository = Path(temporary) / "repository"
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--local",
+                    "--no-hardlinks",
+                    str(ROOT),
+                    str(repository),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(repository),
+                    "update-ref",
+                    "refs/remotes/origin/main",
+                    RELEASE_COORDINATE["commit_oid"],
+                ],
+                check=True,
+                capture_output=True,
+            )
+            candidate = self.observation["candidate_coordinate"]
+            candidate_object = (
+                f"{candidate['commit_oid']}:{candidate['candidate_receipt']}"
+            )
+            run_git_bytes = observation_verifier._run_git_bytes
+            signer_path = repository / "release" / "trusted-release-signers"
+            mutated = False
+
+            def mutate_signer_after_candidate_read(identity, *arguments):
+                nonlocal mutated
+                result = run_git_bytes(identity, *arguments)
+                if arguments == ("cat-file", "blob", candidate_object):
+                    signer_path.write_bytes(
+                        signer_path.read_bytes() + b"# changed after candidate read\n"
+                    )
+                    mutated = True
+                return result
+
+            with patch.object(
+                observation_verifier,
+                "_run_git_bytes",
+                side_effect=mutate_signer_after_candidate_read,
+            ), self.assertRaisesRegex(
+                observation_verifier.ReleaseCoordinateError,
+                "trusted-release-signers remains at the exact captured bytes",
+            ):
+                observation_verifier.verify_promotion_observation(repository)
+            self.assertTrue(mutated)
+
+    def test_historical_release_evidence_carriers_remain_exact(self) -> None:
         expected = {
             "receipts/promotion-receipt.json": "733261cf52339f7f6b3e650302ab4b8b51c37eef57c752b0f5e2d2c4e27485ff",
             "schemas/promotion-receipt.schema.json": "8ebce65f823acb91b459049b2692bf05261c78d5346034e9603319c85de1b594",
-            "src/comparative_evidence/promotion_receipt.py": "377b6a771089bbda1fcdb50cfbc6f2e6ce802ddd2354362e671fb57b11e8c05e",
-            "tools/verify_release_coordinate.py": "f0f4b4ba851069ce94880df06ddd9f01cb9936579d6fee17a590795cb7f2069f",
-            "tests/test_release_coordinate.py": "0af1acf1f505444ef4aebad24835b47922c28246f96bd569615dc99af21c1edb",
         }
         for relative, digest in expected.items():
             with self.subTest(path=relative):

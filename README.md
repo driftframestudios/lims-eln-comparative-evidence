@@ -246,15 +246,14 @@ The candidate contains:
   records the manifest's own digest.
 
 `python3 tools/validate_repository.py` builds two isolated candidates and compares
-the complete inventories byte for byte. Publication remains a separate receiver
-action.
+the complete inventories byte for byte. Publishing and verifying the 0.3.2 Pages
+projection is the next separate step.
 The 0.3.2 candidate is content-addressed by its constellation lock, both report
 digests, and source-constellation digest. Signed tag `comparison-v0.3.2` identifies
 accepted commit `0289ff835c790693a769347e69da0abdcfaa47de`; the candidate and
 release share Git tree `60c85e4206e2d487dac83d521401816dec0f34ae`. The additive
 promotion observation binds those objects, the reproducible release archive, and
-the successful hosted check. The successor Pages projection remains a separate
-receiver action.
+the successful hosted check.
 
 The signed tag `comparison-v0.3.1` at
 `b5c13689a32739d29437e209816bf0cd6a878976` remains the immutable release subject.
@@ -277,9 +276,9 @@ releases keep the comparison's simulated authority, separate environment-observe
 path, and zero production-authorization effect.
 
 The Golden report identity includes the accepted Program, Governance, Enterprise,
-and Simulation source coordinates. Each Comparator release remains a separate
-receiving record, while its accepted main observation carrier supplies the
-publication source. The 0.3.2 relationship preserves reviewed Golden report digest
+and Simulation source coordinates. Each Comparator release retains its own
+immutable record. A later accepted main commit containing the release observation
+supplies the Pages `sourceRevision`. The 0.3.2 relationship preserves reviewed Golden report digest
 `sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c`.
 
 The aggregate repository check creates the JSON and HTML reports twice in isolated

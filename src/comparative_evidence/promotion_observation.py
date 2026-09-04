@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from .promotion_candidate import COMPARISON_AUTHORITY
-
-
 SCHEMA_REFERENCE = "../schemas/promotion-observation-v0.3.2.schema.json"
 SCHEMA_VERSION = "1.0.0"
 RECEIPT_ID = "RCP-COMPARATIVE-PROMOTION-004"
 REPOSITORY = "driftframestudios/lims-eln-comparative-evidence"
 TARGET_RELEASE = "comparison-v0.3.2"
+_COMPARISON_AUTHORITY = {
+    "evidence_mode": "simulated",
+    "assurance_stage": "verified",
+    "comparison_mode": "simulated_verification",
+    "environment_observed_closure": "separate_unasserted_state",
+    "production_authorization_effect": "none",
+}
 CANDIDATE_COORDINATE = {
     "release": "candidate-comparison-v0.3.2",
     "commit_oid": "abcb3d295938f047d58ffc754eeabdeeefa52873",
@@ -88,7 +92,7 @@ def validate_promotion_observation(observation: Any) -> None:
             "evidence_mode": "observed",
             "assurance_stage": "verified",
         },
-        "comparison_authority": COMPARISON_AUTHORITY,
+        "comparison_authority": _COMPARISON_AUTHORITY,
         "candidate_coordinate": CANDIDATE_COORDINATE,
         "release_coordinate": RELEASE_COORDINATE,
         "accountable_role": "Comparative evidence release stewardship",

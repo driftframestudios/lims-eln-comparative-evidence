@@ -108,8 +108,8 @@
     "schema_version": "1.0.0",
     "schema_file_sha256": "sha256:0175531abe071a44a9a12bda2310e5d4f3e0a8d230cc119b617d7e87d84e9aee",
     "receipt_path": "receipts/promotion-observation-v0.3.2.json",
-    "receipt_file_sha256": "sha256:8b4439179a1ddf93fef0ec8867b82fe324d81fda4ff18dbe1e254539fb403f15",
-    "receipt_canonical_json_digest": "sha256:989e91399e45ebab570fefc785c4c2b63801c2428567fdd5c4d1d168b283d693"
+    "receipt_file_sha256": "sha256:a08206118e99c902d1709cfd85a1b8737c6b049d4c507abf787ec2e3127405d2",
+    "receipt_canonical_json_digest": "sha256:a3a56dd0890f551b0014f3bd4ac86a507295171132070e3a28551186d1891987"
   },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
@@ -194,8 +194,8 @@
     "status": "release_observed",
     "settled_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
     "observation_receipt": "receipts/promotion-observation-v0.3.2.json",
-    "observation_receipt_file_sha256": "sha256:8b4439179a1ddf93fef0ec8867b82fe324d81fda4ff18dbe1e254539fb403f15",
-    "observation_receipt_canonical_json_digest": "sha256:989e91399e45ebab570fefc785c4c2b63801c2428567fdd5c4d1d168b283d693",
+    "observation_receipt_file_sha256": "sha256:a08206118e99c902d1709cfd85a1b8737c6b049d4c507abf787ec2e3127405d2",
+    "observation_receipt_canonical_json_digest": "sha256:a3a56dd0890f551b0014f3bd4ac86a507295171132070e3a28551186d1891987",
     "candidate_receipt": "receipts/promotion-candidate.json",
     "candidate_receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
     "candidate_receipt_canonical_json_digest": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227",

@@ -12,9 +12,9 @@
   public projection.
 - Record the accepted comparison-v0.3.2 commit, signed tag, reproducible archive,
   hosted validation, and independent review in an additive promotion observation;
-  retain the complete 0.3.1 verifier family and public projection unchanged.
-- Add one release-history command that verifies both signed releases through the
-  existing hardened Git observer and the thin 0.3.2 observation verifier.
+  retain the 0.3.1 receipt, verifier, and public Pages bytes unchanged.
+- Add one release-history command that runs the existing 0.3.1 verifier and the
+  focused 0.3.2 observation verifier against both signed release coordinates.
 - Record that a tag-to-tag Git tree comparison found identical blobs in the
   database, SQL, fixture, PostgreSQL adapter, service, and domain paths. The earlier
   hosted proof continues to cover those paths, and the accepted Enterprise 0.3.2

@@ -25,16 +25,17 @@ from comparative_evidence.promotion_observation import (  # noqa: E402
 )
 from tools.verify_release_coordinate import (  # noqa: E402
     DEFAULT_ACCEPTED_REF,
+    DEFAULT_TRUSTED_SIGNERS,
     EXPECTED_SIGNING_FINGERPRINT,
     ReleaseCoordinateError,
     _git_text,
+    _observe_release_coordinate,
     _read_regular_bytes,
     _repository_file,
     _repository_identity,
     _require_final_snapshot,
     _run_git_bytes,
     _verify_receipt_carrier,
-    observe_release_coordinate,
 )
 
 
@@ -123,11 +124,13 @@ def verify_promotion_observation(
         carrier_commit=carrier_commit,
     )
 
-    release_coordinate = observe_release_coordinate(
-        identity.worktree_root,
+    release_coordinate, release_snapshot = _observe_release_coordinate(
+        identity,
         tag=observation["target_release"],
         accepted_ref=accepted_ref,
+        trusted_signers=DEFAULT_TRUSTED_SIGNERS,
         expected_signing_fingerprint=expected_signing_fingerprint,
+        carrier_commit=carrier_commit,
     )
     differences = _release_differences(
         observation["release_coordinate"],
@@ -181,6 +184,7 @@ def verify_promotion_observation(
         carrier_commit=carrier_commit,
         receipt_path=observation_file,
         receipt_bytes=observation_bytes,
+        release_snapshot=release_snapshot,
     )
     return {
         "status": "passed",

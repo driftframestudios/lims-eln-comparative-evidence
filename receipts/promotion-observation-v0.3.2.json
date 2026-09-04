@@ -55,7 +55,7 @@
     "The hosted Repository validation job completed successfully for pull request 33.",
     "The signed comparison-v0.3.2 tag resolves to the accepted main release, and GitHub reports valid merge and tag signature verifications.",
     "The tagged archive reproduces the recorded SHA-256 digest from the accepted release commit.",
-    "The exact 0.3.2 candidate receipt remains recoverable beside the immutable 0.3.1 release receipt and public projection."
+    "The repository retains the exact 0.3.2 candidate receipt and immutable 0.3.1 release receipt; the recorded docs revision keeps the 0.3.1 public projection recoverable."
   ],
   "limitations": [
     "The deputized constructive architecture review is the independent review evidence for this release; GitHub records no formal review submission.",
