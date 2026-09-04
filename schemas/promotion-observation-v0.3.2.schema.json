@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.driftframe.org/lims-eln-comparative-evidence/v1.0.0/promotion-observation-v0.3.2.schema.json",
+  "title": "Comparative Evidence Promotion Observation v0.3.2",
+  "description": "Binds the accepted comparison-v0.3.2 release to its reviewed candidate, signed Git objects, hosted check, and retained evidence boundaries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "promotion_receipt_id",
+    "repository",
+    "target_release",
+    "promotion_state",
+    "release_event_evidence",
+    "comparison_authority",
+    "candidate_coordinate",
+    "release_coordinate",
+    "required_evidence",
+    "limitations",
+    "accountable_role"
+  ],
+  "properties": {
+    "$schema": {"const": "../schemas/promotion-observation-v0.3.2.schema.json"},
+    "schema_version": {"const": "1.0.0"},
+    "promotion_receipt_id": {"const": "RCP-COMPARATIVE-PROMOTION-004"},
+    "repository": {"const": "driftframestudios/lims-eln-comparative-evidence"},
+    "target_release": {"const": "comparison-v0.3.2"},
+    "promotion_state": {"const": "release_observed"},
+    "release_event_evidence": {
+      "const": {"evidence_mode": "observed", "assurance_stage": "verified"}
+    },
+    "comparison_authority": {
+      "const": {
+        "evidence_mode": "simulated",
+        "assurance_stage": "verified",
+        "comparison_mode": "simulated_verification",
+        "environment_observed_closure": "separate_unasserted_state",
+        "production_authorization_effect": "none"
+      }
+    },
+    "candidate_coordinate": {"$ref": "#/$defs/candidateCoordinate"},
+    "release_coordinate": {"$ref": "#/$defs/releaseCoordinate"},
+    "required_evidence": {"$ref": "#/$defs/materialStatements"},
+    "limitations": {"$ref": "#/$defs/materialStatements"},
+    "accountable_role": {"const": "Comparative evidence release stewardship"}
+  },
+  "$defs": {
+    "candidateCoordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release",
+        "commit_oid",
+        "tree_oid",
+        "candidate_receipt",
+        "candidate_receipt_file_sha256",
+        "candidate_receipt_canonical_json_digest"
+      ],
+      "properties": {
+        "release": {"const": "candidate-comparison-v0.3.2"},
+        "commit_oid": {"const": "abcb3d295938f047d58ffc754eeabdeeefa52873"},
+        "tree_oid": {"const": "60c85e4206e2d487dac83d521401816dec0f34ae"},
+        "candidate_receipt": {"const": "receipts/promotion-candidate.json"},
+        "candidate_receipt_file_sha256": {"const": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784"},
+        "candidate_receipt_canonical_json_digest": {"const": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227"}
+      }
+    },
+    "hostedCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "run_id", "job_id", "conclusion"],
+      "properties": {
+        "name": {"const": "Repository validation"},
+        "run_id": {"const": "33836962288"},
+        "job_id": {"const": "100911347748"},
+        "conclusion": {"const": "success"}
+      }
+    },
+    "reviewObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["merge_admission", "independent_review", "github_review_record"],
+      "properties": {
+        "merge_admission": {"const": "configured_ruleset_bypass"},
+        "independent_review": {"const": "constructive_architecture_review_completed"},
+        "github_review_record": {"const": "no_formal_review_submitted"}
+      }
+    },
+    "releaseCoordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "git_object_format",
+        "tag",
+        "tag_object_oid",
+        "commit_oid",
+        "tree_oid",
+        "archive_format",
+        "archive_digest",
+        "promoted_at",
+        "pull_request",
+        "hosted_checks",
+        "review_observation",
+        "merge_signature_verification",
+        "tag_signature_verification"
+      ],
+      "properties": {
+        "git_object_format": {"const": "sha1"},
+        "tag": {"const": "comparison-v0.3.2"},
+        "tag_object_oid": {"const": "ccc4b206d9071933516863ee0eb3f5b091fc76b0"},
+        "commit_oid": {"const": "0289ff835c790693a769347e69da0abdcfaa47de"},
+        "tree_oid": {"const": "60c85e4206e2d487dac83d521401816dec0f34ae"},
+        "archive_format": {"const": "git-tar"},
+        "archive_digest": {"const": "sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e"},
+        "promoted_at": {"const": "2026-09-04T04:30:15Z"},
+        "pull_request": {"const": 33},
+        "hosted_checks": {
+          "type": "array",
+          "prefixItems": [{"$ref": "#/$defs/hostedCheck"}],
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "review_observation": {"$ref": "#/$defs/reviewObservation"},
+        "merge_signature_verification": {"const": "valid"},
+        "tag_signature_verification": {"const": "valid"}
+      }
+    },
+    "materialStatements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 20, "maxLength": 500}
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "../schemas/promotion-observation-v0.3.2.schema.json",
+  "schema_version": "1.0.0",
+  "promotion_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+  "repository": "driftframestudios/lims-eln-comparative-evidence",
+  "target_release": "comparison-v0.3.2",
+  "promotion_state": "release_observed",
+  "release_event_evidence": {
+    "evidence_mode": "observed",
+    "assurance_stage": "verified"
+  },
+  "comparison_authority": {
+    "evidence_mode": "simulated",
+    "assurance_stage": "verified",
+    "comparison_mode": "simulated_verification",
+    "environment_observed_closure": "separate_unasserted_state",
+    "production_authorization_effect": "none"
+  },
+  "candidate_coordinate": {
+    "release": "candidate-comparison-v0.3.2",
+    "commit_oid": "abcb3d295938f047d58ffc754eeabdeeefa52873",
+    "tree_oid": "60c85e4206e2d487dac83d521401816dec0f34ae",
+    "candidate_receipt": "receipts/promotion-candidate.json",
+    "candidate_receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
+    "candidate_receipt_canonical_json_digest": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227"
+  },
+  "release_coordinate": {
+    "git_object_format": "sha1",
+    "tag": "comparison-v0.3.2",
+    "tag_object_oid": "ccc4b206d9071933516863ee0eb3f5b091fc76b0",
+    "commit_oid": "0289ff835c790693a769347e69da0abdcfaa47de",
+    "tree_oid": "60c85e4206e2d487dac83d521401816dec0f34ae",
+    "archive_format": "git-tar",
+    "archive_digest": "sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e",
+    "promoted_at": "2026-09-04T04:30:15Z",
+    "pull_request": 33,
+    "hosted_checks": [
+      {
+        "name": "Repository validation",
+        "run_id": "33836962288",
+        "job_id": "100911347748",
+        "conclusion": "success"
+      }
+    ],
+    "review_observation": {
+      "merge_admission": "configured_ruleset_bypass",
+      "independent_review": "constructive_architecture_review_completed",
+      "github_review_record": "no_formal_review_submitted"
+    },
+    "merge_signature_verification": "valid",
+    "tag_signature_verification": "valid"
+  },
+  "required_evidence": [
+    "Accepted develop source abcb3d295938f047d58ffc754eeabdeeefa52873 and accepted release 0289ff835c790693a769347e69da0abdcfaa47de share Git tree 60c85e4206e2d487dac83d521401816dec0f34ae.",
+    "The hosted Repository validation job completed successfully for pull request 33.",
+    "The signed comparison-v0.3.2 tag resolves to the accepted main release, and GitHub reports valid merge and tag signature verifications.",
+    "The tagged archive reproduces the recorded SHA-256 digest from the accepted release commit.",
+    "The exact 0.3.2 candidate receipt remains recoverable beside the immutable 0.3.1 release receipt and public projection."
+  ],
+  "limitations": [
+    "The deputized constructive architecture review is the independent review evidence for this release; GitHub records no formal review submission.",
+    "The public Pages projection remains on comparison-v0.3.1 until a successor build is created from the accepted observation carrier and verified at the canonical origin.",
+    "The comparison remains a simulated-verification instrument and grants no production authorization."
+  ],
+  "accountable_role": "Comparative evidence release stewardship"
+}

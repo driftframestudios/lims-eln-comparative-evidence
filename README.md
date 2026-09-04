@@ -248,10 +248,13 @@ The candidate contains:
 `python3 tools/validate_repository.py` builds two isolated candidates and compares
 the complete inventories byte for byte. Publication remains a separate receiver
 action.
-The current 0.3.2 candidate is content-addressed by its constellation lock, both
-report digests, and source-constellation digest. The accepted release commit, signed
-tag, release archive, and successor Pages projection will add their coordinates
-after each artifact exists and can be verified.
+The 0.3.2 candidate is content-addressed by its constellation lock, both report
+digests, and source-constellation digest. Signed tag `comparison-v0.3.2` identifies
+accepted commit `0289ff835c790693a769347e69da0abdcfaa47de`; the candidate and
+release share Git tree `60c85e4206e2d487dac83d521401816dec0f34ae`. The additive
+promotion observation binds those objects, the reproducible release archive, and
+the successful hosted check. The successor Pages projection remains a separate
+receiver action.
 
 The signed tag `comparison-v0.3.1` at
 `b5c13689a32739d29437e209816bf0cd6a878976` remains the immutable release subject.
@@ -266,18 +269,18 @@ The living release role also retains the initial Pages carrier and docs
 revision, making the later presentation-only follow-up visible without changing
 the signed release or Golden report meaning.
 
-The promotion receipt records the observed signed `comparison-v0.3.1` release: its
-tag object, accepted commit and tree, reproducible archive, and successful hosted
-checks. The reviewed candidate and accepted merge share one Git tree. This release
-observation closes the repository promotion receipt while the comparison keeps its
-simulated authority, separate environment-observed path, and zero production
-authorization effect.
+The historical promotion receipt records the signed `comparison-v0.3.1` release:
+its tag object, accepted commit and tree, reproducible archive, and successful
+hosted checks. The additive 0.3.2 observation records the current signed release
+while preserving the earlier receipt and public projection byte for byte. Both
+releases keep the comparison's simulated authority, separate environment-observed
+path, and zero production-authorization effect.
 
 The Golden report identity includes the accepted Program, Governance, Enterprise,
-and Simulation source coordinates. The Comparator's signed release subject remains a
-separate receiving record, while the accepted main observation carrier supplies the
-publication source. This relationship preserves the reviewed Golden report digest
-`sha256:64535e1005db533037d2d5fea434f2c750294b50258bf6c2ed23237847ff2efa`.
+and Simulation source coordinates. Each Comparator release remains a separate
+receiving record, while its accepted main observation carrier supplies the
+publication source. The 0.3.2 relationship preserves reviewed Golden report digest
+`sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c`.
 
 The aggregate repository check creates the JSON and HTML reports twice in isolated
 directories and compares their exact bytes. The report binds each input's source and
@@ -341,7 +344,7 @@ The resulting Brier score ranges from zero to one, with lower values indicating
 closer probabilistic fit. Simulated results remain available for comparison and stay
 outside the observed calibration ledger.
 
-The stable `comparative-validation` workflow gate recomputes the canonical closure,
+The stable `comparative-validation` workflow check recomputes the canonical closure,
 synthetic contract report, profile, calibration posture, JSON integrity, and
 repository-wide credential-shape scan after the complete Python test matrix succeeds.
 
@@ -352,10 +355,11 @@ completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
 [`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects. The
-0.3.1 promotion and publication work items are complete, and the Enterprise 0.3.2
-comparison refresh is the current work item. The re-entry route preserves the prior
-signed release and public projection while the new candidate moves through review,
-signed release observation, and a source-bound Pages rebuild.
+0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion is
+also complete, and its source-bound Pages rebuild is the current work item. The
+re-entry route preserves both signed releases and the current public projection
+while the successor projection moves through deterministic build and hosted
+verification.
 
 ## Comparative literacy
 

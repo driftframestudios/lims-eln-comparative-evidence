@@ -2,7 +2,7 @@
   "manifest_version": "2.0.0",
   "repository_role": "comparative_evidence",
   "repository_release": "0.3.2",
-  "release_state": "release_candidate",
+  "release_state": "release_observed",
   "external_release": "comparison-v0.3.2",
   "synthetic_contract_report_digest": "sha256:5f66ed1a3023b00bc7779f8810c0440f594dd5fe10e90a475b073eaa438f741b",
   "reference_simulation_observation_digest": "sha256:c64909ae6bc1b77747ee9852be34f2ccbcd7099badebf5148f63cc216dba4ba4",
@@ -103,6 +103,14 @@
     "receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
     "receipt_canonical_json_digest": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227"
   },
+  "promotion_observation_contract": {
+    "schema_path": "schemas/promotion-observation-v0.3.2.schema.json",
+    "schema_version": "1.0.0",
+    "schema_file_sha256": "sha256:0175531abe071a44a9a12bda2310e5d4f3e0a8d230cc119b617d7e87d84e9aee",
+    "receipt_path": "receipts/promotion-observation-v0.3.2.json",
+    "receipt_file_sha256": "sha256:8b4439179a1ddf93fef0ec8867b82fe324d81fda4ff18dbe1e254539fb403f15",
+    "receipt_canonical_json_digest": "sha256:989e91399e45ebab570fefc785c4c2b63801c2428567fdd5c4d1d168b283d693"
+  },
   "machine_node": "machine-node.json",
   "coordination_horizon": "COORDINATION-HORIZON.json",
   "historical_external_releases": [
@@ -180,22 +188,51 @@
     "dependabot_open_pull_requests_per_ecosystem": 2,
     "dependabot_grouped_update_types": ["minor", "patch"],
     "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
-    "settings_state": "pending_source_acceptance_and_observed_check_name"
+    "settings_state": "repository_validation_observed_ruleset_review_configured_bypass"
   },
   "promotion_coordinates": {
-    "status": "pending_release_promotion",
-    "open_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+    "status": "release_observed",
+    "settled_receipt_id": "RCP-COMPARATIVE-PROMOTION-004",
+    "observation_receipt": "receipts/promotion-observation-v0.3.2.json",
+    "observation_receipt_file_sha256": "sha256:8b4439179a1ddf93fef0ec8867b82fe324d81fda4ff18dbe1e254539fb403f15",
+    "observation_receipt_canonical_json_digest": "sha256:989e91399e45ebab570fefc785c4c2b63801c2428567fdd5c4d1d168b283d693",
     "candidate_receipt": "receipts/promotion-candidate.json",
     "candidate_receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
+    "candidate_receipt_canonical_json_digest": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227",
     "target_release": "comparison-v0.3.2",
     "candidate_coordinate": {
       "release": "candidate-comparison-v0.3.2",
-      "repository_release": "0.3.2",
-      "constellation_lock": "constellation.lock.json",
-      "constellation_lock_canonical_json_digest": "sha256:a0f5a59dc032b7771e1c90b42942e7ac0a5a894fbc989fd14cadc42a8d81608e",
-      "synthetic_contract_report_digest": "sha256:5f66ed1a3023b00bc7779f8810c0440f594dd5fe10e90a475b073eaa438f741b",
-      "golden_specimen_report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
-      "golden_source_constellation_digest": "sha256:6547340f075d5ab60a767ba32f1584054c30edf839239e196748a68118c641e2"
+      "commit_oid": "abcb3d295938f047d58ffc754eeabdeeefa52873",
+      "tree_oid": "60c85e4206e2d487dac83d521401816dec0f34ae",
+      "candidate_receipt": "receipts/promotion-candidate.json",
+      "candidate_receipt_file_sha256": "sha256:a99f38fcebccff85d6c8e63a63c69bafc39749317fe79750c5897700de5a6784",
+      "candidate_receipt_canonical_json_digest": "sha256:74a19b585dcc69001b8097a3f9be883436d08964a271e7e35c935e7ae5abd227"
+    },
+    "release_subject": {
+      "git_object_format": "sha1",
+      "tag": "comparison-v0.3.2",
+      "tag_object_oid": "ccc4b206d9071933516863ee0eb3f5b091fc76b0",
+      "commit_oid": "0289ff835c790693a769347e69da0abdcfaa47de",
+      "tree_oid": "60c85e4206e2d487dac83d521401816dec0f34ae",
+      "archive_format": "git-tar",
+      "archive_digest": "sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e",
+      "promoted_at": "2026-09-04T04:30:15Z",
+      "pull_request": 33,
+      "hosted_checks": [
+        {
+          "name": "Repository validation",
+          "run_id": "33836962288",
+          "job_id": "100911347748",
+          "conclusion": "success"
+        }
+      ],
+      "review_observation": {
+        "merge_admission": "configured_ruleset_bypass",
+        "independent_review": "constructive_architecture_review_completed",
+        "github_review_record": "no_formal_review_submitted"
+      },
+      "merge_signature_verification": "valid",
+      "tag_signature_verification": "valid"
     },
     "prior_release": {
       "promotion_receipt": "receipts/promotion-receipt.json",

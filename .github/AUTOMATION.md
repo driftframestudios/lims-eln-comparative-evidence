@@ -12,6 +12,10 @@ safety together. A dependency-free automation check parses the admitted YAML
 subset, derives its effective controls, and requires them to agree with the
 release manifest.
 
+The final step verifies the complete retained release history. The original 0.3.1
+receipt continues through its unchanged verifier, and the additive 0.3.2 observation
+reuses that verifier's signed-tag and repository-safety engine.
+
 Repository settings remain the authority for enabling Actions and selecting a
 required check after its exact hosted name has been observed.
 
