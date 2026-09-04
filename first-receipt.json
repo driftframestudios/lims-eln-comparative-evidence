@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RECEIPT-COMPARATIVE-EVIDENCE-001",
   "machine_node_id": "NODE-COMPARATIVE-EVIDENCE-001",
-  "as_of": "2026-09-04T04:02:50Z",
+  "as_of": "2026-09-04T04:34:49Z",
   "orientation_purpose": "Give each entering collaborator a compact, non-authorizing account of the comparator's contracts, canonical closure, evidence posture, coordination state, and safe handoff.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -34,10 +34,8 @@
     }
   ],
   "coordination_horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
-  "current_horizon_summary": "The signed comparison-v0.3.1 release and its Pages projection remain the public baseline while the Enterprise v0.3.2 source coordinate, unchanged compared result, and new report identities form the content-addressed comparison-v0.3.2 candidate.",
-  "open_receipts": [
-    "RCP-COMPARATIVE-PROMOTION-004"
-  ],
+  "current_horizon_summary": "The signed comparison-v0.3.2 release now binds the Enterprise v0.3.2 source and new report identities while retaining the 0.3.1 classification on each of the 17 compared paths. The comparison-v0.3.1 Pages projection remains the public baseline until the successor projection is verified.",
+  "open_receipts": [],
   "invalidation_conditions": [
     "The governance schema, selected-future assumptions, or canonical closure digest changes.",
     "A promoted release changes the comparator's authority or evidence-admission posture."
@@ -66,7 +64,12 @@
     {
       "source": "comparison-v0.3.2-candidate",
       "permission": "read",
-      "verification": "The candidate receipt binds the current source and report identities. A successor promotion observation will add the accepted 0.3.2 release commit."
+      "verification": "The immutable candidate receipt binds the source and report identities accepted through the comparison-v0.3.2 release."
+    },
+    {
+      "source": "comparison-v0.3.2-release",
+      "permission": "read",
+      "verification": "Signed tag comparison-v0.3.2 resolves through tag object ccc4b206d9071933516863ee0eb3f5b091fc76b0 to accepted commit 0289ff835c790693a769347e69da0abdcfaa47de and tree 60c85e4206e2d487dac83d521401816dec0f34ae; its archive is sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e."
     },
     {
       "source": "accepted-enterprise-v0.3.2-release",
@@ -75,14 +78,14 @@
     }
   ],
   "handoff": {
-    "recipient_role": "Comparative evidence release steward",
-    "next_safe_action": "Review and merge the exact 0.3.2 candidate, assemble release/0.3.2 from accepted develop, and promote it through main before recording the signed release coordinate and rebuilding the docs projection.",
-    "success_evidence": "The candidate reproduces both report bundles, retains the same classifications across all 17 Golden Specimen paths and their 10/4/3 counts, binds Enterprise v0.3.2 lineage, and retains the signed and published comparison-v0.3.1 baseline as an independent prior coordinate."
+    "recipient_role": "Comparative evidence publication receiver",
+    "next_safe_action": "Accept this release observation on main, resolve that accepted commit as the 0.3.2 Pages source revision, and publish one deterministic docs projection before verifying its manifest and hosted bytes.",
+    "success_evidence": "The docs projection binds the accepted 0.3.2 observation carrier as its sourceRevision, reproduces both report bundles, exposes the Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c, and matches the hosted canonical origin byte for byte."
   },
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-09-04T04:02:50Z",
+    "updated_at": "2026-09-04T04:34:49Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-RECEIPT-001",
       "display_name": "Comparative evidence stewardship role",

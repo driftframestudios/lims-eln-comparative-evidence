@@ -95,7 +95,7 @@ The examples below assume `python3` resolves to that interpreter:
 ```sh
 python3 -m unittest discover -s tests -v
 python3 tools/validate_repository.py
-python3 tools/verify_release_coordinate.py --require-observed
+python3 tools/verify_release_history.py
 git diff --check
 ```
 
