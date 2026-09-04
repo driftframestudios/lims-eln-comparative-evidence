@@ -246,8 +246,7 @@ The candidate contains:
   records the manifest's own digest.
 
 `python3 tools/validate_repository.py` builds two isolated candidates and compares
-the complete inventories byte for byte. Publishing and verifying the 0.3.2 Pages
-projection is the next separate step.
+the complete inventories byte for byte.
 The 0.3.2 candidate is content-addressed by its constellation lock, both report
 digests, and source-constellation digest. Signed tag `comparison-v0.3.2` identifies
 accepted commit `0289ff835c790693a769347e69da0abdcfaa47de`; the candidate and
@@ -255,30 +254,32 @@ release share Git tree `60c85e4206e2d487dac83d521401816dec0f34ae`. The additive
 promotion observation binds those objects, the reproducible release archive, and
 the successful hosted check.
 
-The signed tag `comparison-v0.3.1` at
-`b5c13689a32739d29437e209816bf0cd6a878976` remains the immutable release subject.
-The accepted main observation carrier is
-`fadbb1aba21a828eb56ee35c0abb4bb32b7f498c`: it descends from that release,
-contains the exact closed promotion-receipt blob, and supplied the Pages
-`sourceRevision`. The accepted docs revision
-`ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1` publishes the complete projection
-at `https://cometspectrum.io/`. Issue #17 retains the canonical-origin, CNAME,
-source-carrier, deterministic-build, visual, and hosted-acceptance observations.
-The living release role also retains the initial Pages carrier and docs
-revision, making the later presentation-only follow-up visible without changing
-the signed release or Golden report meaning.
+The accepted 0.3.2 observation carrier is
+`2cca88982444ebc8280f9eb2891d97bf25dbeb95`: it contains the exact
+promotion-observation blob, descends from that signed release, and supplies the
+Pages `sourceRevision`. Docs revision
+`6ccc087875b439eb70304771f534434acae3f01c` publishes the complete projection at
+`https://cometspectrum.io/`. Its manifest has SHA-256
+`38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea`.
+Pages run `33839764767` completed successfully; every hosted file matched the
+generated projection byte for byte. Desktop and narrow-viewport browser review
+also confirmed a page-contained, keyboard-focusable table scroller and readable
+Classification values.
 
 The historical promotion receipt records the signed `comparison-v0.3.1` release:
 its tag object, accepted commit and tree, reproducible archive, and successful
-hosted checks. The additive 0.3.2 observation records the current signed release
-while preserving the earlier receipt and public projection byte for byte. Both
-releases keep the comparison's simulated authority, separate environment-observed
-path, and zero production-authorization effect.
+hosted checks. Its later observation carrier
+`fadbb1aba21a828eb56ee35c0abb4bb32b7f498c` and docs revision
+`ff9a82f78b15b07ab90774032d2ec7a7bfd2bcd1` preserve the prior public projection.
+The living release role retains that complete publication record alongside the
+current 0.3.2 coordinates. Both releases keep the comparison's simulated authority,
+separate environment-observed path, and zero production-authorization effect.
 
 The Golden report identity includes the accepted Program, Governance, Enterprise,
 and Simulation source coordinates. Each Comparator release retains its own
 immutable record. A later accepted main commit containing the release observation
-supplies the Pages `sourceRevision`. The 0.3.2 relationship preserves reviewed Golden report digest
+supplies the Pages `sourceRevision`. The 0.3.2 relationship preserves reviewed
+Golden report digest
 `sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c`.
 
 The aggregate repository check creates the JSON and HTML reports twice in isolated
@@ -354,11 +355,11 @@ completion evidence, retained effects, and the re-entry path in a
 planning-vocabulary-neutral form. [`machine-node.json`](machine-node.json) and
 [`first-receipt.json`](first-receipt.json) provide governance-2.0.1-conformant,
 orientation-only entry surfaces; neither artifact authorizes runtime effects. The
-0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion is
-also complete, and its source-bound Pages rebuild is the current work item. The
-re-entry route preserves both signed releases and the current public projection
-while the successor projection moves through deterministic build and hosted
-verification.
+0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
+and source-bound Pages publication are also complete. The current re-entry route
+carries the signed release, observation carrier, report digest, and public
+projection into the Program specification constellation while preserving the
+0.3.1 release and publication as recoverable history.
 
 ## Comparative literacy
 

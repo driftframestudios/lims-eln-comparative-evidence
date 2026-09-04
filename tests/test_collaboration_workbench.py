@@ -95,7 +95,7 @@ class CollaborationWorkbenchTests(unittest.TestCase):
         ):
             self.assertIn(material_rule, skill)
 
-    def test_living_carriers_separate_release_from_prior_public_baseline(self) -> None:
+    def test_living_carriers_record_current_publication_and_prior_history(self) -> None:
         self.assertEqual([], validation.validate_living_publication_state())
         role = json.loads(
             (ROOT / "release/repository-role.json").read_text(encoding="utf-8")
@@ -112,12 +112,33 @@ class CollaborationWorkbenchTests(unittest.TestCase):
         )
         self.assertEqual("published", publication["status"])
         self.assertEqual(
+            role["promotion_coordinates"]["release_subject"]["commit_oid"],
+            publication["release_subject_commit_oid"],
+        )
+        self.assertEqual(
             validation.ACCEPTED_MAIN_SOURCE_REVISION,
             publication["source_revision"],
         )
         self.assertEqual(
             validation.ACCEPTED_DOCS_REVISION,
             publication["docs_revision"],
+        )
+        self.assertEqual(
+            validation.ACCEPTED_PROJECTION_MANIFEST_SHA256,
+            publication["projection_manifest_sha256"],
+        )
+        self.assertEqual(
+            validation.ACCEPTED_PAGES_RUN_ID,
+            publication["hosted_observation"]["pages_run_id"],
+        )
+        prior_publication = next(
+            item["publication_coordinates"]
+            for item in role["historical_external_releases"]
+            if item["external_release"] == "comparison-v0.3.1"
+        )
+        self.assertEqual(
+            validation.PRIOR_PUBLICATION_COORDINATES,
+            prior_publication,
         )
 
     def test_source_revision_divergence_is_visible(self) -> None:
@@ -134,6 +155,25 @@ class CollaborationWorkbenchTests(unittest.TestCase):
             findings = validation.validate_living_publication_state(copy_root)
             self.assertIn(
                 "release role differs from the accepted public coordinates",
+                findings,
+            )
+
+    def test_prior_publication_divergence_is_visible(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-publication-") as temporary:
+            copy_root = Path(temporary)
+            self.copy_living_carriers(copy_root)
+            role_path = copy_root / "release/repository-role.json"
+            role = json.loads(role_path.read_text(encoding="utf-8"))
+            role["historical_external_releases"][0]["publication_coordinates"][
+                "docs_revision"
+            ] = "f" * 40
+            role_path.write_text(
+                json.dumps(role, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            findings = validation.validate_living_publication_state(copy_root)
+            self.assertIn(
+                "release role must retain the complete 0.3.1 publication",
                 findings,
             )
 

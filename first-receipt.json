@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RECEIPT-COMPARATIVE-EVIDENCE-001",
   "machine_node_id": "NODE-COMPARATIVE-EVIDENCE-001",
-  "as_of": "2026-09-04T04:34:49Z",
+  "as_of": "2026-09-04T05:24:33Z",
   "orientation_purpose": "Give each entering collaborator a compact, non-authorizing account of the comparator's contracts, canonical closure, evidence posture, coordination state, and safe handoff.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -34,7 +34,7 @@
     }
   ],
   "coordination_horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
-  "current_horizon_summary": "The signed comparison-v0.3.2 release now binds the Enterprise v0.3.2 source and new report identities while retaining the 0.3.1 classification on each of the 17 compared paths. The comparison-v0.3.1 Pages projection remains the public baseline until the successor projection is verified.",
+  "current_horizon_summary": "The signed comparison-v0.3.2 release, accepted observation carrier, and deterministic Pages projection now form the public comparison baseline. The projection retains the 10/4/3 classification across 17 paths, and the complete comparison-v0.3.1 release and publication remain recoverable.",
   "open_receipts": [],
   "invalidation_conditions": [
     "The governance schema, selected-future assumptions, or canonical closure digest changes.",
@@ -59,7 +59,7 @@
     {
       "source": "accepted-main-observation-carrier",
       "permission": "read",
-      "verification": "Accepted main carrier fadbb1aba21a828eb56ee35c0abb4bb32b7f498c contains closed promotion-receipt blob 4b2f41fe86fb4050d2d3f7da984baa78463c0c12, descends from the signed release subject, and equals the docs manifest sourceRevision."
+      "verification": "Accepted main carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95 contains promotion-observation blob c6318597b4d038cd59c897d4041c7e0178e60e15, descends from signed release 0289ff835c790693a769347e69da0abdcfaa47de, and equals the docs manifest sourceRevision."
     },
     {
       "source": "comparison-v0.3.2-candidate",
@@ -78,14 +78,14 @@
     }
   ],
   "handoff": {
-    "recipient_role": "Comparative evidence publication receiver",
-    "next_safe_action": "Accept this release observation on main, resolve that accepted commit as the 0.3.2 Pages source revision, and publish one deterministic docs projection before verifying its manifest and hosted bytes.",
-    "success_evidence": "The docs projection binds the accepted 0.3.2 observation carrier as its sourceRevision, reproduces both report bundles, exposes the Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c, and matches the hosted canonical origin byte for byte."
+    "recipient_role": "Program specification constellation receiver",
+    "next_safe_action": "Carry the signed 0.3.2 release, accepted observation carrier, Golden report digest, and publication coordinates into the Program specification constellation while preserving the release subject, observation carrier, and public projection as distinct identities.",
+    "success_evidence": "The Program constellation pins release commit 0289ff835c790693a769347e69da0abdcfaa47de while separately recording observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95, docs revision 6ccc087875b439eb70304771f534434acae3f01c, manifest SHA-256 38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea, and Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c."
   },
   "metadata": {
     "schema_version": "2.0.1",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-09-04T04:34:49Z",
+    "updated_at": "2026-09-04T05:24:33Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-RECEIPT-001",
       "display_name": "Comparative evidence stewardship role",
