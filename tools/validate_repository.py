@@ -238,21 +238,69 @@ def parse_skill_source(path: Path) -> tuple[dict[str, str], str]:
 
 
 def _unfenced_markdown(content: str) -> str:
-    """Return Markdown source with fenced code content removed."""
+    """Return visitor-visible Markdown with fences and HTML comments removed."""
     visible: list[str] = []
-    fence: str | None = None
+    fence: tuple[str, int] | None = None
     for line in content.splitlines():
-        marker = line.lstrip()
+        marker = re.match(r"^ {0,3}(.*)$", line).group(1)
         opening = re.match(r"(`{3,}|~{3,})", marker)
         if fence is None and opening:
-            fence = opening.group(1)[0]
+            run = opening.group(1)
+            fence = (run[0], len(run))
             continue
         if fence is not None:
-            if re.match(rf"{re.escape(fence)}{{3,}}\s*$", marker):
+            character, length = fence
+            if re.fullmatch(
+                rf"{re.escape(character)}{{{length},}}[ \t]*", marker
+            ):
                 fence = None
             continue
         visible.append(line)
-    return "\n".join(visible)
+    return re.sub(
+        r"<!--.*?(?:-->|$)",
+        "",
+        "\n".join(visible),
+        flags=re.DOTALL,
+    )
+
+
+def _reference_label(label: str) -> str:
+    """Normalize a Markdown reference label using its case-insensitive form."""
+    return " ".join(label.split()).casefold()
+
+
+def _markdown_link_targets(content: str) -> list[str]:
+    """Return inline and used full/collapsed/shortcut reference targets."""
+    visible = _unfenced_markdown(content)
+    targets = list(MARKDOWN_LINK_TARGET.findall(visible))
+    definitions: dict[str, str] = {}
+    definition_pattern = re.compile(
+        r"(?m)^[ \t]{0,3}\[([^\]]+)\]:[ \t]*(?:<([^>]+)>|(\S+))"
+    )
+    for match in definition_pattern.finditer(visible):
+        definitions.setdefault(
+            _reference_label(match.group(1)),
+            match.group(2) or match.group(3),
+        )
+
+    used_labels: set[str] = set()
+    without_definitions = definition_pattern.sub("", visible)
+    full_reference = re.compile(r"(?<!!)\[([^\]]+)\]\[([^\]]*)\]")
+    for match in full_reference.finditer(without_definitions):
+        used_labels.add(_reference_label(match.group(2) or match.group(1)))
+    remaining = full_reference.sub("", without_definitions)
+    remaining = MARKDOWN_LINK_TARGET.sub("", remaining)
+    for match in re.finditer(r"(?<!!)\[([^\]]+)\](?!\s*[\[(])", remaining):
+        normalized = _reference_label(match.group(1))
+        if normalized in definitions:
+            used_labels.add(normalized)
+
+    targets.extend(
+        destination
+        for label, destination in definitions.items()
+        if label in used_labels
+    )
+    return targets
 
 
 def _markdown_headings(content: str) -> list[str]:
@@ -284,7 +332,7 @@ def _markdown_link_findings(path: Path, root: Path) -> list[str]:
     findings: list[str] = []
     relative_path = str(path.relative_to(root))
     content = path.read_text(encoding="utf-8")
-    for raw_target in MARKDOWN_LINK_TARGET.findall(_unfenced_markdown(content)):
+    for raw_target in _markdown_link_targets(content):
         target = raw_target.strip("<>")
         parsed = urlsplit(target)
         if parsed.scheme or parsed.netloc:
@@ -350,6 +398,7 @@ def validate_orientation_readmes(root: Path = ROOT) -> list[str]:
     role_path = root / "release/repository-role.json"
     if root_readme.is_file() and role_path.is_file():
         root_content = root_readme.read_text(encoding="utf-8")
+        visible_root_content = _unfenced_markdown(root_content)
         role = json.loads(role_path.read_text(encoding="utf-8"))
         counts = role.get("golden_specimen_verification", {}).get(
             "classification_counts", {}
@@ -360,7 +409,7 @@ def validate_orientation_readmes(root: Path = ROOT) -> list[str]:
             "(release/repository-role.json)",
         )
         for route in required_result_routes:
-            if route not in root_content:
+            if route not in visible_root_content:
                 findings.append(f"README.md requires result route {route!r}")
         labels = {
             "agreement": "Agreement",
@@ -369,7 +418,7 @@ def validate_orientation_readmes(root: Path = ROOT) -> list[str]:
         }
         for key, label in labels.items():
             count = counts.get(key)
-            if f"| {label} | {count} |" not in root_content:
+            if f"| {label} | {count} |" not in visible_root_content:
                 findings.append(
                     f"README.md must present {label!r} count {count!r}"
                 )
