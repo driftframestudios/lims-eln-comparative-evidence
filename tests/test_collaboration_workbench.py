@@ -64,6 +64,41 @@ class CollaborationWorkbenchTests(unittest.TestCase):
             )
         )
 
+    def test_orientation_readme_graph_is_complete_and_linked(self) -> None:
+        self.assertEqual([], validation.validate_orientation_readmes())
+        self.assertEqual(
+            {
+                "README.md",
+                "accepted/README.md",
+                "receipts/redacted/README.md",
+                "simulated-closures/README.md",
+            },
+            set(validation.ORIENTATION_README_CONTRACTS),
+        )
+
+    def test_orientation_heading_parser_ignores_fenced_examples(self) -> None:
+        source = """# Visible\n\n```markdown\n## Example only\n```\n\n## Route\n"""
+        self.assertEqual(
+            ["# Visible", "## Route"],
+            validation._markdown_headings(source),
+        )
+
+    def test_same_document_readme_fragment_must_resolve(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-readme-") as temporary:
+            copy_root = Path(temporary)
+            readme = copy_root / "README.md"
+            readme.write_text(
+                "# Orientation\n\n[Missing route](#missing-self-fragment)\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    "README.md link fragment is absent: "
+                    "#missing-self-fragment"
+                ],
+                validation._markdown_link_findings(readme, copy_root),
+            )
+
     def test_upstream_lineage_drift_is_visible(self) -> None:
         with tempfile.TemporaryDirectory(prefix="comparative-workbench-") as temporary:
             copy_root = Path(temporary)

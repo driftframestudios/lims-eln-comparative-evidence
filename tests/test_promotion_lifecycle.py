@@ -345,7 +345,7 @@ class PromotionLifecycleTests(unittest.TestCase):
         self.assertEqual(first_receipt["open_receipts"], machine["open_receipts"])
         self.assertEqual(
             horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PUBLICATION-031"],
+            ["WORK-PROGRAM-CONSTELLATION-HANDOFF-001"],
         )
         self.assertEqual(
             {
@@ -355,7 +355,7 @@ class PromotionLifecycleTests(unittest.TestCase):
                 horizon["as_of"],
                 horizon["metadata"]["updated_at"],
             },
-            {"2026-09-04T05:24:33Z"},
+            {"2026-09-30T15:07:07Z"},
         )
         self.assertEqual(
             self.receipt["release_subject"]["promoted_at"],
@@ -391,9 +391,17 @@ class PromotionLifecycleTests(unittest.TestCase):
         successor_publication_item = publication_items[
             "WORK-COMPARATIVE-PUBLICATION-031"
         ]
+        living_orientation_item = publication_items[
+            "WORK-GOVERNANCE-LIVING-ORIENTATION-038"
+        ]
+        program_handoff_item = publication_items[
+            "WORK-PROGRAM-CONSTELLATION-HANDOFF-001"
+        ]
         self.assertEqual("complete", publication_item["state"])
         self.assertEqual("complete", candidate_item["state"])
         self.assertEqual("complete", successor_publication_item["state"])
+        self.assertEqual("complete", living_orientation_item["state"])
+        self.assertEqual("ready", program_handoff_item["state"])
         self.assertEqual(
             ["WORK-COMPARATIVE-PUBLICATION-017"],
             candidate_item["dependency_ids"],
@@ -404,6 +412,18 @@ class PromotionLifecycleTests(unittest.TestCase):
         )
         self.assertGreaterEqual(
             len(successor_publication_item["completion_evidence"]),
+            3,
+        )
+        self.assertEqual(
+            ["WORK-COMPARATIVE-PUBLICATION-031"],
+            living_orientation_item["dependency_ids"],
+        )
+        self.assertEqual(
+            ["WORK-GOVERNANCE-LIVING-ORIENTATION-038"],
+            program_handoff_item["dependency_ids"],
+        )
+        self.assertGreaterEqual(
+            len(program_handoff_item["completion_evidence"]),
             3,
         )
         self.assertTrue(
