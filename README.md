@@ -1,35 +1,92 @@
 # LIMS/ELN Comparative Evidence
 
-This repository independently compares a released specification and frozen selected
-future through three explicit routes: a shared-result verification between two
-synthetic executions, a planned contract-shape exercise, or caller-supplied observed
-evidence. It produces machine-readable JSON and a portable HTML report while
-preserving the original inputs and their authority.
+LIMS/ELN Comparative Evidence makes differences between two laboratory-system
+result descriptions reviewable. It produces repeatable JSON and HTML reports
+through three routes: a shared-result check between two simulated producers, a
+planned contract-shape exercise, and caller-supplied observed evidence. Each
+route keeps the origin and decision authority of its inputs visible.
 
 Repository authorship and maintenance provenance is recorded in
 [`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
 chronology and contribution credit.
 
-## Start here
+## First receipt
 
-Read [`AGENTS.md`](AGENTS.md) for the repository collaboration ground. Its
-repository-local workbench includes:
+[Open the public Golden Specimen report](https://cometspectrum.io/reports/golden-specimen/comparison.html)
+or [inspect its machine-readable JSON](https://cometspectrum.io/reports/golden-specimen/comparison.json).
+Across 17 decision-relevant paths, the accepted report records:
 
-- [`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) for exact
-  source, release, public-baseline, and live-collaboration orientation;
-- [`source-authority-mapping`](.agents/skills/source-authority-mapping/SKILL.md)
-  for tracing producer evidence, Comparator snapshots, reports, releases, and
-  public projections without collapsing their authority roles;
-- [`deterministic-comparison-report-projection`](.agents/skills/deterministic-comparison-report-projection/SKILL.md)
-  for report twins, exact runtime bytes, source-bound Pages candidates, and
-  projection identity; and
-- [`contextual-jargon-scan`](.agents/skills/contextual-jargon-scan/SKILL.md) for
-  a bounded ordinary-language review of prose already receiving material
-  change.
+| Classification | Count | Meaning |
+| --- | ---: | --- |
+| Agreement | 10 | Both producers emit the same decision-relevant value. |
+| Explainable variation | 4 | Execution-owned identifiers or timestamps differ while the compared meaning remains aligned. |
+| Material divergence | 3 | Scientific values need an accountable mapping before a reviewer can treat them as equivalent. |
 
-All four skills are `public_possible`. They remain available inside the
-repository and outside the public Pages projection while repository use and
-review establish whether each is ready for a separate public projection.
+Both report inputs retain simulated authority. The public report supports
+inspection and design decisions; environment-observed evidence enters through
+the separate admission and acceptance route described below.
+
+[`release/repository-role.json`](release/repository-role.json) is the direct
+machine-readable route to the repository role, accepted comparison result,
+promotion state, and publication coordinates. The living orientation set is
+[`machine-node.json`](machine-node.json),
+[`first-receipt.json`](first-receipt.json), and
+[`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json).
+
+## Current state
+
+| Coordinate | Role | Source owner |
+| --- | --- | --- |
+| Annotated `comparison-v0.3.2` tag | Immutable accepted comparison release and report baseline | [`release/repository-role.json`](release/repository-role.json) and the promotion observation under [`receipts/`](receipts/) |
+| Protected `main` | Release line carrying the later accepted observation and Pages-publication record | The publication coordinates in [`release/repository-role.json`](release/repository-role.json) |
+| `develop` | Later integration line carrying Governance 2.2 living orientation and the next reviewed source state | [`machine-node.json`](machine-node.json), [`first-receipt.json`](first-receipt.json), and [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) |
+| `docs` | Generated, source-bound public projection | [`projection-manifest.json`](https://cometspectrum.io/projection-manifest.json) and [`tools/build_pages.py`](tools/build_pages.py) |
+
+`develop` retains the accepted 0.3.2 report and release identities until a
+later protected promotion establishes a successor. The current living horizon
+places the Program specification constellation handoff in `ready` state; the
+machine lifecycle remains `settling` until that receiver records the distinct
+release, observation, publication, and report coordinates.
+
+## Choose your route
+
+| Reader job | Start here | Continue with |
+| --- | --- | --- |
+| Inspect the result | [Public Golden report](https://cometspectrum.io/reports/golden-specimen/comparison.html) | [Report JSON](https://cometspectrum.io/reports/golden-specimen/comparison.json) and [projection manifest](https://cometspectrum.io/projection-manifest.json) |
+| Recover release, report, and publication state | [`release/repository-role.json`](release/repository-role.json) | [`first-receipt.json`](first-receipt.json) and [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) |
+| Run or change the comparator | [Run it](#run-it) | [`AGENTS.md`](AGENTS.md), [`src/comparative_evidence/`](src/comparative_evidence/), and [`tests/`](tests/) |
+| Admit observed evidence | [`accepted/README.md`](accepted/README.md) | [`receipts/redacted/README.md`](receipts/redacted/README.md) |
+| Inspect selected-future closure | [`simulated-closures/README.md`](simulated-closures/README.md) | [`fixtures/simulated-closures/`](fixtures/simulated-closures/) |
+| Resume branch, release, and publication work | [`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) | [`first-receipt.json`](first-receipt.json) |
+| Trace source and authority roles | [`source-authority-mapping`](.agents/skills/source-authority-mapping/SKILL.md) | [`constellation.lock.json`](constellation.lock.json) |
+| Change report or Pages behavior | [`deterministic-comparison-report-projection`](.agents/skills/deterministic-comparison-report-projection/SKILL.md) | [`tools/build_pages.py`](tools/build_pages.py) |
+| Review public or cross-repository wording | [`contextual-jargon-scan`](.agents/skills/contextual-jargon-scan/SKILL.md) | [`AGENTS.md`](AGENTS.md) |
+
+## Quickest proof
+
+After installing the validation extra with Python 3.11 or newer, run:
+
+```bash
+python3 -m pip install --disable-pip-version-check --editable ".[validation]"
+python3 tools/validate_repository.py
+```
+
+The validator regenerates both report families and the Pages candidate twice,
+compares complete byte inventories, checks the living orientation and README
+routes, validates schemas and release bindings, and scans repository text for
+credential-shaped material. The full review path also runs the complete unit
+suite and signed-release history check:
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 tools/verify_release_history.py
+```
+
+Passing checks establish source-owned behavior and identities at the inspected
+revision. Reader comprehension, Program-side receipt, observed-environment
+claims, hosted changes, and release acceptance retain their named receivers.
+
+## Evidence posture
 
 The selected future is definitive within its declared simulation reality. An
 environment encounter is a separate evidence mode that can confirm it, reveal an
@@ -141,7 +198,7 @@ Enterprise release artifact. Both inputs retain simulated authority, so this rep
 supports design and implementation decisions while the observed-evidence lane keeps
 its independent provenance and acceptance route.
 
-The 0.3.2 candidate receives Enterprise `v0.3.2` through its signed tag and exact
+The accepted 0.3.2 comparison binds Enterprise `v0.3.2` through its signed tag and exact
 commit, tree, and archive identities. That release changes the emitted
 implementation coordinate from `@0.3.1` to `@0.3.2`; its complete result, shared
 projection, producer detail, and provenance remain byte-identical across those
@@ -247,12 +304,13 @@ The candidate contains:
 
 `python3 tools/validate_repository.py` builds two isolated candidates and compares
 the complete inventories byte for byte.
-The 0.3.2 candidate is content-addressed by its constellation lock, both report
-digests, and source-constellation digest. Signed tag `comparison-v0.3.2` identifies
-accepted commit `0289ff835c790693a769347e69da0abdcfaa47de`; the candidate and
-release share Git tree `60c85e4206e2d487dac83d521401816dec0f34ae`. The additive
-promotion observation binds those objects, the reproducible release archive, and
-the successful hosted check.
+The accepted 0.3.2 comparison is content-addressed by its constellation lock,
+both report digests, and source-constellation digest. Signed tag
+`comparison-v0.3.2` identifies accepted commit
+`0289ff835c790693a769347e69da0abdcfaa47de`; the comparison and release share Git
+tree `60c85e4206e2d487dac83d521401816dec0f34ae`. The additive promotion
+observation binds those objects, the reproducible release archive, and the
+successful hosted check.
 
 The accepted 0.3.2 observation carrier is
 `2cca88982444ebc8280f9eb2891d97bf25dbeb95`: it contains the exact
@@ -358,11 +416,13 @@ Governance 2.2 to validate their current orientation records, while the 0.3.2
 [`constellation.lock.json`](constellation.lock.json) retains Governance 2.1 as the
 source coordinate for the accepted Golden report. Released admission policy,
 bounded operations, and accountable roles continue to authorize runtime effects.
-The 0.3.1 promotion and publication work items remain complete. The 0.3.2 promotion
-and source-bound Pages publication are also complete. The current re-entry route
-carries the signed release, observation carrier, report digest, and public
-projection into the Program specification constellation while preserving the
-0.3.1 release and publication as recoverable history.
+The 0.3.1 and 0.3.2 promotion and publication work items remain complete. A
+completed living-orientation item records the move to Governance 2.2 while
+preserving the accepted Golden report and its source constellation. The current
+`ready` item carries the signed release, observation carrier, report digest,
+and public projection into the Program specification constellation while the
+machine lifecycle remains `settling`. Program-side receiving evidence completes
+that handoff.
 
 ## Comparative literacy
 

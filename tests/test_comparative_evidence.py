@@ -1374,7 +1374,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 coordination_horizon["as_of"],
                 coordination_horizon["metadata"]["updated_at"],
             },
-            {"2026-09-04T05:24:33Z"},
+            {"2026-09-30T15:07:07Z"},
         )
         source_permissions = {
             item["source"]: item for item in first_receipt["source_permissions"]
@@ -1395,7 +1395,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         }
         self.assertEqual(
             coordination_horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PUBLICATION-031"],
+            ["WORK-PROGRAM-CONSTELLATION-HANDOFF-001"],
         )
         self.assertEqual(
             promotion_items["WORK-COMPARATIVE-PROMOTION-003"]["state"],
@@ -1421,6 +1421,26 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             successor_publication_item["dependency_ids"],
             ["WORK-COMPARATIVE-PROMOTION-004"],
+        )
+        living_orientation_item = next(
+            item
+            for item in coordination_horizon["work_items"]
+            if item["item_id"] == "WORK-GOVERNANCE-LIVING-ORIENTATION-038"
+        )
+        self.assertEqual(living_orientation_item["state"], "complete")
+        self.assertEqual(
+            living_orientation_item["dependency_ids"],
+            ["WORK-COMPARATIVE-PUBLICATION-031"],
+        )
+        program_handoff_item = next(
+            item
+            for item in coordination_horizon["work_items"]
+            if item["item_id"] == "WORK-PROGRAM-CONSTELLATION-HANDOFF-001"
+        )
+        self.assertEqual(program_handoff_item["state"], "ready")
+        self.assertEqual(
+            program_handoff_item["dependency_ids"],
+            ["WORK-GOVERNANCE-LIVING-ORIENTATION-038"],
         )
         self.assertEqual(
             manifest["promotion_coordinates"]["settled_receipt_id"],

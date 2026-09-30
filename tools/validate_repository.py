@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import sys
 import tempfile
+from urllib.parse import unquote, urldefrag, urlsplit
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
@@ -71,7 +72,67 @@ _SKILL_REQUIRED_SECTIONS = (
 )
 _GIT_OID = re.compile(r"[0-9a-f]{40}")
 _SHA256 = re.compile(r"[0-9a-f]{64}")
-CURRENT_PUBLICATION_OBSERVATION_TIME = "2026-09-04T05:24:33Z"
+ACCEPTED_PUBLICATION_OBSERVATION_TIME = "2026-09-04T05:24:33Z"
+CURRENT_LIVING_ORIENTATION_TIME = "2026-09-30T15:07:07Z"
+ORIENTATION_README_CONTRACTS = {
+    "README.md": (
+        "## First receipt",
+        "## Current state",
+        "## Choose your route",
+        "## Quickest proof",
+        "## Evidence posture",
+        "## Evidence namespaces",
+        "## Run it",
+        "## Coordination Horizon",
+        "## Branch topology",
+    ),
+    "accepted/README.md": (
+        "## Reader job",
+        "## Current state",
+        "## Owner and schema",
+        "## Use",
+        "## Quickest fitting command",
+        "## Evidence ceiling",
+        "## Next route",
+        "## Return to repository root",
+    ),
+    "receipts/redacted/README.md": (
+        "## Reader job",
+        "## Current state",
+        "## Owner and schema",
+        "## Use",
+        "## Quickest fitting command",
+        "## Evidence ceiling",
+        "## Next route",
+        "## Return to repository root",
+    ),
+    "simulated-closures/README.md": (
+        "## Reader job",
+        "## Current state",
+        "## Owner and schema",
+        "## Use",
+        "## Quickest fitting command",
+        "## Evidence ceiling",
+        "## Next route",
+        "## Return to repository root",
+    ),
+}
+README_DISCOVERY_EXCLUDED_PARTS = {
+    ".git",
+    ".mypy_cache",
+    ".nox",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+}
+MARKDOWN_LINK_TARGET = re.compile(
+    r"(?<!!)\[[^\]]+\]\(([^)\s]+)(?:\s+[\"'][^\"']*[\"'])?\)"
+)
 ACCEPTED_MAIN_SOURCE_REVISION = "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
 ACCEPTED_DOCS_REVISION = "6ccc087875b439eb70304771f534434acae3f01c"
 ACCEPTED_PROJECTION_MANIFEST_BLOB_OID = (
@@ -176,6 +237,194 @@ def parse_skill_source(path: Path) -> tuple[dict[str, str], str]:
     return metadata, content
 
 
+def _unfenced_markdown(content: str) -> str:
+    """Return visitor-visible Markdown with fences and HTML comments removed."""
+    visible: list[str] = []
+    fence: tuple[str, int] | None = None
+    for line in content.splitlines():
+        marker = re.match(r"^ {0,3}(.*)$", line).group(1)
+        opening = re.match(r"(`{3,}|~{3,})", marker)
+        if fence is None and opening:
+            run = opening.group(1)
+            fence = (run[0], len(run))
+            continue
+        if fence is not None:
+            character, length = fence
+            if re.fullmatch(
+                rf"{re.escape(character)}{{{length},}}[ \t]*", marker
+            ):
+                fence = None
+            continue
+        visible.append(line)
+    return re.sub(
+        r"<!--.*?(?:-->|$)",
+        "",
+        "\n".join(visible),
+        flags=re.DOTALL,
+    )
+
+
+def _reference_label(label: str) -> str:
+    """Normalize a Markdown reference label using its case-insensitive form."""
+    return " ".join(label.split()).casefold()
+
+
+def _markdown_link_targets(content: str) -> list[str]:
+    """Return inline and used full/collapsed/shortcut reference targets."""
+    visible = _unfenced_markdown(content)
+    targets = list(MARKDOWN_LINK_TARGET.findall(visible))
+    definitions: dict[str, str] = {}
+    definition_pattern = re.compile(
+        r"(?m)^[ \t]{0,3}\[([^\]]+)\]:[ \t]*(?:<([^>]+)>|(\S+))"
+    )
+    for match in definition_pattern.finditer(visible):
+        definitions.setdefault(
+            _reference_label(match.group(1)),
+            match.group(2) or match.group(3),
+        )
+
+    used_labels: set[str] = set()
+    without_definitions = definition_pattern.sub("", visible)
+    full_reference = re.compile(r"(?<!!)\[([^\]]+)\]\[([^\]]*)\]")
+    for match in full_reference.finditer(without_definitions):
+        used_labels.add(_reference_label(match.group(2) or match.group(1)))
+    remaining = full_reference.sub("", without_definitions)
+    remaining = MARKDOWN_LINK_TARGET.sub("", remaining)
+    for match in re.finditer(r"(?<!!)\[([^\]]+)\](?!\s*[\[(])", remaining):
+        normalized = _reference_label(match.group(1))
+        if normalized in definitions:
+            used_labels.add(normalized)
+
+    targets.extend(
+        destination
+        for label, destination in definitions.items()
+        if label in used_labels
+    )
+    return targets
+
+
+def _markdown_headings(content: str) -> list[str]:
+    """Return ATX headings outside fenced code blocks."""
+    return [
+        match.group(0).rstrip(" #")
+        for line in _unfenced_markdown(content).splitlines()
+        if (match := re.match(r"^#{1,6}\s+.+?\s*$", line))
+    ]
+
+
+def _markdown_heading_ids(content: str) -> set[str]:
+    """Return the GitHub-style IDs needed by repository-local links."""
+    identifiers: set[str] = set()
+    duplicates: dict[str, int] = {}
+    for heading in _markdown_headings(content):
+        label = re.sub(r"^#{1,6}\s+", "", heading)
+        slug = label.casefold().strip()
+        slug = re.sub(r"[^\w\- ]", "", slug, flags=re.UNICODE)
+        slug = re.sub(r"\s+", "-", slug)
+        duplicate = duplicates.get(slug, 0)
+        identifiers.add(slug if duplicate == 0 else f"{slug}-{duplicate}")
+        duplicates[slug] = duplicate + 1
+    return identifiers
+
+
+def _markdown_link_findings(path: Path, root: Path) -> list[str]:
+    """Return repository-bound target and fragment findings for one README."""
+    findings: list[str] = []
+    relative_path = str(path.relative_to(root))
+    content = path.read_text(encoding="utf-8")
+    for raw_target in _markdown_link_targets(content):
+        target = raw_target.strip("<>")
+        parsed = urlsplit(target)
+        if parsed.scheme or parsed.netloc:
+            continue
+        location, fragment = urldefrag(target)
+        destination = (
+            path.resolve()
+            if not location
+            else (path.parent / unquote(location)).resolve()
+        )
+        try:
+            destination.relative_to(root.resolve())
+        except ValueError:
+            findings.append(
+                f"{relative_path} link leaves the repository: {target}"
+            )
+            continue
+        if not destination.exists():
+            findings.append(
+                f"{relative_path} link target is absent: {target}"
+            )
+            continue
+        if fragment and destination.is_file() and destination.suffix == ".md":
+            destination_ids = _markdown_heading_ids(
+                destination.read_text(encoding="utf-8")
+            )
+            if unquote(fragment) not in destination_ids:
+                findings.append(
+                    f"{relative_path} link fragment is absent: {target}"
+                )
+    return findings
+
+
+def validate_orientation_readmes(root: Path = ROOT) -> list[str]:
+    """Validate the complete README graph and its result-first root facts."""
+    findings: list[str] = []
+    expected_paths = set(ORIENTATION_README_CONTRACTS)
+    observed_paths = {
+        str(path.relative_to(root))
+        for path in root.rglob("README.md")
+        if not README_DISCOVERY_EXCLUDED_PARTS.intersection(
+            path.relative_to(root).parts
+        )
+    }
+    if observed_paths != expected_paths:
+        findings.append(
+            "orientation README inventory differs: expected "
+            f"{sorted(expected_paths)!r}; received {sorted(observed_paths)!r}"
+        )
+
+    for relative_path, required_headings in ORIENTATION_README_CONTRACTS.items():
+        path = root / relative_path
+        if not path.is_file():
+            continue
+        content = path.read_text(encoding="utf-8")
+        headings = set(_markdown_headings(content))
+        for heading in required_headings:
+            if heading not in headings:
+                findings.append(f"{relative_path} requires heading {heading!r}")
+        findings.extend(_markdown_link_findings(path, root))
+
+    root_readme = root / "README.md"
+    role_path = root / "release/repository-role.json"
+    if root_readme.is_file() and role_path.is_file():
+        root_content = root_readme.read_text(encoding="utf-8")
+        visible_root_content = _unfenced_markdown(root_content)
+        role = json.loads(role_path.read_text(encoding="utf-8"))
+        counts = role.get("golden_specimen_verification", {}).get(
+            "classification_counts", {}
+        )
+        required_result_routes = (
+            "https://cometspectrum.io/reports/golden-specimen/comparison.html",
+            "https://cometspectrum.io/reports/golden-specimen/comparison.json",
+            "(release/repository-role.json)",
+        )
+        for route in required_result_routes:
+            if route not in visible_root_content:
+                findings.append(f"README.md requires result route {route!r}")
+        labels = {
+            "agreement": "Agreement",
+            "explainable_variation": "Explainable variation",
+            "material_divergence": "Material divergence",
+        }
+        for key, label in labels.items():
+            count = counts.get(key)
+            if f"| {label} | {count} |" not in visible_root_content:
+                findings.append(
+                    f"README.md must present {label!r} count {count!r}"
+                )
+    return findings
+
+
 def validate_collaboration_workbench(root: Path = ROOT) -> list[str]:
     """Validate the exact copy-local skill workbench and orientation routes."""
     findings: list[str] = []
@@ -257,8 +506,8 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
         first_receipt.get("metadata", {}).get("updated_at"),
         machine_node.get("metadata", {}).get("updated_at"),
     }
-    if timestamps != {CURRENT_PUBLICATION_OBSERVATION_TIME}:
-        findings.append("living carriers require one publication observation time")
+    if timestamps != {CURRENT_LIVING_ORIENTATION_TIME}:
+        findings.append("living carriers require one current orientation time")
     work_items = {
         item.get("item_id"): item
         for item in horizon.get("work_items", [])
@@ -269,15 +518,25 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
     successor_publication_item = work_items.get(
         "WORK-COMPARATIVE-PUBLICATION-031", {}
     )
+    living_orientation_item = work_items.get(
+        "WORK-GOVERNANCE-LIVING-ORIENTATION-038", {}
+    )
+    program_handoff_item = work_items.get(
+        "WORK-PROGRAM-CONSTELLATION-HANDOFF-001", {}
+    )
     if (
         horizon.get("current_item_ids")
-        != ["WORK-COMPARATIVE-PUBLICATION-031"]
+        != ["WORK-PROGRAM-CONSTELLATION-HANDOFF-001"]
         or publication_item.get("state") != "complete"
         or candidate_item.get("state") != "complete"
         or successor_publication_item.get("state") != "complete"
+        or living_orientation_item.get("state") != "complete"
+        or program_handoff_item.get("state") != "ready"
+        or program_handoff_item.get("dependency_ids")
+        != ["WORK-GOVERNANCE-LIVING-ORIENTATION-038"]
     ):
         findings.append(
-            "the 0.3.2 public projection must remain a completed work item"
+            "completed publication and living orientation must route to the ready Program handoff"
         )
     publication_sources = [
         item
@@ -324,7 +583,7 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
         "projection_manifest_blob_oid": ACCEPTED_PROJECTION_MANIFEST_BLOB_OID,
         "projection_manifest_sha256": ACCEPTED_PROJECTION_MANIFEST_SHA256,
         "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
-        "observed_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+        "observed_at": ACCEPTED_PUBLICATION_OBSERVATION_TIME,
         "receiver_issue": 31,
         "target_branch": "docs",
         "hosted_observation": {
@@ -333,7 +592,7 @@ def validate_living_publication_state(root: Path = ROOT) -> list[str]:
             "pages_run_head_revision": ACCEPTED_DOCS_REVISION,
             "pages_run_conclusion": "success",
             "pages_run_completed_at": "2026-09-04T05:15:41Z",
-            "verified_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+            "verified_at": ACCEPTED_PUBLICATION_OBSERVATION_TIME,
             "byte_parity": "verified_against_docs_projection",
             "responsive_report_surface": "narrow_and_desktop_verified",
         },
@@ -446,6 +705,12 @@ def validate_json_contract(
 
 
 def main() -> int:
+    orientation_findings = validate_orientation_readmes()
+    if orientation_findings:
+        raise ValueError(
+            "orientation README graph differs from its local contract: "
+            + "; ".join(orientation_findings)
+        )
     workbench_findings = validate_collaboration_workbench()
     if workbench_findings:
         raise ValueError(
@@ -590,7 +855,7 @@ def main() -> int:
         raise ValueError(
             "promotion receipt requires the reviewed comparison-v0.3.1 release evidence"
         )
-    carrier_observation_time = CURRENT_PUBLICATION_OBSERVATION_TIME
+    carrier_observation_time = CURRENT_LIVING_ORIENTATION_TIME
     publication_source_name = "accepted-main-observation-carrier"
     release_commit = release_subject["commit_oid"]
     golden_report_digest = (
@@ -654,7 +919,7 @@ def main() -> int:
         "projection_manifest_blob_oid": ACCEPTED_PROJECTION_MANIFEST_BLOB_OID,
         "projection_manifest_sha256": ACCEPTED_PROJECTION_MANIFEST_SHA256,
         "canonical_origin": ACCEPTED_CANONICAL_ORIGIN,
-        "observed_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+        "observed_at": ACCEPTED_PUBLICATION_OBSERVATION_TIME,
         "receiver_issue": 31,
         "target_branch": "docs",
         "hosted_observation": {
@@ -663,7 +928,7 @@ def main() -> int:
             "pages_run_head_revision": ACCEPTED_DOCS_REVISION,
             "pages_run_conclusion": "success",
             "pages_run_completed_at": "2026-09-04T05:15:41Z",
-            "verified_at": CURRENT_PUBLICATION_OBSERVATION_TIME,
+            "verified_at": ACCEPTED_PUBLICATION_OBSERVATION_TIME,
             "byte_parity": "verified_against_docs_projection",
             "responsive_report_surface": "narrow_and_desktop_verified",
         },
@@ -801,6 +1066,12 @@ def main() -> int:
     successor_publication_item = horizon_items.get(
         "WORK-COMPARATIVE-PUBLICATION-031", {}
     )
+    living_orientation_item = horizon_items.get(
+        "WORK-GOVERNANCE-LIVING-ORIENTATION-038", {}
+    )
+    program_handoff_item = horizon_items.get(
+        "WORK-PROGRAM-CONSTELLATION-HANDOFF-001", {}
+    )
     reentry = coordination_horizon.get("reentry_capsule", {})
     handoff = first_receipt.get("handoff", {})
     publication_source = (
@@ -816,13 +1087,18 @@ def main() -> int:
         if isinstance(successor_publication_item, dict)
         else []
     )
+    handoff_completion_evidence = (
+        program_handoff_item.get("completion_evidence", [])
+        if isinstance(program_handoff_item, dict)
+        else []
+    )
 
     def meaningful_text(value: object) -> bool:
         return isinstance(value, str) and len(value.strip()) >= 40
 
     if (
         coordination_horizon.get("current_item_ids")
-        != ["WORK-COMPARATIVE-PUBLICATION-031"]
+        != ["WORK-PROGRAM-CONSTELLATION-HANDOFF-001"]
         or not meaningful_text(coordination_horizon.get("objective"))
         or horizon_items.get("WORK-COMPARATIVE-PROMOTION-003", {}).get(
             "state"
@@ -849,6 +1125,20 @@ def main() -> int:
         != "Comparative evidence publication receiver"
         or successor_publication_item.get("dependency_ids")
         != ["WORK-COMPARATIVE-PROMOTION-004"]
+        or not isinstance(living_orientation_item, dict)
+        or living_orientation_item.get("sequence") != 7
+        or living_orientation_item.get("state") != "complete"
+        or living_orientation_item.get("owner_role")
+        != "Governance conformance reviewer"
+        or living_orientation_item.get("dependency_ids")
+        != ["WORK-COMPARATIVE-PUBLICATION-031"]
+        or not isinstance(program_handoff_item, dict)
+        or program_handoff_item.get("sequence") != 8
+        or program_handoff_item.get("state") != "ready"
+        or program_handoff_item.get("owner_role")
+        != "Program specification constellation receiver"
+        or program_handoff_item.get("dependency_ids")
+        != ["WORK-GOVERNANCE-LIVING-ORIENTATION-038"]
         or len(publication_sources) != 1
         or publication_source.get("permission") != "read"
         or not meaningful_text(source_verification)
@@ -863,6 +1153,11 @@ def main() -> int:
         or not isinstance(completion_evidence, list)
         or len(completion_evidence) < 3
         or any(not meaningful_text(value) for value in completion_evidence)
+        or not isinstance(handoff_completion_evidence, list)
+        or len(handoff_completion_evidence) < 3
+        or any(
+            not meaningful_text(value) for value in handoff_completion_evidence
+        )
     ):
         raise ValueError(
             "Coordination Horizon routes the published 0.3.2 baseline to Program"
@@ -1170,6 +1465,7 @@ def main() -> int:
                     golden_report_artifact_inventory
                 ),
                 "pages_projection_inventory_digest": digest(pages_inventory),
+                "orientation_readmes": len(ORIENTATION_README_CONTRACTS),
                 "collaboration_skills": len(PUBLIC_POSSIBLE_SKILL_METADATA),
                 "promotion_receipt_digest": promotion_receipt_digest(
                     promotion_receipt
