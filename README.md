@@ -23,7 +23,7 @@ into review, choose its [observed-evidence route](accepted/README.md) or
 [simulated-closure route](simulated-closures/README.md). Each route keeps the
 input's evidence standing visible beside the report.
 
-Program's [administrative contract example](https://github.com/driftframestudios/lims-eln-program-specification/blob/develop/docs/README.md#try-the-administrative-contract-kit)
+Program's [administrative contract example](https://github.com/driftframestudios/lims-eln-program-specification/blob/main/docs/README.md#try-the-administrative-contract-kit)
 provides a starting point for administrative-only differences. The paired
 insurance and downstream-outcome evaluation portfolio belongs to
 [#41](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/41),
