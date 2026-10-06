@@ -42,6 +42,15 @@ class CollaborationWorkbenchTests(unittest.TestCase):
             destination / "release/repository-role.json",
         )
 
+    def copy_orientation_graph(self, destination: Path) -> None:
+        for relative_path in validation.ORIENTATION_README_CONTRACTS:
+            target = destination / relative_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative_path, target)
+        role_target = destination / "release/repository-role.json"
+        role_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / "release/repository-role.json", role_target)
+
     def test_copy_local_workbench_has_exact_lineage_and_routes(self) -> None:
         self.assertEqual([], validation.validate_collaboration_workbench())
         self.assertEqual(
@@ -63,6 +72,125 @@ class CollaborationWorkbenchTests(unittest.TestCase):
                 for relative in validation.PUBLIC_POSSIBLE_SKILL_METADATA
             )
         )
+
+    def test_orientation_readme_graph_is_complete_and_linked(self) -> None:
+        self.assertEqual([], validation.validate_orientation_readmes())
+        self.assertEqual(
+            {
+                "README.md",
+                "accepted/README.md",
+                "receipts/redacted/README.md",
+                "simulated-closures/README.md",
+            },
+            set(validation.ORIENTATION_README_CONTRACTS),
+        )
+
+    def test_orientation_heading_parser_ignores_fenced_examples(self) -> None:
+        source = """# Visible\n\n```markdown\n## Example only\n```\n\n<!--\n+## Comment only\n-->\n\n## Route\n"""
+        self.assertEqual(
+            ["# Visible", "## Route"],
+            validation._markdown_headings(source),
+        )
+
+    def test_result_routes_must_be_visible_outside_fenced_examples(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-readme-") as temporary:
+            copy_root = Path(temporary)
+            self.copy_orientation_graph(copy_root)
+            readme = copy_root / "README.md"
+            content = readme.read_text(encoding="utf-8")
+            public_routes = (
+                "https://cometspectrum.io/reports/golden-specimen/comparison.html",
+                "https://cometspectrum.io/reports/golden-specimen/comparison.json",
+            )
+            for route in public_routes:
+                content = content.replace(route, "https://invalid.example/result")
+            content += "\n```markdown\n" + "\n".join(public_routes) + "\n```\n"
+            content += (
+                "\n````markdown\n```\n"
+                + "\n".join(public_routes)
+                + "\n````\n"
+            )
+            content += "\n<!--\n" + "\n".join(public_routes) + "\n-->\n"
+            content += "\n<!--\n" + "\n".join(public_routes) + "\n"
+            readme.write_text(content, encoding="utf-8")
+
+            findings = validation.validate_orientation_readmes(copy_root)
+            for route in public_routes:
+                self.assertIn(f"README.md requires result route {route!r}", findings)
+
+    def test_result_counts_must_be_visible_outside_fenced_examples(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-readme-") as temporary:
+            copy_root = Path(temporary)
+            self.copy_orientation_graph(copy_root)
+            readme = copy_root / "README.md"
+            content = readme.read_text(encoding="utf-8")
+            expected_rows = (
+                "| Agreement | 10 |",
+                "| Explainable variation | 4 |",
+                "| Material divergence | 3 |",
+            )
+            for row in expected_rows:
+                content = content.replace(row, row.rsplit(" ", 2)[0] + " 999 |")
+            content += "\n```markdown\n" + "\n".join(expected_rows) + "\n```\n"
+            content += "\n<!--\n" + "\n".join(expected_rows) + "\n-->\n"
+            readme.write_text(content, encoding="utf-8")
+
+            findings = validation.validate_orientation_readmes(copy_root)
+            for label, count in (
+                ("Agreement", 10),
+                ("Explainable variation", 4),
+                ("Material divergence", 3),
+            ):
+                self.assertIn(
+                    f"README.md must present {label!r} count {count!r}",
+                    findings,
+                )
+
+    def test_reference_style_readme_link_must_resolve(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-readme-") as temporary:
+            copy_root = Path(temporary)
+            readme = copy_root / "README.md"
+            (copy_root / "existing.md").write_text("# Existing\n", encoding="utf-8")
+            readme.write_text(
+                "# Orientation\n\n[Broken][missing]\n\n"
+                "[missing]: does-not-exist.md\n"
+                "[missing]: existing.md\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                ["README.md link target is absent: does-not-exist.md"],
+                validation._markdown_link_findings(readme, copy_root),
+            )
+
+    def test_indented_code_marker_does_not_hide_following_route(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-readme-") as temporary:
+            copy_root = Path(temporary)
+            readme = copy_root / "README.md"
+            readme.write_text(
+                "# Orientation\n\n    ```\n\n"
+                "[Broken](does-not-exist.md)\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                ["README.md link target is absent: does-not-exist.md"],
+                validation._markdown_link_findings(readme, copy_root),
+            )
+
+    def test_same_document_readme_fragment_must_resolve(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-readme-") as temporary:
+            copy_root = Path(temporary)
+            readme = copy_root / "README.md"
+            readme.write_text(
+                "# Orientation\n\n[Missing route](#missing-self-fragment)\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    "README.md link fragment is absent: "
+                    "#missing-self-fragment"
+                ],
+                validation._markdown_link_findings(readme, copy_root),
+            )
 
     def test_upstream_lineage_drift_is_visible(self) -> None:
         with tempfile.TemporaryDirectory(prefix="comparative-workbench-") as temporary:

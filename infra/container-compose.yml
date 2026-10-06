@@ -1,0 +1,23 @@
+services:
+  job:
+    build:
+      context: ${LIMS_JOB_CONTEXT:?Select the prepared external context}
+      dockerfile: Dockerfile
+    user: "${LIMS_RUNTIME_UID:?Select the non-root output owner}:${LIMS_RUNTIME_GID:?Select the output group}"
+    init: true
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1
+    stop_grace_period: 10s
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m,mode=1777
+    volumes:
+      - type: bind
+        source: ${LIMS_JOB_OUTPUT:?Select an existing operator-owned output directory}
+        target: /output
+        bind:
+          create_host_path: false

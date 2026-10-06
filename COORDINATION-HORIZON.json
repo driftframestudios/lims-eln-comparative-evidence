@@ -1,10 +1,10 @@
 {
   "horizon_id": "HORIZON-COMPARATIVE-EVIDENCE-003",
   "title": "Governance-bound selected-future evidence",
-  "objective": "Publish a deterministic 0.3.2 Pages projection from an accepted observation carrier that descends from signed release comparison-v0.3.2, while retaining the prior signed release, the 0.3.1 classification on each of the 17 compared paths, and the current public projection as independently recoverable evidence.",
-  "as_of": "2026-09-04T05:24:33Z",
+  "objective": "Carry the accepted comparison-v0.3.2 release, observation carrier, public projection, and Golden report identity into the Program specification constellation as distinct coordinates while preserving the complete 0.3.1 and 0.3.2 release and publication history.",
+  "as_of": "2026-09-30T15:07:07Z",
   "current_item_ids": [
-    "WORK-COMPARATIVE-PUBLICATION-031"
+    "WORK-PROGRAM-CONSTELLATION-HANDOFF-001"
   ],
   "work_items": [
     {
@@ -24,15 +24,15 @@
     },
     {
       "item_id": "WORK-GOVERNANCE-CONFORMANCE-001",
-      "horizon_label": "Governance conformance",
+      "horizon_label": "Historical Governance 2.0.1 conformance",
       "sequence": 2,
       "state": "complete",
-      "desired_state": "The closure, Machine Node, first receipt, and Coordination Horizon satisfy governance schema release 2.0.1.",
+      "desired_state": "The release-bound closure and the living orientation records at the accepted comparison source satisfy Governance schema release 2.0.1.",
       "entry_evidence": [
         "Governance schema release 2.0.1 and its bounded validator are available."
       ],
       "completion_evidence": [
-        "Each comparator control-plane document passes its matching governance schema."
+        "The accepted comparison source validates its closure, Machine Node, first receipt, and Coordination Horizon against Governance schema release 2.0.1."
       ],
       "owner_role": "Governance conformance reviewer",
       "dependency_ids": [
@@ -125,10 +125,48 @@
       "dependency_ids": [
         "WORK-COMPARATIVE-PROMOTION-004"
       ]
+    },
+    {
+      "item_id": "WORK-GOVERNANCE-LIVING-ORIENTATION-038",
+      "horizon_label": "Governance 2.2 living orientation",
+      "sequence": 7,
+      "state": "complete",
+      "desired_state": "The Machine Node, first receipt, and Coordination Horizon use Governance 2.2 for current orientation while the accepted Golden report and release-bound constellation retain their recorded Governance coordinates.",
+      "entry_evidence": [
+        "The 0.3.2 release observation and Pages publication are complete, and Governance 2.2 schemas are available for the three living orientation carriers."
+      ],
+      "completion_evidence": [
+        "The Machine Node declares Governance schema release 2.2.0, and all three living carriers declare metadata schema version 2.2.0.",
+        "The accepted Golden report digest and constellation lock remain unchanged, retaining Governance v2.1.0 and receipt schema 2.0.1 as their source coordinates.",
+        "Repository validation exercises the living carriers and the immutable report-source boundary together."
+      ],
+      "owner_role": "Governance conformance reviewer",
+      "dependency_ids": [
+        "WORK-COMPARATIVE-PUBLICATION-031"
+      ]
+    },
+    {
+      "item_id": "WORK-PROGRAM-CONSTELLATION-HANDOFF-001",
+      "horizon_label": "Program specification constellation handoff",
+      "sequence": 8,
+      "state": "ready",
+      "desired_state": "The Program specification constellation records the accepted comparison release, later observation carrier, published projection, and Golden report digest as distinct receiving coordinates.",
+      "entry_evidence": [
+        "The signed comparison-v0.3.2 release, accepted observation carrier, source-bound Pages projection, Golden report digest, and Governance 2.2 living orientation are complete and independently identifiable."
+      ],
+      "completion_evidence": [
+        "Completion requires reviewed Program specification source to pin release commit 0289ff835c790693a769347e69da0abdcfaa47de while separately recording observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95.",
+        "Completion also requires the Program receiver to record docs revision 6ccc087875b439eb70304771f534434acae3f01c and projection-manifest SHA-256 38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea.",
+        "Completion is established when the Program constellation preserves Golden report digest sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c and distinguishes comparison release, observation, publication, and report identity."
+      ],
+      "owner_role": "Program specification constellation receiver",
+      "dependency_ids": [
+        "WORK-GOVERNANCE-LIVING-ORIENTATION-038"
+      ]
     }
   ],
   "reentry_capsule": {
-    "current_state": "Signed release comparison-v0.3.2 and its bounded Pages publication are complete. Accepted observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95 supplies the source revision for docs revision 6ccc087875b439eb70304771f534434acae3f01c at https://cometspectrum.io/, while the complete 0.3.1 release and publication remain recoverable.",
+    "current_state": "Signed release comparison-v0.3.2, its bounded Pages publication, and Governance 2.2 living orientation are complete. The Program specification constellation handoff is ready and awaits receiving evidence; the complete 0.3.1 release and publication remain recoverable.",
     "recent_decisions": [
       "DECISION-GOVERNANCE-CLOSURE-AS-AUTHORITY-BOUNDARY-001",
       "DECISION-OBSERVED-EVIDENCE-AS-INDEPENDENT-COMPARISON-001"
@@ -145,9 +183,9 @@
     "Which observed encounter would create enough decision value to justify its collection cost?"
   ],
   "metadata": {
-    "schema_version": "2.0.1",
+    "schema_version": "2.2.0",
     "created_at": "2026-07-28T20:30:00Z",
-    "updated_at": "2026-09-04T05:24:33Z",
+    "updated_at": "2026-09-30T15:07:07Z",
     "owner": {
       "actor_id": "OWNER-COMPARATIVE-HORIZON-001",
       "display_name": "Comparative evidence stewardship role",

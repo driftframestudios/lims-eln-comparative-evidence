@@ -1198,6 +1198,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         machine_node = load("machine-node.json")
         first_receipt = load("first-receipt.json")
         coordination_horizon = load("COORDINATION-HORIZON.json")
+        constellation = load("constellation.lock.json")
         self.assertEqual(__version__, "0.3.2")
         self.assertEqual(manifest["repository_release"], __version__)
         self.assertEqual(manifest["repository_role"], "comparative_evidence")
@@ -1328,16 +1329,37 @@ class ComparativeEvidenceTests(unittest.TestCase):
             },
         )
         self.assertEqual(machine_node["lifecycle_state"], "settling")
+        self.assertEqual(machine_node["schema_release"], "2.2.0")
+        self.assertEqual(
+            {
+                machine_node["metadata"]["schema_version"],
+                first_receipt["metadata"]["schema_version"],
+                coordination_horizon["metadata"]["schema_version"],
+            },
+            {"2.2.0"},
+        )
         self.assertEqual(
             {
                 (item["campaign_id"], item["marking_schema_version"])
                 for item in machine_node["campaigns"]
             },
             {
-                ("LIMS-ELN-OPEN-RECEIPTS", "2.0.1"),
-                ("COMPARATIVE-LITERACY-COLLABORATION", "2.0.1"),
-                ("SITE-READING-SYSTEM", "2.0.1"),
+                ("LIMS-ELN-OPEN-RECEIPTS", "2.2.0"),
+                ("COMPARATIVE-LITERACY-COLLABORATION", "2.2.0"),
+                ("SITE-READING-SYSTEM", "2.2.0"),
             },
+        )
+        self.assertEqual(
+            constellation["governance"]["release"],
+            "governance-v2.1.0",
+        )
+        self.assertEqual(
+            digest(constellation),
+            "sha256:a0f5a59dc032b7771e1c90b42942e7ac0a5a894fbc989fd14cadc42a8d81608e",
+        )
+        self.assertEqual(
+            manifest["golden_specimen_verification"]["report_digest"],
+            "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
         )
         self.assertEqual(machine_node["open_receipts"], [])
         self.assertEqual(
@@ -1352,7 +1374,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 coordination_horizon["as_of"],
                 coordination_horizon["metadata"]["updated_at"],
             },
-            {"2026-09-04T05:24:33Z"},
+            {"2026-09-30T15:07:07Z"},
         )
         source_permissions = {
             item["source"]: item for item in first_receipt["source_permissions"]
@@ -1373,7 +1395,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
         }
         self.assertEqual(
             coordination_horizon["current_item_ids"],
-            ["WORK-COMPARATIVE-PUBLICATION-031"],
+            ["WORK-PROGRAM-CONSTELLATION-HANDOFF-001"],
         )
         self.assertEqual(
             promotion_items["WORK-COMPARATIVE-PROMOTION-003"]["state"],
@@ -1399,6 +1421,26 @@ class ComparativeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             successor_publication_item["dependency_ids"],
             ["WORK-COMPARATIVE-PROMOTION-004"],
+        )
+        living_orientation_item = next(
+            item
+            for item in coordination_horizon["work_items"]
+            if item["item_id"] == "WORK-GOVERNANCE-LIVING-ORIENTATION-038"
+        )
+        self.assertEqual(living_orientation_item["state"], "complete")
+        self.assertEqual(
+            living_orientation_item["dependency_ids"],
+            ["WORK-COMPARATIVE-PUBLICATION-031"],
+        )
+        program_handoff_item = next(
+            item
+            for item in coordination_horizon["work_items"]
+            if item["item_id"] == "WORK-PROGRAM-CONSTELLATION-HANDOFF-001"
+        )
+        self.assertEqual(program_handoff_item["state"], "ready")
+        self.assertEqual(
+            program_handoff_item["dependency_ids"],
+            ["WORK-GOVERNANCE-LIVING-ORIENTATION-038"],
         )
         self.assertEqual(
             manifest["promotion_coordinates"]["settled_receipt_id"],
