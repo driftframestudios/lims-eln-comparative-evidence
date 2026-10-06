@@ -1,6 +1,9 @@
 """Boundary fixtures for the shared offline security patch layer."""
 
 import hashlib
+import importlib.metadata
+import importlib.util
+from types import SimpleNamespace
 from pathlib import Path
 import sys
 import unittest
@@ -51,10 +54,37 @@ class ContainerPatchTests(unittest.TestCase):
         with self.assertRaisesRegex(OSError, "unavailable"):
             subject.admit_patch_files("arm64", unavailable)
 
+    def test_runtime_guard_accepts_application_metadata_and_rejects_installer_routes(self):
+        application = SimpleNamespace(metadata={"Name": "lims-eln-program-specification"})
+        pip = SimpleNamespace(metadata={"Name": "pip"})
+        cases = (
+            ("application", None, [application], False, True),
+            ("pip module", "pip", [application], False, False),
+            ("ensurepip module", "ensurepip", [application], False, False),
+            ("pip metadata", None, [application, pip], False, False),
+            ("pip executable", None, [application], True, False),
+        )
+        for name, module, distributions, executable, accepted in cases:
+            with self.subTest(case=name), patch.object(importlib.util, "find_spec", side_effect=lambda value: object() if value == module else None), patch.object(importlib.metadata, "distributions", return_value=distributions), patch.object(Path, "exists", return_value=executable):
+                if accepted:
+                    exec(subject.runtime_tooling_guard(), {})
+                else:
+                    with self.assertRaises(AssertionError):
+                        exec(subject.runtime_tooling_guard(), {})
+
+    def test_runtime_cleanup_is_bound_to_the_pinned_base(self):
+        result = subject.dockerfile_runtime_cleanup()
+        self.assertIn("25.0.1", result)
+        self.assertIn("site-packages/pip-25.0.1.dist-info", result)
+        self.assertIn("/usr/local/lib/python3.12/ensurepip", result)
+        self.assertIn("rm /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.12", result)
+        self.assertNotIn("rm -rf", result)
+        self.assertNotIn("*", result)
+
     def test_layer_bootstraps_from_patched_pip_with_offline_mount(self):
         for architecture in ("arm64", "amd64"):
             with self.subTest(architecture=architecture):
-                result = subject.dockerfile_patch(architecture)
+                result = subject.dockerfile_patch(architecture) + subject.dockerfile_installer()
                 self.assertIn("RUN --network=none --mount=type=bind,source=security-patches", result)
                 self.assertIn("/opt/security-patches,ro", result)
                 self.assertIn(f'= {architecture}', result)
@@ -67,8 +97,9 @@ class ContainerPatchTests(unittest.TestCase):
                 self.assertIn("--no-deps", result)
                 self.assertNotIn("apt-get update", result)
                 self.assertNotIn("python -m pip", result)
-                for line in result.splitlines()[:-1]:
-                    self.assertTrue(line.endswith("\\"), line)
+                for stage in (subject.dockerfile_patch(architecture), subject.dockerfile_installer()):
+                    for line in stage.splitlines()[:-1]:
+                        self.assertTrue(line.endswith("\\"), line)
 
 
 if __name__ == "__main__":

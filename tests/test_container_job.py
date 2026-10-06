@@ -117,6 +117,15 @@ class ContainerBoundaryTests(unittest.TestCase):
         self.assertLess(source.index("sha256sum --check"), source.index("dpkg --install"))
         self.assertLess(source.index("runpy.run_module"), source.index("python -m pip install"))
         self.assertLess(source.index("metadata.version"), source.index("python -m pip install"))
+        self.assertEqual(source.count("FROM "), 3)
+        self.assertIn("FROM runtime_base AS installer", source)
+        self.assertIn("FROM runtime_base AS runtime", source)
+        self.assertIn("--ignore-installed --no-compile --prefix=/opt/job/runtime-prefix", source)
+        final = source.split("FROM runtime_base AS runtime\n", 1)[1]
+        self.assertIn("COPY --from=installer /opt/job/runtime-prefix/ /usr/local/", final)
+        self.assertIn("runtime installer modules", final)
+        self.assertNotIn("runpy.run_module", final)
+        self.assertNotIn("COPY wheels", final)
 
     def test_patch_directory_and_destination_boundaries(self):
         with tempfile.TemporaryDirectory() as temporary:

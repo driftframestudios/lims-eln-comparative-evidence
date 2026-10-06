@@ -12,7 +12,10 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path, PurePosixPath
-from container_patch import admit_patch_files, dockerfile_patch
+from container_patch import (
+    admit_patch_files, dockerfile_patch, dockerfile_installer,
+    dockerfile_runtime_cleanup, dockerfile_runtime_guard,
+)
 import re
 import shutil
 import signal
@@ -164,12 +167,15 @@ def admitted_dependencies(root: Path) -> tuple[bytes, tuple[tuple[str, str], ...
 
 def dockerfile(architecture: str) -> bytes:
     patch_layer = dockerfile_patch(architecture)
-    return (f"FROM --platform=linux/{architecture} {BASE_IMAGE}\n"
+    return (f"FROM --platform=linux/{architecture} {BASE_IMAGE} AS runtime_base\n"
             "ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1\n"
-            "WORKDIR /opt/job/source\n" + patch_layer +
+            "WORKDIR /opt/job/source\n" + patch_layer + dockerfile_runtime_cleanup() +
+            "FROM runtime_base AS installer\n" + dockerfile_installer() +
             "COPY requirements.lock /opt/job/requirements.lock\n"
             "COPY wheels/ /opt/job/wheels/\n"
-            "RUN --network=none python -m pip install --no-cache-dir --no-index --find-links=/opt/job/wheels --require-hashes --only-binary=:all: -r /opt/job/requirements.lock && rm -r /opt/job/wheels\n"
+            "RUN --network=none mkdir -p /opt/job/runtime-prefix && python -m pip install --no-cache-dir --no-index --find-links=/opt/job/wheels --require-hashes --only-binary=:all: --ignore-installed --no-compile --prefix=/opt/job/runtime-prefix -r /opt/job/requirements.lock\n"
+            "FROM runtime_base AS runtime\n"
+            "COPY --from=installer /opt/job/runtime-prefix/ /usr/local/\n" + dockerfile_runtime_guard() +
             "COPY source/ /opt/job/source/\n"
             "COPY context-receipt.json /opt/job/context-receipt.json\n"
             "USER 10001:10001\n"

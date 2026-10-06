@@ -61,16 +61,35 @@ using the existing bounded regular-file reader. Extra directory entries stay
 outside the prepared context. Keep acquisition separate from the build so the
 application installer remains offline.
 
-The pinned Bookworm base receives `libpcre2-8-0=10.42-1+deb12u2`,
-`perl-base=5.36.0-7+deb12u4`, and `pip==26.2.1`. Debian inputs were
+The pinned Bookworm runtime base receives `libpcre2-8-0=10.42-1+deb12u2`
+and `perl-base=5.36.0-7+deb12u4`. A separate installer stage receives
+`pip==26.2.1`. Debian inputs were
 acquired against signed security-repository metadata; the pip wheel is bound to
 its PyPI release hash. The platform-specific recipe verifies those hashes again
-inside a network-disabled build step. Its read-only temporary bind exposes only
-the admitted patch files. The verified pip wheel executes its own installer,
-updates installed pip, and confirms the installed version before application
-wheels are installed. The context receipt includes every patch and the generated
-bootstrap lock. Program owns the shared patch module and its copy-local digest
-binding alongside the preparer.
+inside network-disabled build steps, using read-only temporary mounts. The
+runtime base removes its pinned installer package, metadata, scripts, and
+`ensurepip` bootstrap route. The separate installer stage runs the verified
+pip wheel, confirms patched pip, and installs the complete application closure
+into an explicit prefix. `--ignore-installed` ensures that prefix contains the
+required packages independently of the installer's global environment.
+
+The final stage receives only the application prefix at its matching
+`/usr/local` coordinates. Build-time checks confirm that pip and ensurepip import
+routes, pip distribution metadata, and pip executables remain absent. These are
+finite job images; editable environments and dependency changes use the existing
+researcher environment route and a rebuilt, reviewed image.
+
+The newer pip/vendor layers stay in the installer stage. Original upstream base
+layers retain their historical bytes; the removal establishes the final runtime
+filesystem boundary. Build-time tooling retains its own advisory review under
+the offline, hash-admitted invocation. This follows Docker's
+[multi-stage build](https://docs.docker.com/build/building/multi-stage/) ownership
+pattern and pip's [prefix installation](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-prefix)
+contract with the same Python interpreter layout in each stage.
+
+The context receipt includes every patch and the generated bootstrap lock.
+Program owns the shared patch module and its copy-local digest binding alongside
+the preparer.
 
 Both architecture input sets are declared. Configured runtime and vulnerability
 observations identify their exercised platform separately. A package update
