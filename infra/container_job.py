@@ -14,6 +14,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
+import signal
 import stat
 import unicodedata
 
@@ -100,26 +101,39 @@ def strict_document(content: bytes) -> object:
 
 
 def requirements_admitted(content: bytes) -> bool:
-    """Reuse Enterprise's registry-only, hash-required installation boundary."""
+    """O(bytes) admission keeps each pinned package and its hashes together."""
     try:
-        lines = content.decode("ascii").splitlines()
-    except UnicodeError:
+        text = content.decode("ascii")
+    except UnicodeDecodeError:
         return False
-    pending = False
-    hashed = False
-    for raw in lines:
-        line = raw.strip().removesuffix("\\").rstrip()
+    fragments = []
+    count = 0
+    for raw in text.splitlines():
+        line = raw.strip()
         if not line or line.startswith("#"):
-            continue
-        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*==[A-Za-z0-9_.+!-]+", line):
-            if pending and not hashed:
+            if fragments:
                 return False
-            pending, hashed = True, False
-        elif re.fullmatch(r"--hash=sha256:[0-9a-f]{64}", line) and pending:
-            hashed = True
-        else:
+            continue
+        continued = line.endswith("\\")
+        fragment = line[:-1].rstrip() if continued else line
+        if not fragment:
             return False
-    return pending and hashed
+        fragments.append(fragment)
+        if continued:
+            continue
+        tokens = " ".join(fragments).split()
+        fragments.clear()
+        if (
+            len(tokens) < 2
+            or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*==[A-Za-z0-9_.+!-]+", tokens[0]) is None
+            or any(re.fullmatch(r"--hash=sha256:[0-9a-f]{64}", token) is None for token in tokens[1:])
+        ):
+            return False
+        count += 1
+    if fragments or count == 0:
+        return False
+
+    return True
 
 
 def admitted_dependencies(root: Path) -> tuple[bytes, tuple[tuple[str, str], ...]]:
@@ -194,6 +208,10 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
             raise ContextError("context-byte-budget")
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
+        directory = target.parent
+        while directory != destination:
+            directory.chmod(0o755)
+            directory = directory.parent
         with target.open("xb") as stream:
             stream.write(content)
         target.chmod(0o644)
@@ -201,7 +219,8 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
     try:
         for path in profile.files:
             write("source/" + path, regular_bytes(source, path))
-        (destination / "wheels").mkdir()
+        (destination / "wheels").mkdir(mode=0o755)
+        (destination / "wheels").chmod(0o755)
         for name, expected in wheels:
             content = regular_bytes(dependencies, name)
             if sha256(content).hexdigest() != expected:
@@ -213,13 +232,14 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
         with (destination / "context-receipt.json").open("x") as stream:
             json.dump(receipt, stream, sort_keys=True, indent=2)
             stream.write("\n")
+        (destination / "context-receipt.json").chmod(0o644)
         return {"profile":profile.name, "files":len(records), "bytes":total, "receiptSha256":sha256((destination / "context-receipt.json").read_bytes()).hexdigest()}
     except BaseException:
         shutil.rmtree(destination)
         raise
 
 
-def main() -> int:
+def _main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
     parser.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
@@ -232,6 +252,16 @@ def main() -> int:
         return 1
     print(json.dumps({"status":"prepared", **result}, sort_keys=True))
     return 0
+
+
+def main() -> int:
+    def interrupted(number: int, _frame) -> None:
+        raise SystemExit(128 + number)
+    previous = signal.signal(signal.SIGTERM, interrupted)
+    try:
+        return _main()
+    finally:
+        signal.signal(signal.SIGTERM, previous)
 
 
 if __name__ == "__main__":

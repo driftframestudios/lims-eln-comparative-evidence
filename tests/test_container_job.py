@@ -96,7 +96,7 @@ class ContainerBoundaryTests(unittest.TestCase):
                 first=runtime.publish(produce,root)
                 second=runtime.publish(produce,root)
                 self.assertNotEqual(first["directory"],second["directory"])
-                self.assertEqual((root/first["directory"]/"value.json").read_bytes(),(root/second["directory"]/"value.json").read_bytes())
+                self.assertEqual((root/first["directory"]/"payload"/"value.json").read_bytes(),(root/second["directory"]/"payload"/"value.json").read_bytes())
                 def failed(output):
                     produce(output)
                     raise ValueError("fixture")
