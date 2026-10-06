@@ -459,3 +459,9 @@ coordinates in its explicit evidence modes instead.
 
 Fixture, oracle, critical-path, tolerance, and admission changes receive independent
 review. Release tags use `comparison-vMAJOR.MINOR.PATCH`.
+
+## Confined container job
+
+The [finite container entry](infra/README.container-job.md) reuses the constellation's
+prepared-input and confined-runtime safeguards. Its source profile, focused
+checks, output ownership, and release-evidence boundary remain inspectable.
