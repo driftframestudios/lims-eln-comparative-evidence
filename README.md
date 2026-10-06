@@ -10,6 +10,25 @@ Repository authorship and maintenance provenance is recorded in
 [`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
 chronology and contribution credit.
 
+## Start with a comparison
+
+[Read the Golden Specimen report](https://cometspectrum.io/reports/golden-specimen/comparison.html)
+to see agreement, explained variation, and differences that need interpretation.
+The [matching JSON](https://cometspectrum.io/reports/golden-specimen/comparison.json)
+carries the same comparison for further analysis. Start with one differing
+measurement and follow its input, unit, and classification.
+
+To reproduce a result, use the [local examples](#run-it). To bring a new result
+into review, choose its [observed-evidence route](accepted/README.md) or
+[simulated-closure route](simulated-closures/README.md). Each route keeps the
+input's evidence standing visible beside the report.
+
+Program's [administrative contract example](https://github.com/driftframestudios/lims-eln-program-specification/blob/develop/docs/README.md#try-the-administrative-contract-kit)
+provides a starting point for administrative-only differences. The paired
+insurance and downstream-outcome evaluation portfolio belongs to
+[#41](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/41),
+with its own scenario controls and acceptance evidence.
+
 ## First receipt
 
 [Open the public Golden Specimen report](https://cometspectrum.io/reports/golden-specimen/comparison.html)
