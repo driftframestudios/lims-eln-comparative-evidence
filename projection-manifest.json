@@ -8,63 +8,63 @@
       "bytes": 0,
       "path": ".nojekyll",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "deterministic_pages_builder_output",
       "bytes": 17,
       "path": "CNAME",
       "sha256": "87d970d23146a88ae4ea9d16ed350b1868cf4e35f58eda48af7dff81fdcd6b3c",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "deterministic_pages_builder_output",
       "bytes": 2491,
       "path": "assets/site.css",
       "sha256": "1b41eab419257aaf6941f5f6904fc68523fdd197de631d6c390ba89c01e6d94c",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "deterministic_pages_builder_output",
       "bytes": 2273,
       "path": "data-use.html",
       "sha256": "a660f6ee6a9d23f9422ccd5fd768c6d4a17be8b8d4af4197ad0bbe84712f0a0c",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "deterministic_pages_builder_output",
       "bytes": 6388,
       "path": "index.html",
-      "sha256": "9735755a9ff103997579a51b8aa2783dfa54dedbf5954c8fbd575bdfb8868a44",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sha256": "df2b46d3baa9a4d3e3485a8e00e97d4dd9d0dd2f66ff32f738990483d2fe7153",
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "exact_comparator_runtime_output",
       "bytes": 24133,
       "path": "reports/golden-specimen/comparison.html",
       "sha256": "9b617266edcafc1375b9071df006896b310f8f0ee0a69e4f6bf4ed5c00406b9c",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "exact_comparator_runtime_output",
       "bytes": 10458,
       "path": "reports/golden-specimen/comparison.json",
       "sha256": "d969397b368d7da3dfdd7d80c986e7dab294d1c0d58215336f5b2fa87247bfa2",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "exact_comparator_runtime_output",
       "bytes": 16054,
       "path": "reports/reference/comparison.html",
       "sha256": "582c3b95bd879e4d7a1a74c913a57c73657c23f19cd916552d4c84ae50fc70ac",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     },
     {
       "byteRelation": "exact_comparator_runtime_output",
       "bytes": 8312,
       "path": "reports/reference/comparison.json",
       "sha256": "dad8738002da8c5420275fd6ac5ecce956d25c0115654bafdd4c37cd1780cef8",
-      "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+      "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea"
     }
   ],
   "goldenSpecimenReportDigest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
@@ -72,6 +72,6 @@
   "projectionOwner": "comparative-evidence-pages-builder",
   "reportDigest": "sha256:5f66ed1a3023b00bc7779f8810c0440f594dd5fe10e90a475b073eaa438f741b",
   "repositoryUrl": "https://github.com/driftframestudios/lims-eln-comparative-evidence",
-  "sourceRevision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+  "sourceRevision": "05c5f18636e9d50689df651d468669bc53d867ea",
   "sourceStanding": "clean_exact_revision"
 }
