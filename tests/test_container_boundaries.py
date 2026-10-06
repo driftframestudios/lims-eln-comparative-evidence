@@ -281,5 +281,53 @@ raise SystemExit(job.main())
             self.assertEqual((prior / "receipt.json").read_bytes(), b"retained\n")
 
 
+    def test_signal_at_acquisition_preserves_ownership(self):
+        code = '''import os, pathlib, signal, sys
+sys.path.insert(0, sys.argv[1])
+kind, source, output = sys.argv[2:]
+root = pathlib.Path(output).resolve()
+if kind.startswith("context"):
+    import container_job as job
+    destination = root / "context"
+    original = pathlib.Path.mkdir
+    def acquired(path, *args, **options):
+        result = original(path, *args, **options)
+        if path == destination:
+            os.kill(os.getpid(), signal.SIGTERM)
+        return result
+    pathlib.Path.mkdir = acquired
+    sys.argv = ["container-job", str(destination), "--source", source]
+    raise SystemExit(job.main())
+else:
+    import container_runtime as runtime
+    original = runtime.tempfile.mkdtemp
+    def acquired(*args, **options):
+        directory = original(*args, **options)
+        os.kill(os.getpid(), signal.SIGTERM)
+        return directory
+    runtime.tempfile.mkdtemp = acquired
+    publish = runtime.publish
+    runtime.publish = lambda producer, **options: publish(producer, root, **options)
+    runtime.run(lambda output: (output / "result.json").write_text("{}"))
+'''
+        for kind in ("context", "context-existing", "runtime"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                source = self.source(root)
+                output = root / "output"
+                output.mkdir()
+                retained = output / ("context" if kind == "context-existing" else "previous")
+                retained.mkdir()
+                (retained / "receipt.json").write_bytes(b"retained\n")
+                process = subprocess.run(
+                    [sys.executable, "-B", "-c", code, str(ROOT / "infra"), kind, str(source), str(output)],
+                    capture_output=True, text=True, timeout=5,
+                )
+                expected = 1 if kind == "context-existing" else 128 + signal.SIGTERM
+                self.assertEqual(process.returncode, expected, process.stderr)
+                self.assertEqual({p.name for p in output.iterdir()}, {retained.name})
+                self.assertEqual((retained / "receipt.json").read_bytes(), b"retained\n")
+
+
 if __name__ == "__main__":
     unittest.main()

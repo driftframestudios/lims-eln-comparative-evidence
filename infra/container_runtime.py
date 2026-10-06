@@ -72,9 +72,14 @@ def publish(
     info = root.lstat()
     if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
         raise ValueError("operator-owned-output-required")
-    temporary = Path(tempfile.mkdtemp(prefix=".pending-", dir=root))
-    destination = root / ("run-" + temporary.name.removeprefix(".pending-"))
+    temporary = None
     try:
+        previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
+        try:
+            temporary = Path(tempfile.mkdtemp(prefix=".pending-", dir=root))
+        finally:
+            signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
+        destination = root / ("run-" + temporary.name.removeprefix(".pending-"))
         payload = temporary / "payload"
         payload.mkdir(mode=0o700)
         produce(payload)
@@ -90,7 +95,7 @@ def publish(
         os.rename(temporary, destination)
         return {"status": "completed", "directory": destination.name, "files": len(records)}
     finally:
-        if temporary.exists():
+        if temporary is not None and temporary.exists():
             shutil.rmtree(temporary)
 
 

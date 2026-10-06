@@ -198,7 +198,7 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
         if destination.is_relative_to(dependencies):
             raise ContextError("external-context")
         requirements, wheels = admitted_dependencies(dependencies)
-    destination.mkdir(mode=0o700)
+    acquired = False
     records = []
     total = 0
     def write(relative: str, content: bytes) -> None:
@@ -217,6 +217,12 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
         target.chmod(0o644)
         records.append({"path": relative, "bytes": len(content), "sha256": sha256(content).hexdigest()})
     try:
+        previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
+        try:
+            destination.mkdir(mode=0o700)
+            acquired = True
+        finally:
+            signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
         for path in profile.files:
             write("source/" + path, regular_bytes(source, path))
         (destination / "wheels").mkdir(mode=0o755)
@@ -235,7 +241,8 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
         (destination / "context-receipt.json").chmod(0o644)
         return {"profile":profile.name, "files":len(records), "bytes":total, "receiptSha256":sha256((destination / "context-receipt.json").read_bytes()).hexdigest()}
     except BaseException:
-        shutil.rmtree(destination)
+        if acquired:
+            shutil.rmtree(destination)
         raise
 
 
