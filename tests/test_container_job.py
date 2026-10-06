@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from container_patch_fixtures import patch_inputs
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -22,6 +23,9 @@ context=load("container_job",ROOT/"infra/container_job.py")
 runtime=load("container_runtime",ROOT/"infra/container_runtime.py")
 
 class ContainerBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        self.patch_directory = self.enterContext(patch_inputs())
+
     def fixture(self,root):
         source=root/"source"
         (source/"infra").mkdir(parents=True)
@@ -49,19 +53,22 @@ class ContainerBoundaryTests(unittest.TestCase):
             canary="generated-"+os.urandom(16).hex()
             (source/"private-local-value").write_text(canary)
             target=root/"context"
-            result=context.prepare(source,target)
+            result=context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
             receipt=json.loads((target/"context-receipt.json").read_text())
-            expected={"source/infra/container_entry.py","source/infra/container_runtime.py","source/LICENSE","source/AUTHORS","requirements.lock","Dockerfile"}
+            expected={"source/infra/container_entry.py","source/infra/container_runtime.py","source/LICENSE","source/AUTHORS","requirements.lock","Dockerfile",
+                      "security-patches/libpcre2-8-0_10.42-1+deb12u2_arm64.deb",
+                      "security-patches/perl-base_5.36.0-7+deb12u4_arm64.deb",
+                      "security-patches/pip-26.2.1-py3-none-any.whl","security-patches/pip.lock"}
             self.assertEqual({item["path"] for item in receipt["members"]},expected)
             for item in receipt["members"]:
                 content=(target/item["path"]).read_bytes()
                 self.assertEqual(item["sha256"],sha256(content).hexdigest())
                 self.assertEqual(item["bytes"],len(content))
                 self.assertNotIn(canary.encode(),content)
-            self.assertEqual(result["files"],6)
+            self.assertEqual(result["files"],10)
             before=(target/"context-receipt.json").read_bytes()
             with self.assertRaises(FileExistsError):
-                context.prepare(source,target)
+                context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
             self.assertEqual(before,(target/"context-receipt.json").read_bytes())
 
     def test_source_and_failure_boundaries(self):
@@ -77,8 +84,50 @@ class ContainerBoundaryTests(unittest.TestCase):
                     else: os.link(source/"AUTHORS",item)
                 with patch.object(context,"MAX_TOTAL_BYTES",1 if kind=="failure" else context.MAX_TOTAL_BYTES):
                     with self.assertRaises((context.ContextError,OSError)):
-                        context.prepare(source,root/"context")
+                        context.prepare(source,root/"context",patches=self.patch_directory,architecture="arm64")
                 self.assertFalse((root/"context").exists())
+
+    def test_patch_inputs_use_existing_file_boundary_before_acquisition(self):
+        for kind in ("missing", "changed", "symlink", "hardlink", "directory"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary, patch_inputs() as patches:
+                root = Path(temporary)
+                source = self.fixture(root)
+                selected = patches / "libpcre2-8-0_10.42-1+deb12u2_arm64.deb"
+                original = selected.read_bytes()
+                selected.unlink()
+                if kind == "changed":
+                    selected.write_bytes(b"x" * len(original))
+                elif kind in ("symlink", "hardlink"):
+                    other = patches / "other"
+                    other.write_bytes(original)
+                    if kind == "symlink":
+                        selected.symlink_to(other)
+                    else:
+                        os.link(other, selected)
+                elif kind == "directory":
+                    selected.mkdir()
+                target = root / "context"
+                with self.assertRaises((context.ContextError, OSError)):
+                    context.prepare(source, target, patches=patches, architecture="arm64")
+                self.assertFalse(target.exists())
+
+    def test_patches_precede_application_installation(self):
+        source = context.dockerfile("arm64").decode("ascii")
+        self.assertTrue(source.startswith("FROM --platform=linux/arm64 python:"))
+        self.assertLess(source.index("sha256sum --check"), source.index("dpkg --install"))
+        self.assertLess(source.index("runpy.run_module"), source.index("python -m pip install"))
+        self.assertLess(source.index("metadata.version"), source.index("python -m pip install"))
+
+    def test_patch_directory_and_destination_boundaries(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = self.fixture(root)
+            alias = root / "patch-alias"
+            alias.symlink_to(self.patch_directory, target_is_directory=True)
+            with self.assertRaisesRegex(context.ContextError, "patch-directory"):
+                context.prepare(source, root / "context", patches=alias, architecture="arm64")
+            with self.assertRaisesRegex(context.ContextError, "external-context"):
+                context.prepare(source, self.patch_directory / "context", patches=self.patch_directory, architecture="arm64")
 
     def test_requirements_require_hashes_and_registry_coordinates(self):
         digest="a"*64
@@ -114,9 +163,9 @@ class ContainerBoundaryTests(unittest.TestCase):
                 self.assertEqual(list(root.iterdir()),[])
 
     def test_image_and_compose_confinement(self):
-        self.assertIn(b"RUN --network=none",context.dockerfile())
-        self.assertIn(b"--require-hashes",context.dockerfile())
-        self.assertIn(b"USER 10001:10001",context.dockerfile())
+        self.assertIn(b"RUN --network=none",context.dockerfile("arm64"))
+        self.assertIn(b"--require-hashes",context.dockerfile("arm64"))
+        self.assertIn(b"USER 10001:10001",context.dockerfile("arm64"))
         source=(ROOT/"infra/container-compose.yml").read_text()
         for expected in ("read_only: true","network_mode: none","cap_drop: [ALL]","no-new-privileges:true","pids_limit: 128","mem_limit: 512m","init: true","create_host_path: false"):
             with self.subTest(expected=expected): self.assertIn(expected,source)

@@ -9,7 +9,7 @@ Choose a reviewed source checkout or a verified source-carrier component. Keep i
 ```sh
 mkdir -m 700 "$LIMS_JOB_OUTPUT" &&
 uv run --isolated --no-project --python 3.12 --managed-python -- \
-  python infra/container_job.py "$LIMS_JOB_CONTEXT" &&
+  python infra/container_job.py "$LIMS_JOB_CONTEXT" --patches "$LIMS_JOB_PATCHES" --architecture "$LIMS_JOB_ARCHITECTURE" &&
 export LIMS_RUNTIME_UID="$(id -u)" LIMS_RUNTIME_GID="$(id -g)" &&
 docker compose -f infra/container-compose.yml build &&
 docker compose -f infra/container-compose.yml run --rm job
@@ -43,3 +43,37 @@ The source tree and dependency directory are operator-owned and quiescent during
 The runtime inspects every emitted member and propagates directory traversal failures. Native artifact families retain their own exact inventories under `payload/`; container metadata stays beside that family. A successful rename publishes one complete invocation. Retry creates a new invocation while prior completed runs retain their bytes.
 
 [Research and design decisions](https://github.com/driftframestudios/lims-eln-program-specification/blob/codex/container-hardening/infra/container-design-evidence.md) connect the shared implementation to primary sources and focused counterexamples. Current image findings and actual Compose behavior remain separate release evidence.
+
+## Reviewed base-image patch inputs
+
+Set `LIMS_JOB_ARCHITECTURE` to `arm64` or `amd64` and
+`LIMS_JOB_PATCHES` to an operator-owned directory outside the checkout and
+prepared context. List its three required artifacts with:
+
+```sh
+uv run --isolated --no-project --python 3.12 --managed-python -- \
+  python infra/container_patch.py "$LIMS_JOB_ARCHITECTURE"
+```
+
+Acquire the listed HTTPS URLs under their listed filenames. The records carry
+exact byte counts and SHA-256 hashes; context preparation admits those bytes
+using the existing bounded regular-file reader. Extra directory entries stay
+outside the prepared context. Keep acquisition separate from the build so the
+application installer remains offline.
+
+The pinned Bookworm base receives `libpcre2-8-0=10.42-1+deb12u2`,
+`perl-base=5.36.0-7+deb12u4`, and `pip==26.2.1`. Debian inputs were
+acquired against signed security-repository metadata; the pip wheel is bound to
+its PyPI release hash. The platform-specific recipe verifies those hashes again
+inside a network-disabled build step. Its read-only temporary bind exposes only
+the admitted patch files. The verified pip wheel executes its own installer,
+updates installed pip, and confirms the installed version before application
+wheels are installed. The context receipt includes every patch and the generated
+bootstrap lock. Program owns the shared patch module and its copy-local digest
+binding alongside the preparer.
+
+Both architecture input sets are declared. Configured runtime and vulnerability
+observations identify their exercised platform separately. A package update
+provides evidence for its addressed findings; remaining findings retain their
+component-specific review and human acceptance boundary. Image approval, main
+promotion, and public source tagging remain separately owned decisions.

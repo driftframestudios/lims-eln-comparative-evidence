@@ -14,6 +14,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from container_patch_fixtures import patch_inputs
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,6 +32,9 @@ runtime = module("boundary_container_runtime", "container_runtime.py")
 
 
 class ContainerBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        self.patch_directory = self.enterContext(patch_inputs())
+
     def source(self, root, dependencies="stdlib"):
         source = root / "source"
         (source / "infra").mkdir(parents=True)
@@ -64,7 +68,7 @@ class ContainerBoundaryTests(unittest.TestCase):
             context = root / "context"
             original = os.umask(0o077)
             try:
-                job.prepare(source, context)
+                job.prepare(source, context, patches=self.patch_directory, architecture="arm64")
             finally:
                 os.umask(original)
             self.assertEqual(stat.S_IMODE(context.stat().st_mode), 0o700)
@@ -80,7 +84,7 @@ class ContainerBoundaryTests(unittest.TestCase):
             dependencies, _, name = self.dependencies(root)
             (dependencies / "unlisted.txt").write_text("private fixture", encoding="utf-8")
             context = root / "context"
-            job.prepare(source, context, dependencies)
+            job.prepare(source, context, dependencies, patches=self.patch_directory, architecture="arm64")
             self.assertEqual({item.name for item in (context / "wheels").iterdir()}, {name})
             self.assertEqual((context / "wheels" / name).read_bytes(), (dependencies / name).read_bytes())
             self.assertEqual((context / "requirements.lock").read_bytes(), (dependencies / "requirements.lock").read_bytes())
@@ -94,7 +98,7 @@ class ContainerBoundaryTests(unittest.TestCase):
                 (dependencies / (name if changed == "wheel" else changed)).write_bytes(b"changed")
                 context = root / "context"
                 with self.assertRaises(job.ContextError):
-                    job.prepare(source, context, dependencies)
+                    job.prepare(source, context, dependencies, patches=self.patch_directory, architecture="arm64")
                 self.assertFalse(context.exists())
 
     def test_dependency_manifest_requires_exact_owned_records(self):
@@ -234,7 +238,7 @@ runtime.run(produce)
             for name, content in expected.items():
                 (source / name).write_bytes(content)
             context = root / "context"
-            job.prepare(source, context)
+            job.prepare(source, context, patches=self.patch_directory, architecture="arm64")
             receipt = json.loads((context / "context-receipt.json").read_bytes())
             observed = {item["path"]: item for item in receipt["members"]}
             for name, content in expected.items():
@@ -263,8 +267,11 @@ def inspect(root, relative):
         signal.pause()
     return original(root, relative)
 job.regular_bytes = inspect
-sys.argv = ["container-job", destination, "--source", source]
-raise SystemExit(job.main())
+sys.path.insert(0, str(pathlib.Path(sys.argv[1]).parent / "tests"))
+from container_patch_fixtures import patch_inputs
+with patch_inputs() as patches:
+    sys.argv = ["container-job", destination, "--source", source, "--patches", str(patches), "--architecture", "arm64"]
+    raise SystemExit(job.main())
 '''
             process = subprocess.Popen([sys.executable, "-B", "-c", code, str(ROOT / "infra"), str(source), str(context)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             try:
@@ -296,8 +303,11 @@ if kind.startswith("context"):
             os.kill(os.getpid(), signal.SIGTERM)
         return result
     pathlib.Path.mkdir = acquired
-    sys.argv = ["container-job", str(destination), "--source", source]
-    raise SystemExit(job.main())
+    sys.path.insert(0, str(pathlib.Path(sys.argv[1]).parent / "tests"))
+    from container_patch_fixtures import patch_inputs
+    with patch_inputs() as patches:
+        sys.argv = ["container-job", str(destination), "--source", source, "--patches", str(patches), "--architecture", "arm64"]
+        raise SystemExit(job.main())
 else:
     import container_runtime as runtime
     original = runtime.tempfile.mkdtemp

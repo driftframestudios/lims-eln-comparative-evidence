@@ -12,6 +12,7 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path, PurePosixPath
+from container_patch import admit_patch_files, dockerfile_patch
 import re
 import shutil
 import signal
@@ -161,10 +162,11 @@ def admitted_dependencies(root: Path) -> tuple[bytes, tuple[tuple[str, str], ...
     return requirements, tuple(records)
 
 
-def dockerfile() -> bytes:
-    return (f"FROM {BASE_IMAGE}\n"
+def dockerfile(architecture: str) -> bytes:
+    patch_layer = dockerfile_patch(architecture)
+    return (f"FROM --platform=linux/{architecture} {BASE_IMAGE}\n"
             "ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1\n"
-            "WORKDIR /opt/job/source\n"
+            "WORKDIR /opt/job/source\n" + patch_layer +
             "COPY requirements.lock /opt/job/requirements.lock\n"
             "COPY wheels/ /opt/job/wheels/\n"
             "RUN --network=none python -m pip install --no-cache-dir --no-index --find-links=/opt/job/wheels --require-hashes --only-binary=:all: -r /opt/job/requirements.lock && rm -r /opt/job/wheels\n"
@@ -174,10 +176,11 @@ def dockerfile() -> bytes:
             'ENTRYPOINT ["python", "-B", "infra/container_entry.py"]\n').encode("ascii")
 
 
-def prepare(source: Path, destination: Path, dependencies: Path | None = None) -> dict:
-    """O(B + P log P) work and O(P + largest-file) space for bounded inputs.
+def prepare(source: Path, destination: Path, dependencies: Path | None = None,
+            *, patches: Path, architecture: str) -> dict:
+    """O(B + P log P) work; O(P + largest-file + patch-bytes) space.
 
-    The operator owns quiescent source/dependency trees. A complete receipt is
+    The operator owns quiescent source/dependency/patch trees. A complete receipt is
     written last. Failure removes only this invocation's new destination.
     """
     if source.is_symlink() or not source.is_dir():
@@ -198,6 +201,15 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
         if destination.is_relative_to(dependencies):
             raise ContextError("external-context")
         requirements, wheels = admitted_dependencies(dependencies)
+    if patches.is_symlink() or not patches.is_dir():
+        raise ContextError("patch-directory")
+    patches = patches.resolve()
+    if destination.is_relative_to(patches):
+        raise ContextError("external-context")
+    try:
+        patch_members = admit_patch_files(architecture, lambda name: regular_bytes(patches, name))
+    except ValueError as error:
+        raise ContextError(str(error)) from error
     acquired = False
     records = []
     total = 0
@@ -225,6 +237,8 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
             signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
         for path in profile.files:
             write("source/" + path, regular_bytes(source, path))
+        for path, content in patch_members.items():
+            write(path, content)
         (destination / "wheels").mkdir(mode=0o755)
         (destination / "wheels").chmod(0o755)
         for name, expected in wheels:
@@ -233,7 +247,7 @@ def prepare(source: Path, destination: Path, dependencies: Path | None = None) -
                 raise ContextError("wheel-byte-mismatch")
             write("wheels/" + name, content)
         write("requirements.lock", requirements)
-        write("Dockerfile", dockerfile())
+        write("Dockerfile", dockerfile(architecture))
         receipt = {"version":"1.0.0", "profile":profile.name, "profileSha256":sha256(profile_bytes).hexdigest(), "sourceStanding":"declared-file-content", "baseImage":BASE_IMAGE, "members":sorted(records, key=lambda item:item["path"])}
         with (destination / "context-receipt.json").open("x") as stream:
             json.dump(receipt, stream, sort_keys=True, indent=2)
@@ -251,9 +265,12 @@ def _main() -> int:
     parser.add_argument("destination", type=Path)
     parser.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--dependencies", type=Path)
+    parser.add_argument("--patches", type=Path, required=True)
+    parser.add_argument("--architecture", choices=("arm64", "amd64"), required=True)
     args = parser.parse_args()
     try:
-        result = prepare(args.source, args.destination, args.dependencies)
+        result = prepare(args.source, args.destination, args.dependencies,
+                         patches=args.patches, architecture=args.architecture)
     except (ContextError, OSError) as error:
         print(json.dumps({"status":"held", "code":str(error) if isinstance(error, ContextError) else "filesystem-boundary"}))
         return 1
