@@ -44,11 +44,11 @@ The runtime inspects every emitted member and propagates directory traversal fai
 
 [Research and design decisions](https://github.com/driftframestudios/lims-eln-program-specification/blob/main/infra/container-design-evidence.md) connect the shared implementation to primary sources and focused counterexamples. Current image findings and actual Compose behavior remain separate release evidence.
 
-## Reviewed base and installer input
+## Reviewed base, native repair, and installer inputs
 
 Set `LIMS_JOB_ARCHITECTURE` to `arm64` or `amd64` and
 `LIMS_JOB_PATCHES` to an operator-owned directory outside the checkout and
-prepared context. List its single required installer wheel with:
+prepared context. List the selected native package and installer wheel with:
 
 ```sh
 uv run --isolated --no-project --python 3.12 --managed-python -- \
@@ -61,9 +61,20 @@ using the existing bounded regular-file reader. Extra directory entries stay
 outside the prepared context. Keep acquisition separate from the build so the
 application installer remains offline.
 
-The pinned Python 3.12.15 slim Trixie base owns the Debian 13 runtime packages.
-Its network-disabled guard checks the selected architecture and Debian release.
-OS security updates enter through reviewed revisions of that base. A separate
+The pinned Python 3.12.15 slim Trixie base supplies Debian 13 runtime packages.
+Its network-disabled guard verifies the release and architecture, checks the
+selected native package hash and metadata, and installs `liblzma5` version
+`5.8.1-1+deb13u2` before the installer and runtime stages diverge. The exact
+ARM64 and AMD64 package records follow Debian's signed security package indices.
+The package's `libc6 >= 2.34` dependency is satisfied by the pinned base.
+Installation must finish with the expected configured version and architecture.
+The shared base and final image also exercise Python's native `lzma` decoder
+against fixed XZ and legacy LZMA streams and bounded round trips. These checks
+establish package state and codec behavior; the
+[Debian security update](https://security-tracker.debian.org/tracker/DSA-6549-1)
+and [upstream advisory](https://github.com/tukaani-project/xz/security/advisories/GHSA-5qpq-xqfv-j9pg)
+provide the remediation scope. Later native updates enter through a reviewed
+base revision or another exact, separately admitted package revision. A separate
 installer stage receives `pip==26.2.1`, bound to its PyPI release hash. The
 installer verifies the wheel again inside a network-disabled build step using a
 read-only temporary mount. The runtime base removes its pinned installer package,
@@ -80,14 +91,15 @@ finite job images; editable environments and dependency changes use the existing
 researcher environment route and a rebuilt, reviewed image.
 
 The newer pip/vendor layers stay in the installer stage. Original upstream base
-layers retain their historical bytes; the removal establishes the final runtime
-filesystem boundary. Build-time tooling retains its own advisory review under
+layers retain their historical bytes, including the earlier native library; the
+package repair and installer removal establish the final runtime filesystem
+boundary. Build-time tooling retains its own advisory review under
 the offline, hash-admitted invocation. This follows Docker's
 [multi-stage build](https://docs.docker.com/build/building/multi-stage/) ownership
 pattern and pip's [prefix installation](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-prefix)
 contract with the same Python interpreter layout in each stage.
 
-The context receipt includes the verified installer wheel and generated bootstrap lock.
+The context receipt includes the verified native package, installer wheel, and generated bootstrap lock.
 Program owns the shared patch module and its copy-local digest binding alongside
 the preparer.
 

@@ -13,6 +13,6 @@
   "patch": {
     "source": "infra/container_patch.py",
     "local": "infra/container_patch.py",
-    "sha256": "c2cbe168a0853cf1682e363930b1c2abda4150e84d876ccc5766c245ce035c90"
+    "sha256": "2bee3c4707e7fa45efe897778ff61b055daf84112504ac64986ce540eecd5657"
   }
 }

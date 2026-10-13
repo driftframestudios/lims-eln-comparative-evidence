@@ -56,14 +56,15 @@ class ContainerBoundaryTests(unittest.TestCase):
             result=context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
             receipt=json.loads((target/"context-receipt.json").read_text())
             expected={"source/infra/container_entry.py","source/infra/container_runtime.py","source/LICENSE","source/AUTHORS","requirements.lock","Dockerfile",
-                      "security-patches/pip-26.2.1-py3-none-any.whl","security-patches/pip.lock"}
+                      "security-patches/pip-26.2.1-py3-none-any.whl","security-patches/pip.lock",
+                      "security-patches/liblzma5_5.8.1-1+deb13u2_arm64.deb"}
             self.assertEqual({item["path"] for item in receipt["members"]},expected)
             for item in receipt["members"]:
                 content=(target/item["path"]).read_bytes()
                 self.assertEqual(item["sha256"],sha256(content).hexdigest())
                 self.assertEqual(item["bytes"],len(content))
                 self.assertNotIn(canary.encode(),content)
-            self.assertEqual(result["files"],8)
+            self.assertEqual(result["files"],9)
             before=(target/"context-receipt.json").read_bytes()
             with self.assertRaises(FileExistsError):
                 context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
@@ -90,7 +91,7 @@ class ContainerBoundaryTests(unittest.TestCase):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary, patch_inputs() as patches:
                 root = Path(temporary)
                 source = self.fixture(root)
-                selected = patches / "pip-26.2.1-py3-none-any.whl"
+                selected = patches / "liblzma5_5.8.1-1+deb13u2_arm64.deb"
                 original = selected.read_bytes()
                 selected.unlink()
                 if kind == "changed":
@@ -114,8 +115,9 @@ class ContainerBoundaryTests(unittest.TestCase):
         self.assertTrue(source.startswith("FROM --platform=linux/arm64 python:3.12.15-slim-trixie@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 AS runtime_base\n"))
         self.assertLess(source.index('test "$VERSION_ID" = 13'), source.index("FROM runtime_base AS installer"))
         self.assertLess(source.index("sha256sum --check"), source.index("runpy.run_module"))
-        self.assertNotIn("dpkg --install", source)
-        self.assertNotIn(".deb", source)
+        self.assertIn("dpkg --install /opt/security-patches/liblzma5_5.8.1-1+deb13u2_arm64.deb", source)
+        self.assertLess(source.index("dpkg --install"), source.index("FROM runtime_base AS installer"))
+        self.assertLess(source.index("native package state"), source.index("FROM runtime_base AS installer"))
         self.assertLess(source.index("runpy.run_module"), source.index("python -m pip install"))
         self.assertLess(source.index("metadata.version"), source.index("python -m pip install"))
         self.assertEqual(source.count("FROM "), 3)
@@ -125,6 +127,8 @@ class ContainerBoundaryTests(unittest.TestCase):
         final = source.split("FROM runtime_base AS runtime\n", 1)[1]
         self.assertIn("COPY --from=installer /opt/job/runtime-prefix/ /usr/local/", final)
         self.assertIn("runtime installer modules", final)
+        self.assertIn("native package state", final)
+        self.assertIn("native decode", final)
         self.assertNotIn("runpy.run_module", final)
         self.assertNotIn("COPY wheels", final)
 
