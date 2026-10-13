@@ -13,7 +13,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 from container_patch import (
-    admit_patch_files, dockerfile_patch, dockerfile_installer,
+    admit_patch_files, dockerfile_base_guard, dockerfile_installer,
     dockerfile_runtime_cleanup, dockerfile_runtime_guard,
 )
 import re
@@ -25,7 +25,7 @@ import unicodedata
 MAX_FILES = 512
 MAX_FILE_BYTES = 32 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
-BASE_IMAGE = "python:3.12.15-slim-bookworm@sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3"
+BASE_IMAGE = "python:3.12.15-slim-trixie@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1"
 
 
 class ContextError(ValueError):
@@ -166,7 +166,7 @@ def admitted_dependencies(root: Path) -> tuple[bytes, tuple[tuple[str, str], ...
 
 
 def dockerfile(architecture: str) -> bytes:
-    patch_layer = dockerfile_patch(architecture)
+    patch_layer = dockerfile_base_guard(architecture)
     return (f"FROM --platform=linux/{architecture} {BASE_IMAGE} AS runtime_base\n"
             "ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1\n"
             "WORKDIR /opt/job/source\n" + patch_layer + dockerfile_runtime_cleanup() +

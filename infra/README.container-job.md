@@ -25,7 +25,7 @@ Each invocation produces a new run directory containing its complete native arti
 
 ## Evidence and release
 
-Run the new focused tests with the existing unittest discovery pattern:
+Run the focused tests with the existing unittest discovery pattern:
 
 ```sh
 uv run --isolated --no-project --python 3.12 --managed-python -- \
@@ -38,17 +38,17 @@ The fixture tests cover exact context membership, declared byte digests, path/fi
 
 ## Review and extension boundary
 
-The source tree and dependency directory are operator-owned and quiescent during preparation. Each copied file is bounded and digest-bound; staged directories receive mode 0755 and copied files mode 0644 inside the private mode-0700 context. Program owns both shared modules and their receiving-copy digests. Each repository owns its finite entry, native parser, native artifact validator, and exact source profile.
+The source tree and dependency directory are operator-owned and quiescent during preparation. Each copied file is bounded and digest-bound; staged directories receive mode 0755 and copied files mode 0644 inside the private mode-0700 context. Program owns the shared preparation, runtime, and installer modules and their receiving-copy digests. Each repository owns its finite entry, native parser, native artifact validator, and exact source profile.
 
 The runtime inspects every emitted member and propagates directory traversal failures. Native artifact families retain their own exact inventories under `payload/`; container metadata stays beside that family. A successful rename publishes one complete invocation. Retry creates a new invocation while prior completed runs retain their bytes.
 
-[Research and design decisions](https://github.com/driftframestudios/lims-eln-program-specification/blob/codex/container-hardening/infra/container-design-evidence.md) connect the shared implementation to primary sources and focused counterexamples. Current image findings and actual Compose behavior remain separate release evidence.
+[Research and design decisions](https://github.com/driftframestudios/lims-eln-program-specification/blob/main/infra/container-design-evidence.md) connect the shared implementation to primary sources and focused counterexamples. Current image findings and actual Compose behavior remain separate release evidence.
 
-## Reviewed base-image patch inputs
+## Reviewed base and installer input
 
 Set `LIMS_JOB_ARCHITECTURE` to `arm64` or `amd64` and
 `LIMS_JOB_PATCHES` to an operator-owned directory outside the checkout and
-prepared context. List its three required artifacts with:
+prepared context. List its single required installer wheel with:
 
 ```sh
 uv run --isolated --no-project --python 3.12 --managed-python -- \
@@ -61,13 +61,13 @@ using the existing bounded regular-file reader. Extra directory entries stay
 outside the prepared context. Keep acquisition separate from the build so the
 application installer remains offline.
 
-The pinned Bookworm runtime base receives `libpcre2-8-0=10.42-1+deb12u2`
-and `perl-base=5.36.0-7+deb12u4`. A separate installer stage receives
-`pip==26.2.1`. Debian inputs were
-acquired against signed security-repository metadata; the pip wheel is bound to
-its PyPI release hash. The platform-specific recipe verifies those hashes again
-inside network-disabled build steps, using read-only temporary mounts. The
-runtime base removes its pinned installer package, metadata, scripts, and
+The pinned Python 3.12.15 slim Trixie base owns the Debian 13 runtime packages.
+Its network-disabled guard checks the selected architecture and Debian release.
+OS security updates enter through reviewed revisions of that base. A separate
+installer stage receives `pip==26.2.1`, bound to its PyPI release hash. The
+installer verifies the wheel again inside a network-disabled build step using a
+read-only temporary mount. The runtime base removes its pinned installer package,
+metadata, scripts, and
 `ensurepip` bootstrap route. The separate installer stage runs the verified
 pip wheel, confirms patched pip, and installs the complete application closure
 into an explicit prefix. `--ignore-installed` ensures that prefix contains the
@@ -87,11 +87,11 @@ the offline, hash-admitted invocation. This follows Docker's
 pattern and pip's [prefix installation](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-prefix)
 contract with the same Python interpreter layout in each stage.
 
-The context receipt includes every patch and the generated bootstrap lock.
+The context receipt includes the verified installer wheel and generated bootstrap lock.
 Program owns the shared patch module and its copy-local digest binding alongside
 the preparer.
 
-Both architecture input sets are declared. Configured runtime and vulnerability
+Both architecture selections are declared. Configured runtime and vulnerability
 observations identify their exercised platform separately. A package update
 provides evidence for its addressed findings; remaining findings retain their
 component-specific review and human acceptance boundary. Image approval, main

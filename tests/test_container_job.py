@@ -56,8 +56,6 @@ class ContainerBoundaryTests(unittest.TestCase):
             result=context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
             receipt=json.loads((target/"context-receipt.json").read_text())
             expected={"source/infra/container_entry.py","source/infra/container_runtime.py","source/LICENSE","source/AUTHORS","requirements.lock","Dockerfile",
-                      "security-patches/libpcre2-8-0_10.42-1+deb12u2_arm64.deb",
-                      "security-patches/perl-base_5.36.0-7+deb12u4_arm64.deb",
                       "security-patches/pip-26.2.1-py3-none-any.whl","security-patches/pip.lock"}
             self.assertEqual({item["path"] for item in receipt["members"]},expected)
             for item in receipt["members"]:
@@ -65,7 +63,7 @@ class ContainerBoundaryTests(unittest.TestCase):
                 self.assertEqual(item["sha256"],sha256(content).hexdigest())
                 self.assertEqual(item["bytes"],len(content))
                 self.assertNotIn(canary.encode(),content)
-            self.assertEqual(result["files"],10)
+            self.assertEqual(result["files"],8)
             before=(target/"context-receipt.json").read_bytes()
             with self.assertRaises(FileExistsError):
                 context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
@@ -92,7 +90,7 @@ class ContainerBoundaryTests(unittest.TestCase):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary, patch_inputs() as patches:
                 root = Path(temporary)
                 source = self.fixture(root)
-                selected = patches / "libpcre2-8-0_10.42-1+deb12u2_arm64.deb"
+                selected = patches / "pip-26.2.1-py3-none-any.whl"
                 original = selected.read_bytes()
                 selected.unlink()
                 if kind == "changed":
@@ -111,10 +109,13 @@ class ContainerBoundaryTests(unittest.TestCase):
                     context.prepare(source, target, patches=patches, architecture="arm64")
                 self.assertFalse(target.exists())
 
-    def test_patches_precede_application_installation(self):
+    def test_base_and_verified_installer_precede_application_installation(self):
         source = context.dockerfile("arm64").decode("ascii")
-        self.assertTrue(source.startswith("FROM --platform=linux/arm64 python:"))
-        self.assertLess(source.index("sha256sum --check"), source.index("dpkg --install"))
+        self.assertTrue(source.startswith("FROM --platform=linux/arm64 python:3.12.15-slim-trixie@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 AS runtime_base\n"))
+        self.assertLess(source.index('test "$VERSION_ID" = 13'), source.index("FROM runtime_base AS installer"))
+        self.assertLess(source.index("sha256sum --check"), source.index("runpy.run_module"))
+        self.assertNotIn("dpkg --install", source)
+        self.assertNotIn(".deb", source)
         self.assertLess(source.index("runpy.run_module"), source.index("python -m pip install"))
         self.assertLess(source.index("metadata.version"), source.index("python -m pip install"))
         self.assertEqual(source.count("FROM "), 3)
