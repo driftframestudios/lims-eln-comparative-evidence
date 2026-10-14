@@ -154,6 +154,54 @@ class AdministrativeEvaluationTests(unittest.TestCase):
         self.assertIn('data-canary="big-bench"',html)
         self.assertNotIn("  Commercial  ",html)
 
+    def test_unequal_complete_repeats_keep_equal_subject_weights(self):
+        pack = build_pack(repeats=2)
+        study = demonstration_study(pack)
+        # Five paired differences produce subject means 0, 10, 20.
+        # Their equal-subject mean is 10; a pair-weighted mean would be 12.
+        differences = {
+            ('SYN-CASE-REPEAT', 0): 0,
+            ('SYN-CASE-MULTIPLE', 0): 4,
+            ('SYN-CASE-MULTIPLE', 1): 16,
+            ('SYN-CASE-REPORTABILITY', 0): 14,
+            ('SYN-CASE-REPORTABILITY', 1): 26,
+        }
+        cohorts = {row.run_id: row.cohort for row in pack.expected}
+        selected = {
+            run.run_id: run for run in study.runs
+            if cohorts[run.run_id] == 'SYN-COHORT-ADULT-EN'
+            and (run.scenario_id, run.repeat_index) in differences
+        }
+        self.assertEqual(10, len(selected))
+        document = study.model_dump(mode='json', by_alias=True)
+        observations = []
+        for observation in document['observations']:
+            run = selected.get(observation['run_id'])
+            if run is None:
+                continue
+            self.assertEqual('completed', observation['status'])
+            output = json.loads(observation['administrative_output']['text'])
+            delta = differences[(run.scenario_id, run.repeat_index)]
+            output['workflow_minutes'] = 100 + (delta if run.arm == 'b' else 0)
+            text = canonical_json_bytes(output).decode()
+            observation['administrative_output'].update(text=text, digest=canonical_sha256(text))
+            observations.append(observation)
+        for reverse in (False, True):
+            with self.subTest(reversed_observations=reverse):
+                document['observations'] = list(reversed(observations)) if reverse else observations
+                observed = admit_administrative_study(canonical_json_bytes(document))
+                report = evaluate(pack, observed)
+                group = next(row for row in report.groups if row.cohort == 'SYN-COHORT-ADULT-EN')
+                self.assertEqual(144, report.planned_runs)
+                self.assertEqual(10, report.attempted_runs)
+                self.assertEqual(10, report.completed_runs)
+                self.assertEqual(10, report.scored_coverage.numerator)
+                self.assertEqual(134, report.status_counts['pending'])
+                self.assertEqual(5, group.complete_pairs)
+                self.assertEqual(3, group.independent_subjects)
+                self.assertEqual('descriptive', group.standing)
+                self.assertAlmostEqual(10.0, group.workflow_difference_minutes)
+
     def test_repeated_subjects_are_counted_once_and_pair_order_is_balanced(self):
         pack=build_pack(repeats=2)
         study=demonstration_study(pack)
