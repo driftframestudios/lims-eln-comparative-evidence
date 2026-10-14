@@ -74,7 +74,7 @@ class AdministrativeEvaluationTests(unittest.TestCase):
         report=evaluate(self.pack,self.changed(change))
         self.assertEqual(63,report.scored_coverage.numerator)
         self.assertEqual(1,sum(row.standing=="execution_mismatch" for row in report.runs))
-        self.assertTrue(any(pair["execution"]=="mismatched" for pair in report.eligibility["pairs"]))
+        self.assertTrue(any(pair.execution=="mismatched" for pair in report.eligibility.pairs))
 
     def test_reordered_input_preserves_scoring(self):
         def change(doc):
@@ -115,9 +115,9 @@ class AdministrativeEvaluationTests(unittest.TestCase):
             admit_pack(canonical_json_bytes(pack))
         report = evaluate(pack, demonstration_study(pack))
         baseline = evaluate(self.pack, self.study)
-        eligibility = next(row for row in report.eligibility["pairs"] if row["pair_id"] == changed["pair_id"])
-        self.assertFalse(eligibility["eligible"])
-        self.assertIn("controlled_input_mismatch", eligibility["reasons"])
+        eligibility = next(row for row in report.eligibility.pairs if row.pair_id == changed["pair_id"])
+        self.assertFalse(eligibility.eligible)
+        self.assertIn("controlled_input_mismatch", eligibility.reasons)
         self.assertEqual(baseline.groups[0].complete_pairs - 1, report.groups[0].complete_pairs)
         self.assertEqual(baseline.groups[1].complete_pairs, report.groups[1].complete_pairs)
         self.assertEqual(baseline.scored_coverage, report.scored_coverage)

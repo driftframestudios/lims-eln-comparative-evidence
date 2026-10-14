@@ -113,7 +113,8 @@ def _attach_cleanup(primary: BaseException, cleanup: BaseException) -> None:
 
 
 def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
-    from .administrative_evaluation import EvaluationReport, demonstration_study, evaluate, render_html
+    from .administrative_evaluation import demonstration_study, evaluate, render_html
+    from .administrative_report import admit_evaluation_report
 
     names = set()
     with os.scandir(directory_fd) as entries:
@@ -136,7 +137,7 @@ def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
                 raise AdministrativeArtifactError("bundle_encoding")
             strict_json_loads(content[name].decode("utf-8"))
         study = admit_administrative_study(content["study.json"])
-        report = EvaluationReport.model_validate_json(content["comparison.json"], strict=True)
+        report = admit_evaluation_report(content["comparison.json"])
         if report.evidence_mode == "fixture_demonstration" and canonical_json_bytes(study) != canonical_json_bytes(demonstration_study(pack)):
             raise AdministrativeArtifactError("bundle_fixture_identity")
         reproduced = evaluate(pack, study, evidence_mode=report.evidence_mode)

@@ -37,7 +37,7 @@ Actual outputs can agree, differ, remain partial, or carry a failed attempt.
 | Question | Result | Denominator and meaning |
 | --- | --- | --- |
 | Did normalization return the expected set? | Exact set agreement and Jaccard | Scored runs; two empty sets have Jaccard one |
-| Which labels need attention? | Per-label counts, micro precision/recall/F1, macro F1 | Micro pools label decisions; macro weights supported labels equally |
+| Which labels need attention? | Per-label counts, micro precision/recall/F1, macro F1 | Micro pools label decisions; macro weights the union of expected and observed labels in scored runs equally, including prediction-only labels |
 | Was uncertainty or policy interpreted as expected? | Classification and policy agreement | Scored runs, beside planned-run coverage |
 | Was raw source retained? | Exact raw-label preservation | Scored runs; original text stays in the local study |
 | Was required information carried forward? | Required-fact recall | Required facts in scored runs |
@@ -88,8 +88,8 @@ use `caller_supplied_synthetic`. Its three-file profile is
 separate from the released two-file report verifier. Each member is a regular
 file with one link; study, report JSON and HTML budgets are 2, 4 and 16 MiB,
 respectively. The returned SHA-256 inventory identifies the verified bytes.
-Standalone semantic report admission remains with
-[#56](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/56).
+Saved-report admission is described below; bundle verification retains its exact
+source recomputation and filesystem recovery contract.
 
 Publication requires concrete parent directories and an exclusive directory
 rename on a supporting local filesystem: Linux uses `renameat2` with
@@ -131,6 +131,104 @@ retains the independent Golden Specimen measurement question. Publication,
 release tags, and external model execution remain separately authorized.
 
 Return to [first receipt](../README.md#first-receipt).
+
+## Admit a saved report
+
+Use `comparative_evidence.administrative_report.admit_evaluation_report(payload)`
+with immutable UTF-8 bytes. It returns an `EvaluationReport` using the existing
+`urn:driftframe:comparison:administrative-evaluation:1.0.0` identity. The
+executable contract lives in
+[`administrative_report.py`](../src/comparative_evidence/administrative_report.py);
+`EvaluationReport.model_json_schema()` supplies its structural validation
+projection with local definitions. Runtime validators own cross-field meaning.
+Program's exact `StudyComparisonReport` and `StudyInterpretation` types own
+the nested identity and eligibility records. Python callers now access those
+records through attributes, such as `report.eligibility.pairs`; their JSON
+field names and values stay stable.
+
+Admission checks strict JSON, finite numbers, unique keys, a 4 MiB input and
+canonical-output ceiling, 32 container levels, and 100,000 decoded values.
+Program's lexical depth check runs before decoding; its decoded-value and
+bounded-output helpers retain their original ownership. The model permits
+2 through 512 run records, 1 through 256 Program pairs, up to 4,096 attempts,
+1 through 8 cohorts, and up to 16,384 distinct label rows. Nested Program
+collections retain their own declared bounds. These limits bound accepted
+representations; process memory and elapsed time require separate observations.
+
+Counts use strict integers and exact equality. Ratios carry a numerator,
+denominator, and value in [0, 1]; a zero denominator requires a zero numerator
+and `null` value. Division and derived floating-point means use
+`math.isclose(rel_tol=1e-12, abs_tol=1e-12)`. That tolerance applies to floats
+only. Finite workflow measurements are integer minutes from 0 through 1,440;
+paired differences occupy [-1,440, 1,440]. Scientific fact counts retain the
+16-term output bound.
+
+Run identities, two-arm pairs, cohort and subject membership, status
+partitions, labels, scientific counts, aggregate scores, complete pairs and
+equal-subject workflow means reconcile to the records present. Program
+eligibility governs paired estimates. Macro F1 divides by the distinct labels
+appearing in either expected or observed sets of scored runs; prediction-only
+labels contribute zero F1. An empty label union produces `null` macro F1.
+Two matching empty sets still have exact agreement and Jaccard one.
+
+A saved report preserves declared counts and coherent relationships. The
+1.0.0 format omits per-run retry histories, raw expected/observed label sets,
+and the configured small-cell threshold. Admission checks attempted-count
+bounds, agreement between aggregate populations, and a possible shared
+threshold in the supported 2 through 32 range. Exact historical attempts,
+label provenance and the selected threshold require the source-complete route:
+
+```python
+from comparative_evidence.administrative_report import (
+    admit_evaluation_report,
+    verify_evaluation_report,
+)
+
+report = admit_evaluation_report(payload)
+reproduced = verify_evaluation_report(payload, pack=admitted_pack, study=admitted_study)
+```
+
+`verify_evaluation_report` re-admits both supplied sources, checks their
+digests, recomputes the full report, and compares exact structure and counts
+with the declared float policy. A known digest mismatch is returned even when
+the other source is missing; matching partial sources receive
+`report_sources_required`. The scoring digest binds Comparative's unchanged
+profile, and the interpretation uses Program's default declared-input profile.
+A `fixture_demonstration` claim additionally requires the exact demonstration
+study. The pack's Program version and source coordinate, study specification
+bindings, and accepted dependency pins retain their existing owners.
+
+Both APIs raise `ReportAdmissionError` with a fixed `code` and safe text.
+Categories distinguish JSON/resource failures, shape and nested-record
+validation, ratio/run/group/count coherence, source bindings, missing sources,
+fixture identity, and `report_recomputation`. Rejected values and detailed
+source diagnostics stay with the caller. The renderer re-admits the report
+before projecting the same values into HTML. The bundle receiver continues to
+require canonical byte equality, which is stronger than float-tolerant semantic
+recomputation, and preserves its existing staging and recovery behavior.
+
+These signals support distinct decisions:
+
+- Admission establishes self-consistency of the saved representation.
+- A digest identifies the exact canonical content against a trusted coordinate.
+- Recomputation establishes agreement with the admitted study and authored pack.
+- Provenance review establishes whether those source identities and assertions
+  are suitable for the receiving purpose.
+- Accountable acceptance authorizes the next governed use.
+
+A coherent altered score can pass admission and still fail recomputation.
+The independent fixtures in
+[`test_administrative_report.py`](../tests/test_administrative_report.py) exercise
+that distinction, literal expected counts, empty and sparse observations,
+failed and mismatched execution, withholding, parser budgets, and semantic
+agreement between JSON and HTML. The existing evaluator and bundle recovery
+checks remain the regression route.
+
+This source is prepared for
+[#56](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/56)
+pending the Governance handoff and independent parent review. Merge, release,
+publication, cloud execution and external-model execution retain their separate
+authorization boundaries.
 
 ## Execution identity and paired evidence
 

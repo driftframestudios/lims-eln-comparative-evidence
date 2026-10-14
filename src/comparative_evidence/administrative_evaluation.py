@@ -24,9 +24,12 @@ from lims_eln_contracts.study_interpretation import interpret_administrative_stu
 from lims_eln_sim.administrative_pack import Classification, MAX_BYTES, PolicyState, ScenarioPack, Token, Tokens, admit_pack
 
 from .publication import render_public_boundary
+from .administrative_report import (
+    PROFILE, EvaluationReport, GroupScore, LabelScore, Ratio, RunScore,
+    ratio, readmit_evaluation_report,
+)
 
-PROFILE = {"id":"administrative-fields", "version":"1.0.0", "primary":"exact label-set match", "averaging":"micro over label decisions; macro over labels with expected or observed support", "zero_denominator":"null", "empty_set_jaccard":1, "paired_estimator":"equal subject weight after within-subject repeat means", "uncertainty":"descriptive fixture observations; inferential intervals require an independently reviewed sampling design"}
-Count = Annotated[int, Field(ge=0, le=100000)]
+
 
 
 class EvaluationError(ValueError):
@@ -47,91 +50,6 @@ class ScientificOutput(ContractModel):
     facts: Tokens
 
 
-class Ratio(ContractModel):
-    numerator: Count
-    denominator: Count
-    value: float | None
-
-
-def ratio(numerator: int, denominator: int) -> Ratio:
-    return Ratio(numerator=numerator, denominator=denominator, value=numerator / denominator if denominator else None)
-
-
-class RunScore(ContractModel):
-    run_id: Token
-    pair_id: Token
-    subject_id: Token
-    cohort: Token
-    arm: Literal["a", "b"]
-    repeat_index: Count
-    status: Literal["pending", "completed", "abstained", "timeout", "cancelled", "invalid_response", "failed", "excluded"]
-    standing: Literal["scored", "output_unavailable", "execution_mismatch", "output_shape"]
-    exact_labels: bool | None = None
-    jaccard: float | None = None
-    classification_matches: bool | None = None
-    policy_matches: bool | None = None
-    raw_preserved: bool | None = None
-    required_facts: Count = 0
-    found_required_facts: Count = 0
-    unsupported_facts: Count = 0
-    supplied_facts: Count = 0
-    scientific_matches: bool | None = None
-    workflow_minutes: int | None = None
-
-
-class LabelScore(ContractModel):
-    label: Token
-    support: Count
-    true_positive: Count
-    false_positive: Count
-    false_negative: Count
-    precision: Ratio
-    recall: Ratio
-    f1: Ratio
-
-
-class GroupScore(ContractModel):
-    cohort: Token
-    planned_runs: Count
-    attempted_runs: Count
-    completed_runs: Count
-    scored_runs: Count
-    complete_pairs: Count
-    independent_subjects: Count
-    standing: Literal["descriptive", "small_cell", "empty"]
-    workflow_difference_minutes: float | None
-
-
-class EvaluationReport(ContractModel):
-    schema_id: Literal["urn:driftframe:comparison:administrative-evaluation:1.0.0"] = Field(alias="$schema")
-    pack_digest: Sha256Digest
-    study_digest: Sha256Digest
-    scoring_digest: Sha256Digest
-    evidence_mode: Literal["fixture_demonstration", "caller_supplied_synthetic"]
-    evidence_scope: Literal["authored_synthetic_task_and_declared_outputs"] = "authored_synthetic_task_and_declared_outputs"
-    planned_runs: Count
-    attempted_runs: Count
-    completed_runs: Count
-    attempt_records: Count
-    status_counts: dict[str, Count]
-    scored_coverage: Ratio
-    exact_label_agreement: Ratio
-    mean_jaccard: float | None
-    micro_precision: Ratio
-    micro_recall: Ratio
-    micro_f1: Ratio
-    macro_f1: float | None
-    required_fact_recall: Ratio
-    unsupported_fact_rate: Ratio
-    classification_agreement: Ratio
-    policy_agreement: Ratio
-    raw_preservation: Ratio
-    scientific_oracle_disagreements: Count
-    labels: tuple[LabelScore, ...]
-    groups: tuple[GroupScore, ...]
-    runs: tuple[RunScore, ...]
-    identity_comparison: dict
-    eligibility: dict
 
 
 def _parsed(model: type[ContractModel], text: str) -> ContractModel:
@@ -209,7 +127,7 @@ def evaluate(pack: ScenarioPack, study: AdministrativeStudy, *, evidence_mode: L
     count = len(scored)
     exact = sum(row.exact_labels for row in scored)
     all_tp, all_fp, all_fn = sum(tp.values()), sum(fp.values()), sum(fn.values())
-    return EvaluationReport(schema_id="urn:driftframe:comparison:administrative-evaluation:1.0.0",pack_digest=canonical_sha256(pack),study_digest=canonical_sha256(study),scoring_digest=canonical_sha256(PROFILE),evidence_mode=evidence_mode,planned_runs=len(runs),attempted_runs=len(attempted),completed_runs=comparison.completed,attempt_records=len(study.observations),status_counts=dict(Counter(row.status for row in scores)),scored_coverage=ratio(count,len(runs)),exact_label_agreement=ratio(exact,count),mean_jaccard=sum(row.jaccard for row in scored)/count if count else None,micro_precision=ratio(all_tp,all_tp+all_fp),micro_recall=ratio(all_tp,all_tp+all_fn),micro_f1=ratio(2*all_tp,2*all_tp+all_fp+all_fn),macro_f1=sum(row.f1.value for row in label_rows)/len(label_rows) if label_rows else None,required_fact_recall=ratio(sum(row.found_required_facts for row in scored),sum(row.required_facts for row in scored)),unsupported_fact_rate=ratio(sum(row.unsupported_facts for row in scored),sum(row.supplied_facts for row in scored)),classification_agreement=ratio(sum(row.classification_matches for row in scored),count),policy_agreement=ratio(sum(row.policy_matches for row in scored),count),raw_preservation=ratio(sum(row.raw_preserved for row in scored),count),scientific_oracle_disagreements=sum(row.scientific_matches is False for row in scored),labels=label_rows,groups=tuple(groups),runs=tuple(scores),identity_comparison=comparison.model_dump(mode="json",by_alias=True),eligibility=interpretation.model_dump(mode="json",by_alias=True))
+    return EvaluationReport(schema_id="urn:driftframe:comparison:administrative-evaluation:1.0.0",pack_digest=canonical_sha256(pack),study_digest=canonical_sha256(study),scoring_digest=canonical_sha256(PROFILE),evidence_mode=evidence_mode,planned_runs=len(runs),attempted_runs=len(attempted),completed_runs=comparison.completed,attempt_records=len(study.observations),status_counts=dict(Counter(row.status for row in scores)),scored_coverage=ratio(count,len(runs)),exact_label_agreement=ratio(exact,count),mean_jaccard=sum(row.jaccard for row in scored)/count if count else None,micro_precision=ratio(all_tp,all_tp+all_fp),micro_recall=ratio(all_tp,all_tp+all_fn),micro_f1=ratio(2*all_tp,2*all_tp+all_fp+all_fn),macro_f1=sum(row.f1.value for row in label_rows)/len(label_rows) if label_rows else None,required_fact_recall=ratio(sum(row.found_required_facts for row in scored),sum(row.required_facts for row in scored)),unsupported_fact_rate=ratio(sum(row.unsupported_facts for row in scored),sum(row.supplied_facts for row in scored)),classification_agreement=ratio(sum(row.classification_matches for row in scored),count),policy_agreement=ratio(sum(row.policy_matches for row in scored),count),raw_preservation=ratio(sum(row.raw_preserved for row in scored),count),scientific_oracle_disagreements=sum(row.scientific_matches is False for row in scored),labels=label_rows,groups=tuple(groups),runs=tuple(scores),identity_comparison=comparison,eligibility=interpretation)
 
 
 def _fixture_response(run) -> tuple[str, dict, dict]:
@@ -277,6 +195,7 @@ def demonstration_study(pack: ScenarioPack) -> AdministrativeStudy:
 
 def render_html(report: EvaluationReport) -> str:
     """Render declared report fields and the complete escaped semantic companion."""
+    report = readmit_evaluation_report(report)
     rows = "".join(f'<tr><th scope="row">{escape(group.cohort)}</th><td>{group.planned_runs}</td><td>{group.scored_runs}</td><td>{group.independent_subjects}</td><td>{escape(group.standing)}</td><td>{group.workflow_difference_minutes if group.workflow_difference_minutes is not None else "Requires sufficient paired subjects"}</td></tr>' for group in report.groups)
     embedded = escape(json.dumps(report.model_dump(mode="json",by_alias=True),indent=2,sort_keys=True))
     return f'''<!doctype html>
@@ -286,7 +205,7 @@ def render_html(report: EvaluationReport) -> str:
 <p>Scientific oracle disagreements: {report.scientific_oracle_disagreements}. Authored fixture results support harness review; population and causal conclusions receive a separately reviewed study design.</p>
 <h2 id="groups">Cohort coverage and paired workflow</h2><p>Scroll within the table to inspect every column. Workflow differences use equal subject weights after averaging repeats; small and empty cells retain coverage while their score stays withheld.</p>
 <div class="table-scroll" role="region" aria-labelledby="groups" tabindex="0"><table><caption>Designed cohorts and complete-pair evidence</caption><thead><tr><th scope="col">Cohort</th><th scope="col">Planned runs</th><th scope="col">Scored runs</th><th scope="col">Paired subjects</th><th scope="col">Standing</th><th scope="col">Workflow difference, minutes</th></tr></thead><tbody>{rows}</tbody></table></div>
-<h2>Scoring and evidence</h2><p>Micro scores aggregate label decisions. Macro F1 gives equal weight to supported labels. Empty-set Jaccard is one; undefined ratios remain null. Omitted required facts and unsupported facts remain separate counts. Probability calibration and inferential uncertainty require fitting probability outputs and a sampling design.</p>
+<h2>Scoring and evidence</h2><p>Micro scores aggregate label decisions. Macro F1 averages over the distinct labels present in expected or observed sets of scored runs, including prediction-only labels; the denominator is that union of labels. An empty label union has null macro F1. Empty-set Jaccard is one; undefined ratios remain null. Omitted required facts and unsupported facts remain separate counts. Probability calibration and inferential uncertainty require fitting probability outputs and a sampling design.</p>
 <details><summary>Complete machine-readable report</summary><pre id="report-json">{embedded}</pre></details><footer>{render_public_boundary()}</footer></main></body></html>'''
 
 
