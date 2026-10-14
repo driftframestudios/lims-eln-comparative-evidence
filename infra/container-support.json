@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "authority": "driftframestudios/lims-eln-program-specification",
   "source": "infra/container_job.py",
-  "sha256": "1a72f0382960d676a94ae09a81b37c650b6b1275499e9656dc8dbac8cc89809c",
+  "sha256": "ae19b4cb72f633781d530a43d75cb4ed082af6e4f30ab91e38aa916c697d7fbd",
   "local": "infra/container_job.py",
   "standing": "review-candidate",
   "runtime": {
@@ -13,6 +13,6 @@
   "patch": {
     "source": "infra/container_patch.py",
     "local": "infra/container_patch.py",
-    "sha256": "7d420830d5175d604a3b03d629fef3e317728829a85103bd4b9bc7339e80bfd1"
+    "sha256": "2bee3c4707e7fa45efe897778ff61b055daf84112504ac64986ce540eecd5657"
   }
 }

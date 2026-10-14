@@ -1,10 +1,11 @@
-"""Exact Bookworm patch inputs and an offline layer preceding application installs.
+"""Exact native repair and installer inputs for the pinned Trixie runtime.
 
-Debian package hashes were admitted from signed Bookworm security metadata.
-The pip wheel hash comes from the release's PyPI metadata. Revisions receive
-review, an image scan, and configured-job evidence together. Input admission is
-O(B) time and space for the three selected artifacts, with B bounded by their
-literal byte counts. Filesystem safety belongs to the caller's existing reader.
+Debian package hashes follow the signed trixie-security package indices. The pip
+wheel hash comes from the release's PyPI metadata and supplies the separate
+installer stage. Revisions receive review, an image scan, and configured-job
+evidence together. Admission is O(B) time and space for the selected input bytes,
+bounded by the artifacts' literal byte counts.
+Filesystem safety belongs to the caller's existing regular-file reader.
 """
 
 from dataclasses import asdict, dataclass
@@ -22,37 +23,31 @@ class PatchArtifact:
     url: str
 
 
-_PCRE_VERSION = "10.42-1+deb12u2"
-_PERL_VERSION = "5.36.0-7+deb12u4"
 _PIP_VERSION = "26.2.1"
-_DEBIAN = "https://security.debian.org/debian-security/pool/updates/main"
 _PIP = PatchArtifact(
     "pip-26.2.1-py3-none-any.whl", 1816632,
     "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
     "https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl",
 )
-_DEBIAN_INPUTS = (
-    ("arm64", 230704, "8498d2c0bd6747dfc2fc6eec62774a86967079555f7043d5a7b78ee4efbbc0fb",
-     1477684, "03d979b849a1a0a8955eee28b988dbc25a407fd3a0581df5c94e6ae7bcc01ddf"),
-    ("amd64", 261628, "d2f7edfcc7689b9e0761c2742cc824ac86a20768bc5e8057818dc6875291fe76",
-     1609596, "d7d1943aec9597629bf73075efcc5ef6dc9bda96d78e80d843156ecd448478b8"),
+_LIBLZMA_VERSION = "5.8.1-1+deb13u2"
+_LIBLZMA_ARM64 = PatchArtifact(
+    "liblzma5_5.8.1-1+deb13u2_arm64.deb", 302984,
+    "88f3aa499dc30edf01b9209ab40f11e37edfbecef971f84f4721de1874ed4827",
+    "https://security.debian.org/debian-security/pool/updates/main/x/xz-utils/liblzma5_5.8.1-1+deb13u2_arm64.deb",
+)
+_LIBLZMA_AMD64 = PatchArtifact(
+    "liblzma5_5.8.1-1+deb13u2_amd64.deb", 309696,
+    "b38acab30f295bf1066a6632e31cbd0a1980f2924b38040cda131d5dea5384ec",
+    "https://security.debian.org/debian-security/pool/updates/main/x/xz-utils/liblzma5_5.8.1-1+deb13u2_amd64.deb",
 )
 
 
 def patch_artifacts(architecture: str) -> tuple[PatchArtifact, ...]:
-    """Return the three reviewed inputs for one explicitly selected platform."""
+    """Return the native repair and installer for one reviewed platform."""
     if type(architecture) is not str or architecture not in ("arm64", "amd64"):
         raise ValueError("patch architecture must be arm64 or amd64")
-    for arch, pcre_size, pcre_hash, perl_size, perl_hash in _DEBIAN_INPUTS:
-        if arch == architecture:
-            pcre = f"libpcre2-8-0_{_PCRE_VERSION}_{arch}.deb"
-            perl = f"perl-base_{_PERL_VERSION}_{arch}.deb"
-            return (
-                PatchArtifact(pcre, pcre_size, pcre_hash, f"{_DEBIAN}/p/pcre2/{pcre}"),
-                PatchArtifact(perl, perl_size, perl_hash, f"{_DEBIAN}/p/perl/{perl}"),
-                _PIP,
-            )
-    raise ValueError("patch architecture has no reviewed inputs")
+    native = _LIBLZMA_ARM64 if architecture == "arm64" else _LIBLZMA_AMD64
+    return (native, _PIP)
 
 
 def admit_patch_files(architecture: str, read_file: Callable[[str], bytes]) -> dict[str, bytes]:
@@ -86,18 +81,50 @@ def _checksum_command(artifacts: tuple[PatchArtifact, ...]) -> str:
     return f"printf %b {shlex.quote(checksums)} | sha256sum --check --strict -"
 
 
-def dockerfile_patch(architecture: str) -> str:
-    """Apply the reviewed OS packages to the shared runtime base."""
-    artifacts = patch_artifacts(architecture)[:2]
-    return _offline_patch_run((
+def dockerfile_base_guard(architecture: str) -> str:
+    """Verify and repair the shared base before installer and runtime diverge."""
+    native, _ = patch_artifacts(architecture)
+    package_path = shlex.quote(f"/opt/security-patches/{native.filename}")
+    installed_format = shlex.quote("${Status} ${Version} ${Architecture}")
+    installed = shlex.quote(f"install ok installed {_LIBLZMA_VERSION} {architecture}")
+    commands = (
         f'test "$(dpkg --print-architecture)" = {architecture}',
-        _checksum_command(artifacts),
-        "dpkg --install " + " ".join(
-            shlex.quote(f"/opt/security-patches/{item.filename}") for item in artifacts
-        ),
-        'test "$(dpkg-query -W -f=\'${Version}\' libpcre2-8-0)" = ' + shlex.quote(_PCRE_VERSION),
-        'test "$(dpkg-query -W -f=\'${Version}\' perl-base)" = ' + shlex.quote(_PERL_VERSION),
-    ))
+        ". /etc/os-release",
+        'test "$ID" = debian',
+        'test "$VERSION_ID" = 13',
+        _checksum_command((native,)),
+        f'test "$(dpkg-deb --field {package_path} Package)" = liblzma5',
+        f'test "$(dpkg-deb --field {package_path} Version)" = {shlex.quote(_LIBLZMA_VERSION)}',
+        f'test "$(dpkg-deb --field {package_path} Architecture)" = {architecture}',
+        f"dpkg --install {package_path}",
+        f'test "$(dpkg-query --show --showformat={installed_format} liblzma5)" = {installed}',
+        f"python -I -B -c {shlex.quote(runtime_native_guard())}",
+    )
+    return _offline_patch_run(commands)
+
+
+def runtime_native_guard() -> str:
+    """Check installed state and bounded Python codec behavior in each stage.
+
+    Fixed streams were prepared independently of the image under test. Their
+    expected plaintext makes decoding an independent check alongside round trips.
+    This observes native-library use; advisory coverage belongs to the package
+    provenance and image scan.
+    """
+    streams = (
+        "fd377a585a000004e6d6b4460200210116000000742fe5a301001866696e697465206a6f62206c69627261727920636865636b0a00000000a941e7e48ad8317b00013119591ab0821fb6f37d010000000004595a",
+        "5d00008000ffffffffffffffff00331a4a1f66bfa9f300adda3e38cd4df96dab31a718fdb2d6744a4d3b6bffff932c0000",
+    )
+    return (
+        "import lzma,subprocess; "
+        "assert subprocess.check_output(['dpkg-query','--show',"
+        "'--showformat=${Status} ${Version}','liblzma5'],text=True) == "
+        f"{'install ok installed ' + _LIBLZMA_VERSION!r}, 'native package state'; "
+        "payload=b'finite job library check\\n'; "
+        f"assert all(lzma.decompress(bytes.fromhex(item)) == payload for item in {streams!r}), 'native decode'; "
+        "assert all(lzma.decompress(lzma.compress(payload,format=mode)) == payload "
+        "for mode in (lzma.FORMAT_XZ,lzma.FORMAT_ALONE)), 'native round trip'"
+    )
 
 
 def dockerfile_installer() -> str:
@@ -152,12 +179,15 @@ def dockerfile_runtime_cleanup() -> str:
 
 
 def dockerfile_runtime_guard() -> str:
-    return f"RUN --network=none python -I -B -c {shlex.quote(runtime_tooling_guard())}\n"
+    return (
+        f"RUN --network=none python -I -B -c {shlex.quote(runtime_tooling_guard())}"
+        f" && python -I -B -c {shlex.quote(runtime_native_guard())}\n"
+    )
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="List the exact public patch inputs for acquisition.")
+    parser = argparse.ArgumentParser(description="List exact public native-repair and installer inputs for acquisition.")
     parser.add_argument("architecture", choices=("arm64", "amd64"))
     args = parser.parse_args()
     print(json.dumps([asdict(item) for item in patch_artifacts(args.architecture)], indent=2))
