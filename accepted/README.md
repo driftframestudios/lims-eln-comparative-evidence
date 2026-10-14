@@ -34,6 +34,12 @@ Each admitted manifest carries the raw-artifact digest, protected locator,
 independent reviewer, classification, and redaction disposition. Raw artifact
 bytes remain with their governed evidence owner.
 
+Generated manifests become visible after their complete bytes are verified.
+An identical generated-byte replay returns the accepted path; changed bytes
+require the namespace's new-identity route. Follow the
+[artifact publication guide](../docs/artifact-publication.md) when an interrupted
+run or an occupied entry needs recovery.
+
 ## Quickest fitting command
 
 From the repository root, exercise the admission boundary:

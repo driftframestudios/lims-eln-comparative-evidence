@@ -926,6 +926,11 @@ class ComparativeEvidenceTests(unittest.TestCase):
                 {"comparison.json", "comparison.html"},
             )
 
+            def reset_replay():
+                for name in ("comparison.json", "comparison.html"):
+                    (replay_path / name).unlink()
+                write_reports(reference_report(), replay_path)
+
             (replay_path / "comparison.html").write_text(
                 "<!doctype html>\n<p>changed</p>\n",
                 encoding="utf-8",
@@ -936,7 +941,7 @@ class ComparativeEvidenceTests(unittest.TestCase):
             ):
                 verify_reproducible_reports(first_path, replay_path)
 
-            write_reports(reference_report(), replay_path)
+            reset_replay()
             (replay_path / "comparison.json").write_text(
                 '{"report_digest":"one","report_digest":"two"}\n',
                 encoding="utf-8",
@@ -946,27 +951,27 @@ class ComparativeEvidenceTests(unittest.TestCase):
 
             for encoding in ("utf-16", "utf-32"):
                 with self.subTest(encoding=encoding):
-                    write_reports(reference_report(), replay_path)
+                    reset_replay()
                     replay_json = replay_path / "comparison.json"
                     report_text = replay_json.read_text(encoding="utf-8")
                     replay_json.write_bytes(report_text.encode(encoding))
                     with self.assertRaisesRegex(ReportArtifactError, "UTF-8"):
                         verify_reproducible_reports(first_path, replay_path)
 
-            write_reports(reference_report(), replay_path)
+            reset_replay()
             replay_json = replay_path / "comparison.json"
             replay_json.write_bytes(b"\xef\xbb\xbf" + replay_json.read_bytes())
             with self.assertRaisesRegex(ReportArtifactError, "UTF-8"):
                 verify_reproducible_reports(first_path, replay_path)
 
-            write_reports(reference_report(), replay_path)
+            reset_replay()
             replay_html = replay_path / "comparison.html"
             replay_html.unlink()
             replay_html.symlink_to(first_path / "comparison.html")
             with self.assertRaisesRegex(ReportArtifactError, "regular file"):
                 verify_reproducible_reports(first_path, replay_path)
 
-            write_reports(reference_report(), replay_path)
+            reset_replay()
             with (
                 patch(
                     "comparative_evidence.artifact_boundary.O_NOFOLLOW",

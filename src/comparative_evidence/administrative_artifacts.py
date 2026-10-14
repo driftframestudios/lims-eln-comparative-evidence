@@ -9,16 +9,10 @@ Work is O(study + report + HTML bytes), including bounded scoring and hashing.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-import ctypes
 import errno
 from hashlib import sha256
 import os
 from pathlib import Path
-import shutil
-import signal
-import stat
-import sys
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
@@ -26,7 +20,11 @@ from lims_eln_contracts.administrative_study import admit_administrative_study
 from lims_eln_contracts.canonical import canonical_json_bytes, strict_json_loads
 from lims_eln_sim.administrative_pack import MAX_BYTES, admit_pack
 
-from .artifact_boundary import BYTE_ORDER_MARKS, _owned_binary_stream, _read_regular_file
+from .artifact_boundary import BYTE_ORDER_MARKS, _read_regular_file
+from .filesystem_publication import (
+    _attach_cleanup, _cleanup_owned, _directory, _directory_flags,
+    _exclusive_rename, _record_transition, _same_directory, _write_artifact,
+)
 
 if TYPE_CHECKING:
     from lims_eln_contracts.administrative_study import AdministrativeStudy
@@ -66,50 +64,6 @@ class AdministrativePublicationError(ValueError):
         if cleanup_error is not None:
             recovery += "; invocation-owned staging needs local cleanup review"
         super().__init__(self.code + ": " + recovery)
-
-
-def _directory_flags() -> int:
-    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
-        raise AdministrativeArtifactError("bundle_platform")
-    return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-
-
-@contextmanager
-def _directory(path: Path, *, create: bool = False):
-    """Anchor each concrete path component before opening the next one."""
-    absolute = path.absolute()
-    descriptor = os.open(absolute.anchor, _directory_flags())
-    failure = None
-    try:
-        for component in absolute.parts[1:]:
-            if create:
-                try:
-                    os.mkdir(component, dir_fd=descriptor)
-                except FileExistsError:
-                    pass
-            child = os.open(component, _directory_flags(), dir_fd=descriptor)
-            previous = descriptor
-            descriptor = child
-            os.close(previous)
-        yield descriptor
-    except BaseException as error:
-        failure = error
-        raise
-    finally:
-        try:
-            os.close(descriptor)
-        except OSError as error:
-            if failure is None:
-                raise
-            _attach_cleanup(failure, error)
-
-
-def _attach_cleanup(primary: BaseException, cleanup: BaseException) -> None:
-    previous = getattr(primary, "cleanup_error", None)
-    primary.cleanup_error = cleanup if previous is None else BaseExceptionGroup(
-        "Resource cleanup observations", [previous, cleanup],
-    )
-    primary.add_note("Resource cleanup needs local review; the primary failure remains available.")
 
 
 def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
@@ -168,62 +122,6 @@ def administrative_artifact_inventory(root: Path, pack: ScenarioPack) -> dict[st
         raise
     except (ValueError, TypeError, OSError) as error:
         raise AdministrativeArtifactError("bundle_source_or_directory") from error
-
-
-def _exclusive_rename():
-    """Bind the platform's five-argument, errno-reporting exclusive rename ABI."""
-    symbol, flag = {
-        "linux": ("renameat2", 1),       # RENAME_NOREPLACE
-        "darwin": ("renameatx_np", 4),  # RENAME_EXCL
-    }.get(sys.platform, (None, None))
-    if symbol is None or not shutil.rmtree.avoids_symlink_attacks:
-        raise AdministrativeArtifactError("bundle_platform")
-    library = ctypes.CDLL(None, use_errno=True)
-    try:
-        rename = getattr(library, symbol)
-    except AttributeError as error:
-        raise AdministrativeArtifactError("bundle_platform") from error
-    rename.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint)
-    rename.restype = ctypes.c_int
-
-    def publish(parent_fd: int, source: str, destination: str) -> None:
-        if rename(parent_fd, os.fsencode(source), parent_fd, os.fsencode(destination), flag) != 0:
-            number = ctypes.get_errno()
-            raise OSError(number, os.strerror(number))
-
-    return publish
-
-
-@contextmanager
-def _record_transition():
-    """Record resource ownership before delivering a pending termination signal."""
-    previous = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT, signal.SIGTERM})
-    try:
-        yield
-    finally:
-        signal.pthread_sigmask(signal.SIG_SETMASK, previous)
-
-
-def _write_artifact(directory_fd: int, name: str, payload: bytes) -> None:
-    descriptor = os.open(
-        name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-        0o600, dir_fd=directory_fd,
-    )
-    with _owned_binary_stream(descriptor, "wb") as stream:
-        stream.write(payload)
-        stream.flush()
-        os.fsync(stream.fileno())
-
-
-def _same_directory(parent_fd: int, name: str, identity: tuple[int, int]) -> bool:
-    info = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
-    return stat.S_ISDIR(info.st_mode) and (info.st_dev, info.st_ino) == identity
-
-
-def _cleanup_owned(parent_fd: int, name: str, identity: tuple[int, int]) -> None:
-    if not _same_directory(parent_fd, name, identity):
-        raise AdministrativeArtifactError("bundle_staging_identity")
-    shutil.rmtree(name, dir_fd=parent_fd)
 
 
 def publish_administrative_bundle(
