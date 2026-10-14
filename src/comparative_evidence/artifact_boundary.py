@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from hashlib import sha256
 from html import unescape
 import os
@@ -39,18 +40,40 @@ def report_artifact_inventory(root: Path) -> dict[str, str]:
         raise ReportArtifactError(
             "report root requires one concrete output directory"
         )
+    def contents():
+        for path in sorted(root.rglob("*")):
+            relative = path.relative_to(root).as_posix()
+            if path.is_symlink():
+                raise ReportArtifactError(
+                    f"report artifact {relative} requires a regular file"
+                )
+            if path.is_dir():
+                continue
+            yield relative, _read_regular_file(path, relative)
+    return _report_content_inventory(contents())
+
+
+def _report_inventory_at(directory_fd: int, limits: dict[str, int]) -> dict[str, str]:
+    """Verify an owned candidate with reads bounded by its prepared byte counts."""
+    names = set()
+    with os.scandir(directory_fd) as entries:
+        for entry in entries:
+            names.add(entry.name)
+            if len(names) > len(REPORT_ARTIFACTS):
+                break
+    if names != REPORT_ARTIFACTS:
+        raise ReportArtifactError("report bundle requires exactly its JSON and HTML artifacts")
+    return _report_content_inventory(
+        (name, _read_regular_file(Path(name), name, max_bytes=limits[name], directory_fd=directory_fd))
+        for name in REPORT_ARTIFACTS
+    )
+
+
+def _report_content_inventory(contents) -> dict[str, str]:
     inventory: dict[str, str] = {}
     report_document: dict | None = None
     html_document: str | None = None
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
-        if path.is_symlink():
-            raise ReportArtifactError(
-                f"report artifact {relative} requires a regular file"
-            )
-        if path.is_dir():
-            continue
-        content = _read_regular_file(path, relative)
+    for relative, content in contents:
         if relative == "comparison.json":
             if any(content.startswith(marker) for marker in BYTE_ORDER_MARKS):
                 raise ReportArtifactError(
@@ -152,21 +175,69 @@ def verify_reproducible_reports(first: Path, replay: Path) -> dict[str, str]:
     return first_inventory
 
 
-def _read_regular_file(path: Path, relative: str) -> bytes:
+@contextmanager
+def _owned_binary_stream(descriptor: int, mode: str):
+    """Own the raw descriptor across borrowed-stream setup, use and teardown."""
+    stream = None
+    failure = None
+    try:
+        stream = os.fdopen(descriptor, mode, closefd=False)
+        yield stream
+    except BaseException as error:
+        failure = error
+        raise
+    finally:
+        cleanups = []
+        if stream is not None:
+            try:
+                stream.close()
+            except BaseException as cleanup:
+                cleanups.append(cleanup)
+        try:
+            os.close(descriptor)
+        except BaseException as cleanup:
+            cleanups.append(cleanup)
+        if cleanups:
+            cleanup = cleanups[0] if len(cleanups) == 1 else BaseExceptionGroup(
+                "Stream and descriptor cleanup observations", cleanups,
+            )
+            if failure is None:
+                raise cleanup
+            previous = getattr(failure, "cleanup_error", None)
+            failure.cleanup_error = cleanup if previous is None else BaseExceptionGroup(
+                "Resource cleanup observations", [previous, cleanup],
+            )
+            failure.add_note("Resource cleanup needs local review; the primary failure remains available.")
+
+
+def _read_regular_file(
+    path: Path,
+    relative: str,
+    *,
+    max_bytes: int | None = None,
+    directory_fd: int | None = None,
+    single_link: bool = False,
+) -> bytes:
     if O_NOFOLLOW is None:
         raise ReportArtifactError(
             "report artifact verification requires operating-system O_NOFOLLOW support"
         )
-    flags = os.O_RDONLY | O_NOFOLLOW
+    flags = os.O_RDONLY | O_NOFOLLOW | os.O_NONBLOCK
     try:
-        descriptor = os.open(path, flags)
+        descriptor = os.open(path, flags, dir_fd=directory_fd)
     except OSError as error:
         raise ReportArtifactError(
             f"report artifact {relative} requires a readable regular file"
         ) from error
-    with os.fdopen(descriptor, "rb") as stream:
-        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+    with _owned_binary_stream(descriptor, "rb") as stream:
+        info = os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or (single_link and info.st_nlink != 1):
             raise ReportArtifactError(
                 f"report artifact {relative} requires a regular file"
             )
-        return stream.read()
+        if max_bytes is not None and info.st_size > max_bytes:
+            raise ReportArtifactError("report artifact exceeds its byte budget")
+        content = stream.read() if max_bytes is None else stream.read(max_bytes + 1)
+        if max_bytes is not None and len(content) > max_bytes:
+            raise ReportArtifactError("report artifact exceeds its byte budget")
+        return content
