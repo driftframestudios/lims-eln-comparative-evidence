@@ -40,18 +40,40 @@ def report_artifact_inventory(root: Path) -> dict[str, str]:
         raise ReportArtifactError(
             "report root requires one concrete output directory"
         )
+    def contents():
+        for path in sorted(root.rglob("*")):
+            relative = path.relative_to(root).as_posix()
+            if path.is_symlink():
+                raise ReportArtifactError(
+                    f"report artifact {relative} requires a regular file"
+                )
+            if path.is_dir():
+                continue
+            yield relative, _read_regular_file(path, relative)
+    return _report_content_inventory(contents())
+
+
+def _report_inventory_at(directory_fd: int, limits: dict[str, int]) -> dict[str, str]:
+    """Verify an owned candidate with reads bounded by its prepared byte counts."""
+    names = set()
+    with os.scandir(directory_fd) as entries:
+        for entry in entries:
+            names.add(entry.name)
+            if len(names) > len(REPORT_ARTIFACTS):
+                break
+    if names != REPORT_ARTIFACTS:
+        raise ReportArtifactError("report bundle requires exactly its JSON and HTML artifacts")
+    return _report_content_inventory(
+        (name, _read_regular_file(Path(name), name, max_bytes=limits[name], directory_fd=directory_fd))
+        for name in REPORT_ARTIFACTS
+    )
+
+
+def _report_content_inventory(contents) -> dict[str, str]:
     inventory: dict[str, str] = {}
     report_document: dict | None = None
     html_document: str | None = None
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
-        if path.is_symlink():
-            raise ReportArtifactError(
-                f"report artifact {relative} requires a regular file"
-            )
-        if path.is_dir():
-            continue
-        content = _read_regular_file(path, relative)
+    for relative, content in contents:
         if relative == "comparison.json":
             if any(content.startswith(marker) for marker in BYTE_ORDER_MARKS):
                 raise ReportArtifactError(

@@ -15,15 +15,16 @@ def write_reports(
     *,
     canonical_url: str | None = None,
 ) -> None:
-    output.mkdir(parents=True, exist_ok=True)
-    (output / "comparison.json").write_text(
-        json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
-    (output / "comparison.html").write_text(
-        render_html(report, canonical_url=canonical_url),
-        encoding="utf-8",
-    )
+    """Publish a complete immutable pair into an empty or fresh directory."""
+    from .artifact_boundary import _report_inventory_at
+    from .filesystem_publication import publish_report
+
+    payloads = {
+        "comparison.json": (json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8"),
+        "comparison.html": render_html(report, canonical_url=canonical_url).encode("utf-8"),
+    }
+    limits = {name: len(payload) for name, payload in payloads.items()}
+    publish_report(payloads, output, lambda descriptor: _report_inventory_at(descriptor, limits))
 
 
 def render_html(
