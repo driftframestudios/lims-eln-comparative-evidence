@@ -299,6 +299,8 @@ def _read(path: Path) -> bytes:
 
 
 def main() -> None:
+    from .administrative_artifacts import publish_administrative_bundle
+
     parser = argparse.ArgumentParser(description="Score a bounded synthetic administrative study.")
     parser.add_argument("--pack",type=Path,required=True)
     sources = parser.add_mutually_exclusive_group(required=True)
@@ -310,11 +312,7 @@ def main() -> None:
         pack = admit_pack(_read(args.pack))
         study = demonstration_study(pack) if args.fixture_demo else admit_administrative_study(_read(args.study))
         report = evaluate(pack,study,evidence_mode="fixture_demonstration" if args.fixture_demo else "caller_supplied_synthetic")
-        artifacts = {"study.json":canonical_json_bytes(study)+b"\n","comparison.json":canonical_json_bytes(report)+b"\n","comparison.html":render_html(report).encode()}
-        args.output.mkdir(parents=True,exist_ok=False)
-        for name, payload in artifacts.items():
-            with (args.output/name).open("xb") as stream:
-                stream.write(payload)
+        publish_administrative_bundle(pack, study, report, args.output)
         print(f"{report.planned_runs} planned; {report.scored_coverage.numerator} scored; {report.scientific_oracle_disagreements} scientific oracle disagreements")
     except (ValueError, OSError) as error:
         parser.exit(2, str(error)+"\n")

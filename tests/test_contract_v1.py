@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from hashlib import sha256
+from importlib.util import find_spec
 import json
 from pathlib import Path
 import sys
@@ -47,6 +48,12 @@ from comparative_evidence.model import ObservationEnvelope
 
 SPECIFICATION_SOURCE = (
     ROOT.parent / "lims-eln-program-specification" / "src"
+)
+SPECIFICATION_DEPENDENCIES_AVAILABLE = find_spec("pydantic") is not None
+INSTALLED_SPECIFICATION_AVAILABLE = find_spec("lims_eln_contracts") is not None
+SPECIFICATION_BOUNDARY_AVAILABLE = (
+    SPECIFICATION_DEPENDENCIES_AVAILABLE
+    and (INSTALLED_SPECIFICATION_AVAILABLE or SPECIFICATION_SOURCE.is_dir())
 )
 
 
@@ -447,12 +454,21 @@ class ContractV1Tests(unittest.TestCase):
             ObservationEnvelope.from_dict(expanded)
 
     @unittest.skipUnless(
-        SPECIFICATION_SOURCE.is_dir(),
-        "authoritative sibling source is available through the focused conformance path",
+        SPECIFICATION_BOUNDARY_AVAILABLE,
+        "an authoritative Program package or sibling source and its Pydantic runtime are available through the focused conformance path",
     )
     def test_authoritative_package_accepts_compared_observations(self) -> None:
-        sys.path.insert(0, str(SPECIFICATION_SOURCE))
+        use_sibling_source = not INSTALLED_SPECIFICATION_AVAILABLE
+        if use_sibling_source:
+            sys.path.insert(0, str(SPECIFICATION_SOURCE))
         try:
+            import lims_eln_contracts
+
+            if getattr(lims_eln_contracts, "__version__", None) == "0.6.1":
+                self.skipTest(
+                    "Program 0.6.1 serves the administrative-study profile; "
+                    "the retained conformance proof uses contract-conformance"
+                )
             summary = verify_shared_package()
             simulation_value = load("fixtures/pairs/simulation-observation.json")
             simulation = validate_with_shared_package(simulation_value)
@@ -465,7 +481,8 @@ class ContractV1Tests(unittest.TestCase):
             defaulted.pop("approvals")
             shared_defaults = validate_with_shared_package(defaulted)
         finally:
-            sys.path.remove(str(SPECIFICATION_SOURCE))
+            if use_sibling_source:
+                sys.path.remove(str(SPECIFICATION_SOURCE))
 
         self.assertEqual(summary, contract_reference())
         self.assertEqual(simulation["evidence_mode"], "simulated")

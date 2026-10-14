@@ -5,7 +5,13 @@ import json
 from pathlib import Path
 import unittest
 
-HAS_CONTRACTS = find_spec("lims_eln_contracts") is not None and find_spec("lims_eln_sim") is not None
+HAS_CONTRACTS = (
+    find_spec("lims_eln_contracts") is not None
+    and find_spec("lims_eln_sim") is not None
+    and find_spec("lims_eln_contracts.administrative_study") is not None
+    and find_spec("lims_eln_contracts.study_interpretation") is not None
+    and find_spec("lims_eln_sim.administrative_pack") is not None
+)
 if HAS_CONTRACTS:
     from lims_eln_contracts.administrative_study import admit_administrative_study
     from lims_eln_contracts.canonical import canonical_json_bytes,canonical_sha256

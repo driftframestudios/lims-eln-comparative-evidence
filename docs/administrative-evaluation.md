@@ -70,6 +70,59 @@ Retain `study.json` as the finite observation checkpoint. A renewed comparison
 can read that artifact without executing a model. Changed plans or specification
 receive a successor study; existing observations keep their original bindings.
 
+### Complete local bundles and recovery
+
+The command prepares the three files in a private, invocation-owned sibling
+directory, verifies their exact membership and meaning, then makes the complete
+directory visible at the requested fresh destination. Existing destinations,
+including empty directories and symbolic links, retain their contents. A second
+concurrent invocation receives `bundle_destination_exists`; the successful
+invocation retains its complete result.
+
+The administrative receiver is
+`comparative_evidence.administrative_artifacts.administrative_artifact_inventory(directory, admitted_pack)`.
+It requires a separately admitted source pack, re-admits `study.json`, recomputes
+the report, and checks the exact HTML projection. A `fixture_demonstration`
+label binds the exact demonstration study for that pack; receiving observations
+use `caller_supplied_synthetic`. Its three-file profile is
+separate from the released two-file report verifier. Each member is a regular
+file with one link; study, report JSON and HTML budgets are 2, 4 and 16 MiB,
+respectively. The returned SHA-256 inventory identifies the verified bytes.
+Standalone semantic report admission remains with
+[#56](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/56).
+
+Publication requires concrete parent directories and an exclusive directory
+rename on a supporting local filesystem: Linux uses `renameat2` with
+`RENAME_NOREPLACE`; macOS uses `renameatx_np` with `RENAME_EXCL`.
+Directory descriptors anchor traversal and publication. A symlink in the parent
+route receives an acquisition failure; select the concrete directory path.
+The caller controls that parent namespace, and bundle verification reads a
+quiescent directory. Independent publishers receive distinct staging names;
+protection against a hostile same-user actor changing the namespace has its
+own filesystem isolation requirements.
+Other platforms or filesystems receive a held publication result. The primitive
+contracts are documented in the
+[Linux manual](https://man7.org/linux/man-pages/man2/rename.2.html) and
+[Apple's system-call source](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/man/man2/rename.2).
+
+The publisher flushes and syncs each file, syncs the completed staging directory,
+performs the exclusive rename, and syncs the destination parent. This establishes
+complete visibility and successful operating-system sync calls. Storage-device
+power-loss guarantees remain a separate environment property. A final parent-sync
+failure returns `bundle_sync` with `published=True`: the complete bundle remains
+available for verification. Preserve it and choose a new destination for another
+comparison.
+
+Before publication, acquisition, write, verification and rename failures retain
+the existing destination and release invocation-owned staging. Correct the named
+failure and retry the same still-absent destination. A cleanup failure retains
+the primary error plus a separate cleanup diagnostic and the pending directory
+name for local review. Abrupt process termination can leave a private
+`.administrative-pending-*` sibling; a later invocation uses its own fresh staging
+directory. Inspect and remove an abandoned sibling only after confirming its
+owning process has ended. Previously published bundles retain their names and
+bytes throughout recovery.
+
 [Enterprise #36](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/36)
 owns the broader adapter handoff. [#40](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/40)
 owns additional source admission and exercised recovery procedures.
