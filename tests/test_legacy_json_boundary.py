@@ -56,7 +56,7 @@ class LegacyJsonBoundaryTests(unittest.TestCase):
             path = Path(directory) / 'source.json'
             path.write_bytes(b'{}')
             requested = []
-            real_fdopen = os.fdopen
+            real_reader = artifact_boundary.io.BufferedReader
             class Reader:
                 def __init__(self, stream): self.stream = stream
                 def fileno(self): return self.stream.fileno()
@@ -64,7 +64,7 @@ class LegacyJsonBoundaryTests(unittest.TestCase):
                 def read(self, size):
                     requested.append(size)
                     return b' ' * size
-            with patch.object(artifact_boundary.os, 'fdopen', side_effect=lambda *a, **k: Reader(real_fdopen(*a, **k))), patch('comparative_evidence.cli.strict_json_loads') as decode:
+            with patch.object(artifact_boundary.io, 'BufferedReader', side_effect=lambda raw: Reader(real_reader(raw))), patch('comparative_evidence.cli.strict_json_loads') as decode:
                 with self.assertRaises(ReportArtifactError):
                     _load(path)
                 decode.assert_not_called()
