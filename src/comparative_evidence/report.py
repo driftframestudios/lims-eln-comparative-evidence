@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from .publication import render_public_boundary
+from .legacy_json import REPORT_BUDGET, HTML_BYTES, RepresentationCapacityError, validate_representation
 
 
 def write_reports(
@@ -19,10 +20,14 @@ def write_reports(
     from .artifact_boundary import _report_inventory_at
     from .filesystem_publication import publish_report
 
-    payloads = {
-        "comparison.json": (json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8"),
-        "comparison.html": render_html(report, canonical_url=canonical_url).encode("utf-8"),
-    }
+    validate_representation(report, REPORT_BUDGET)
+    json_payload = (json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
+    if len(json_payload) > REPORT_BUDGET.bytes:
+        raise RepresentationCapacityError("report_bytes")
+    html_payload = render_html(report, canonical_url=canonical_url).encode("utf-8")
+    if len(html_payload) > HTML_BYTES:
+        raise RepresentationCapacityError("report_bytes")
+    payloads = {"comparison.json": json_payload, "comparison.html": html_payload}
     limits = {name: len(payload) for name, payload in payloads.items()}
     publish_report(payloads, output, lambda descriptor: _report_inventory_at(descriptor, limits))
 
@@ -32,6 +37,7 @@ def render_html(
     *,
     canonical_url: str | None = None,
 ) -> str:
+    validate_representation(report, REPORT_BUDGET)
     if report.get("comparison_mode") == "simulated_verification":
         return _render_simulated_verification_html(
             report,

@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from .artifact_boundary import _read_regular_file
+from .legacy_json import INPUT_BUDGET
 from .calibration import score_calibration
 from .compare import compare, compare_synthetic_contract
 from .gate import admit
@@ -14,7 +16,7 @@ from .simulated_closure import admit_simulated_closure
 
 
 def _load(path: Path) -> dict:
-    value = strict_json_loads(path.read_text(encoding="utf-8"))
+    value = strict_json_loads(_read_regular_file(path, "input", max_bytes=INPUT_BUDGET.bytes))
     if not isinstance(value, dict):
         raise ValueError("JSON document requires an object at the repository boundary")
     return value

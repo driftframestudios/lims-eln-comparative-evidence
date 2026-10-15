@@ -29,6 +29,7 @@
     "src/comparative_evidence/filesystem_publication.py",
     "src/comparative_evidence/gate.py",
     "src/comparative_evidence/golden_verification.py",
+    "src/comparative_evidence/legacy_json.py",
     "src/comparative_evidence/model.py",
     "src/comparative_evidence/normalize.py",
     "src/comparative_evidence/promotion_candidate.py",
