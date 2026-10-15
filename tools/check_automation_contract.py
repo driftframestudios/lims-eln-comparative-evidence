@@ -239,15 +239,8 @@ def _require_equal(actual: object, expected: object, label: str) -> None:
         )
 
 
-def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
-    """Parse the release-coordinate job without widening the YAML subset.
-
-    The manual workflow includes a folded command and a flow-style matrix in its
-    report-producing job. Those forms remain outside this dependency-free parser's
-    deliberately small grammar. The release-coordinate job uses the restricted
-    grammar, so extract that owned mapping and parse it through the same semantic
-    path as the pull-request workflow.
-    """
+def _manual_job_lines(workflow_text: str, job_name: str) -> list[str]:
+    """Locate one owned mapping without parsing unrelated matrix/folded syntax."""
 
     source = MANUAL_FULL_PROOF_WORKFLOW.as_posix()
     raw_lines = workflow_text.splitlines()
@@ -265,7 +258,7 @@ def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
             jobs_end = index
             break
 
-    job_header = f"  {MANUAL_VALIDATION_JOB}:"
+    job_header = f"  {job_name}:"
     job_lines = [
         index
         for index in range(jobs_start + 1, jobs_end)
@@ -273,7 +266,7 @@ def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
     ]
     if len(job_lines) != 1:
         raise AutomationContractError(
-            f"{source}: expected exactly one {MANUAL_VALIDATION_JOB!r} job"
+            f"{source}: expected exactly one {job_name!r} job"
         )
 
     job_start = job_lines[0]
@@ -284,7 +277,14 @@ def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
             job_end = index
             break
 
-    fragment = "jobs:\n" + "\n".join(raw_lines[job_start:job_end]) + "\n"
+    return raw_lines[job_start:job_end]
+
+
+def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
+    """Parse the owned release-coordinate job through the restricted grammar."""
+    source = MANUAL_FULL_PROOF_WORKFLOW.as_posix()
+    lines = _manual_job_lines(workflow_text, MANUAL_VALIDATION_JOB)
+    fragment = "jobs:\n" + "\n".join(lines) + "\n"
     document = parse_restricted_yaml(fragment, source=source)
     jobs = _require_mapping(document.get("jobs"), "manual workflow jobs")
     _require_exact_keys(jobs, {MANUAL_VALIDATION_JOB}, "manual workflow job fragment")
@@ -294,7 +294,29 @@ def _extract_manual_validation_job(workflow_text: str) -> dict[str, object]:
     )
 
 
+def _validate_manual_matrix_checkout(workflow_text: str) -> None:
+    """The full test matrix receives the signed history its release tests inspect."""
+    lines = _manual_job_lines(workflow_text, "test-and-report")
+    starts = [index for index, line in enumerate(lines) if line == "    steps:"]
+    if len(starts) != 1:
+        raise AutomationContractError("manual test matrix requires one steps sequence")
+    steps = lines[starts[0] + 1:]
+    boundaries = [index for index, line in enumerate(steps) if line.startswith("      - ")]
+    if not boundaries:
+        raise AutomationContractError("manual test matrix requires a source checkout")
+    end = boundaries[1] if len(boundaries) > 1 else len(steps)
+    # Action version comments retain their YAML comment role in this small fragment.
+    first = [line[4:].partition(" #")[0] for line in steps[:end] if line.strip()]
+    document = parse_restricted_yaml("steps:\n" + "\n".join(first) + "\n",
+                                     source=MANUAL_FULL_PROOF_WORKFLOW.as_posix())
+    _require_equal(document, {"steps": [{
+        "uses": CHECKOUT_ACTION,
+        "with": {"persist-credentials": False, "fetch-depth": 0},
+    }]}, "manual test matrix checkout and required signed history")
+
+
 def _validate_manual_full_proof_workflow(workflow_text: str) -> None:
+    _validate_manual_matrix_checkout(workflow_text)
     job = _extract_manual_validation_job(workflow_text)
     _require_exact_keys(
         job,
