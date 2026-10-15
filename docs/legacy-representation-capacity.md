@@ -60,6 +60,8 @@ checks representation and serialized byte capacity before publication. A
 capacity rejection leaves the destination's previous complete pair available.
 Input admission establishes input capacity; the expanded report has its own
 capacity decision before publication.
+Pages validates generated report JSON with that report allowance. Input
+fixtures and projection manifests retain the input allowance.
 
 For B input bytes, N expanded values/member names, D container depth, K integer
 bits, P compared paths and H output bytes, admission adds a bounded byte/depth

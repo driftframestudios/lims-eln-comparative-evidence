@@ -37,7 +37,9 @@ from build_pages import (
     verify_reproducible_projections,
 )
 from comparative_evidence.compare import compare_synthetic_contract
+from comparative_evidence.artifact_boundary import ReportArtifactError, report_artifact_inventory
 from comparative_evidence.golden_verification import compare_golden_specimen
+from comparative_evidence.legacy_json import REPORT_BUDGET, RepresentationCapacityError
 from comparative_evidence.model import ObservationEnvelope, strict_json_loads
 from comparative_evidence.publication import (
     BIG_BENCH_CANARY,
@@ -263,6 +265,82 @@ class PagesProjectionTests(unittest.TestCase):
                     ).read_bytes(),
                     (runtime / filename).read_bytes(),
                 )
+
+    def test_expanded_report_retains_report_capacity_in_exact_source_pages(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-capacity-") as directory:
+            parent = Path(directory)
+            prior = self.build(parent, "prior")
+            prior_bytes = {
+                str(path.relative_to(prior)): path.read_bytes()
+                for path in prior.rglob("*") if path.is_file()
+            }
+            repository = initialize_publication_repository(parent, "repository")
+            inputs = (
+                "fixtures/pairs/simulation-observation.json",
+                "fixtures/contracts/planned-observation.json",
+            )
+            envelopes = []
+            for value, relative in enumerate(inputs):
+                document = load(relative)
+                document["result"]["extension"] = {
+                    f"value{index}": value for index in range(1_000)
+                }
+                encoded = json.dumps(document).encode("utf-8")
+                # Each actual input passes its existing capacity and shape owner.
+                envelopes.append(ObservationEnvelope.from_dict(strict_json_loads(encoded)))
+                (repository / relative).write_bytes(encoded)
+            report = compare_synthetic_contract(
+                *envelopes, load("specification/comparison-profile.json")
+            )
+            saved = parent / "saved-report"
+            write_reports(
+                report,
+                saved,
+                canonical_url=DEFAULT_CANONICAL_ORIGIN + "reports/reference/comparison.html",
+            )
+            self.assertEqual(set(report_artifact_inventory(saved)), {
+                "comparison.json", "comparison.html",
+            })
+            report_bytes = (saved / "comparison.json").read_bytes()
+            self.assertEqual(strict_json_loads(report_bytes, budget=REPORT_BUDGET), report)
+            with self.assertRaises(RepresentationCapacityError) as caught:
+                strict_json_loads(report_bytes)
+            self.assertEqual(caught.exception.code, "legacy_text")
+
+            subprocess.run(["git", "add", *inputs], cwd=repository, check=True)
+            subprocess.run(
+                ["git", "commit", "--quiet", "-m", "exercise admitted result extensions"],
+                cwd=repository,
+                check=True,
+            )
+            proof = clean_source_revision(repository)
+            output = parent / "expanded"
+            manifest = build_projection(repository, output, source_proof=proof)
+            self.assertEqual(manifest["sourceStanding"], "clean_exact_revision")
+            self.assertEqual(manifest["sourceRevision"], proof.revision)
+            self.assertEqual(manifest["reportDigest"], report["report_digest"])
+            self.assertEqual(validate_projection(output), manifest)
+            for name in ("comparison.json", "comparison.html"):
+                self.assertEqual(
+                    (output / "reports/reference" / name).read_bytes(),
+                    (saved / name).read_bytes(),
+                )
+            with self.assertRaisesRegex(PagesBuildError, "fresh destination"):
+                build_projection(repository, prior, source_proof=proof)
+
+            oversized = parent / "oversized"
+            shutil.copytree(output, oversized)
+            relative = "reports/reference/comparison.json"
+            (oversized / relative).write_bytes(
+                report_bytes + b" " * (REPORT_BUDGET.bytes + 1 - len(report_bytes))
+            )
+            update_manifest_identity(oversized, relative)
+            with self.assertRaisesRegex(ReportArtifactError, "exceeds its byte budget"):
+                validate_projection(oversized)
+            self.assertEqual(prior_bytes, {
+                str(path.relative_to(prior)): path.read_bytes()
+                for path in prior.rglob("*") if path.is_file()
+            })
 
     def test_golden_report_keeps_public_and_horizontal_boundaries(self) -> None:
         with tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory:
