@@ -318,6 +318,74 @@ class AdministrativeReportTests(unittest.TestCase):
         self.assertEqual(0, sum(row["true_positive"] for row in document["labels"]))
         self.rejected(document, "report_label_counts")
 
+    def test_zero_overlap_and_partial_overlap_bound_label_true_positives(self):
+        for jaccards in ((0.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 0.5)):
+            document = independent_document()
+            for row, jaccard in zip(document["runs"], jaccards):
+                row.update(exact_labels=False, jaccard=jaccard)
+            document.update(exact_label_agreement=fraction(0, 4, 0.0),
+                            mean_jaccard=sum(jaccards) / 4,
+                            micro_precision=fraction(3, 6, 0.5),
+                            micro_f1=fraction(6, 10, 0.6), macro_f1=0.6)
+            document["labels"][1].update(false_positive=3,
+                                        precision=fraction(1, 4, 0.25), f1=fraction(2, 5, 0.4))
+            # Retain the independently declared three true positives. Even the
+            # partial-overlap case permits only one occurrence of SYN-A, not two.
+            with self.subTest(jaccards=jaccards):
+                self.rejected(document, "report_label_counts")
+
+    def test_total_true_positives_fit_the_positive_overlap_run_capacity(self):
+        document = independent_document()
+        for index, row in enumerate(document["runs"]):
+            row.update(exact_labels=index == 0, jaccard=1.0 if index == 0 else 0.0)
+        document["labels"] = [
+            {"label": f"SYN-COMMON-{index}", "support": 1, "true_positive": 1,
+             "false_positive": 0, "false_negative": 0,
+             "precision": fraction(1, 1, 1.0), "recall": fraction(1, 1, 1.0),
+             "f1": fraction(2, 2, 1.0)}
+            for index in range(17)
+        ] + [
+            {"label": "SYN-EXTRA", "support": 0, "true_positive": 0,
+             "false_positive": 3, "false_negative": 0,
+             "precision": fraction(0, 3, 0.0), "recall": fraction(0, 0, None),
+             "f1": fraction(0, 3, 0.0)},
+        ]
+        document.update(
+            exact_label_agreement=fraction(1, 4, 0.25), mean_jaccard=0.25,
+            micro_precision=fraction(17, 20, 17 / 20), micro_recall=fraction(17, 17, 1.0),
+            micro_f1=fraction(34, 37, 34 / 37), macro_f1=17 / 18,
+        )
+        # Every individual label fits one overlapping run; their total exceeds
+        # that run's sixteen-label bound while fitting the four-run population.
+        self.rejected(document, "report_label_counts")
+
+    def test_nonexact_jaccard_bounds_intersection_below_sixteen(self):
+        document = independent_document()
+        for index, row in enumerate(document["runs"]):
+            row.update(exact_labels=False, jaccard=0.5 if index == 0 else 0.0)
+        # Sixteen intersections plus sixteen extra labels yield aggregate
+        # precision 1/2, but the single overlapping run permits at most ten
+        # intersections at Jaccard 1/2 with sixteen labels per side.
+        document["labels"] = [
+            {"label": f"SYN-COMMON-{index}", "support": 1, "true_positive": 1,
+             "false_positive": 0, "false_negative": 0,
+             "precision": fraction(1, 1, 1.0), "recall": fraction(1, 1, 1.0),
+             "f1": fraction(2, 2, 1.0)}
+            for index in range(16)
+        ] + [
+            {"label": f"SYN-EXTRA-{index}", "support": 0, "true_positive": 0,
+             "false_positive": 1, "false_negative": 0,
+             "precision": fraction(0, 1, 0.0), "recall": fraction(0, 0, None),
+             "f1": fraction(0, 1, 0.0)}
+            for index in range(16)
+        ]
+        document.update(
+            exact_label_agreement=fraction(0, 4, 0.0), mean_jaccard=0.125,
+            micro_precision=fraction(16, 32, 0.5), micro_recall=fraction(16, 16, 1.0),
+            micro_f1=fraction(32, 48, 2 / 3), macro_f1=0.5,
+        )
+        self.rejected(document, "report_label_counts")
+
     def test_valid_empty_disjoint_and_positive_intersection_populations(self):
         # Each case declares its complete label universe and four set comparisons.
         cases = (

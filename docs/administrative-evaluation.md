@@ -170,6 +170,12 @@ eligibility governs paired estimates. Macro F1 divides by the distinct labels
 appearing in either expected or observed sets of scored runs; prediction-only
 labels contribute zero F1. An empty label union produces `null` macro F1.
 Two matching empty sets still have exact agreement and Jaccard one.
+Only positive-Jaccard runs can contribute true positives: each label contributes
+at most once per such run. Admission enumerates the finite intersection/union
+sizes allowed by two sixteen-label sets and each reported Jaccard value, using
+the declared float tolerance. Their minimum and maximum intersection totals
+bound aggregate true positives. These necessary bounds reconcile the encoded
+populations while source recomputation retains full label-set provenance.
 
 A saved report preserves declared counts and coherent relationships. The
 1.0.0 format omits per-run retry histories, raw expected/observed label sets,
