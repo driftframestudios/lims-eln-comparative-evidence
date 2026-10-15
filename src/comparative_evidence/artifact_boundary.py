@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import io
 from hashlib import sha256
 from html import unescape
 import os
@@ -177,11 +178,18 @@ def verify_reproducible_reports(first: Path, replay: Path) -> dict[str, str]:
 
 @contextmanager
 def _owned_binary_stream(descriptor: int, mode: str):
-    """Own the raw descriptor across borrowed-stream setup, use and teardown."""
+    """Invalidate both stream layers before releasing their owned descriptor."""
+    raw = None
     stream = None
     failure = None
     try:
-        stream = os.fdopen(descriptor, mode, closefd=False)
+        raw = io.FileIO(descriptor, mode, closefd=False)
+        if mode == "rb":
+            stream = io.BufferedReader(raw)
+        elif mode == "wb":
+            stream = io.BufferedWriter(raw)
+        else:
+            raise ValueError("artifact streams require binary read or write mode")
         yield stream
     except BaseException as error:
         failure = error
@@ -193,14 +201,25 @@ def _owned_binary_stream(descriptor: int, mode: str):
                 stream.close()
             except BaseException as cleanup:
                 cleanups.append(cleanup)
-        try:
-            os.close(descriptor)
-        except BaseException as cleanup:
-            cleanups.append(cleanup)
+        if raw is not None and not raw.closed:
+            try:
+                raw.close()
+            except BaseException as cleanup:
+                cleanups.append(cleanup)
+        retained = raw is not None and not raw.closed
+        if not retained:
+            try:
+                os.close(descriptor)
+            except BaseException as cleanup:
+                cleanups.append(cleanup)
         if cleanups:
             cleanup = cleanups[0] if len(cleanups) == 1 else BaseExceptionGroup(
                 "Stream and descriptor cleanup observations", cleanups,
             )
+            if retained:
+                owner = failure if failure is not None else cleanup
+                owner.retained_stream = raw
+                owner.retained_descriptor = descriptor
             if failure is None:
                 raise cleanup
             previous = getattr(failure, "cleanup_error", None)

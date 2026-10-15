@@ -53,6 +53,25 @@ failure after successful publication retains complete accepted bytes. Retry
 can establish their identical identity while the owner separately resolves the
 reported staging cleanup.
 
+The shared file owner keeps its raw `FileIO` object, buffered stream, and numeric
+descriptor separately. It attempts buffered close, directly invalidates a raw
+object that remains live, then releases the descriptor once the raw object is
+closed. A later buffered flush therefore retains no access to a reused
+descriptor. Read-ahead bytes already held by a reader remain ordinary local
+values; further raw I/O requires its original live resource.
+
+If raw invalidation fails while the object remains live, the file owner retains
+both `retained_stream` and `retained_descriptor` on its failure. Administrative
+control translation carries these handles onto the selected interruption.
+Legacy publication preserves its existing primary/group policy and exposes
+the original failure through its exception cause. Follow that local cause or
+`primary_error` chain to the retained handles, close the raw object, confirm
+`closed`, then close the descriptor once. Staging and directory release still
+receive their independent attempts. A physical-close error after invalidation
+has uncertain completion: preserve its diagnostic for platform reconciliation
+instead of retrying the numeric descriptor. Keep exception objects and recovery
+handles with the local operator.
+
 Files and the staging directory are synced before publication, and the parent
 is synced afterwards. A later sync failure reports visible complete output.
 Native macOS interruption and competing-writer tests exercise these paths;
@@ -74,6 +93,12 @@ bytes directly, avoiding another parsed manifest tree. Collision checks read
 at most each prepared member's byte count plus one and inspect at most one
 extra directory entry. These are per-input bounds; input admission owns the
 size of the original evidence.
+
+The explicit buffered stream uses `io.DEFAULT_BUFFER_SIZE`; ordinary buffered
+open may select a device-derived capacity. The raw and buffered layers remain
+two I/O objects, with constant additional ownership state and a bounded number
+of cleanup observations. Byte work remains linear; exact allocation and
+throughput equivalence require their own measurement.
 
 The focused proof is:
 

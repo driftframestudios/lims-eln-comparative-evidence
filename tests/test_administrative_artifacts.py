@@ -414,7 +414,6 @@ class AdministrativeArtifactTests(unittest.TestCase):
 
     def test_verification_read_cleanup_signal_survives_both_receiving_paths(self):
         accepted = self.publish(self.root / "accepted")
-        real_fdopen = os.fdopen
         for operation in ("publish", "inventory"):
             primary = OSError(errno.EIO, "synthetic verification read failure")
             interruption = KeyboardInterrupt("synthetic reader close interruption")
@@ -428,14 +427,12 @@ class AdministrativeArtifactTests(unittest.TestCase):
                     raise primary
                 def close(self):
                     raise interruption
-            def wrap(fd, mode, **kwargs):
-                self.assertFalse(kwargs["closefd"])
-                if mode == "rb":
-                    descriptors.append(fd)
-                    return BorrowedReader(fd)
-                return real_fdopen(fd, mode, **kwargs)
+            def wrap(raw):
+                self.assertFalse(raw.closefd)
+                descriptors.append(raw.fileno())
+                return BorrowedReader(raw.fileno())
             with self.subTest(operation=operation):
-                with patch.object(artifacts.os, "fdopen", side_effect=wrap):
+                with patch.object(io, "BufferedReader", side_effect=wrap):
                     with self.assertRaises(KeyboardInterrupt) as held:
                         if operation == "publish":
                             self.publish()
@@ -484,13 +481,13 @@ class AdministrativeArtifactTests(unittest.TestCase):
     def test_successful_file_body_keeps_grouped_cleanup_signal_and_close_diagnostic(self):
         prior = self.root / "accepted"
         accepted = self.publish(prior)
-        real_fdopen, real_close = os.fdopen, os.close
+        real_close = os.close
         for operation in ("publish-read", "inventory-read", "publish-write"):
             for signal in (KeyboardInterrupt, SystemExit):
                 interruption = signal("synthetic stream close interruption")
                 close_error = OSError(errno.EIO, "synthetic raw descriptor close observation")
                 descriptors, raw_closes = [], []
-                selected_mode = "wb" if operation == "publish-write" else "rb"
+                buffer_type = io.BufferedWriter if operation == "publish-write" else io.BufferedReader
                 class InterruptedClose:
                     def __init__(self, stream):
                         self.stream = stream
@@ -499,20 +496,17 @@ class AdministrativeArtifactTests(unittest.TestCase):
                     def close(self):
                         self.stream.close()
                         raise interruption
-                def wrap(fd, mode, **kwargs):
-                    self.assertFalse(kwargs["closefd"])
-                    stream = real_fdopen(fd, mode, **kwargs)
-                    if mode == selected_mode:
-                        descriptors.append(fd)
-                        return InterruptedClose(stream)
-                    return stream
+                def wrap(raw):
+                    self.assertFalse(raw.closefd)
+                    descriptors.append(raw.fileno())
+                    return InterruptedClose(buffer_type(raw))
                 def close(fd):
                     real_close(fd)
                     if descriptors and fd == descriptors[0] and not raw_closes:
                         raw_closes.append(fd)
                         raise close_error
                 with self.subTest(operation=operation, signal=signal.__name__):
-                    with patch.object(artifacts.os, "fdopen", side_effect=wrap), patch.object(artifacts.os, "close", side_effect=close):
+                    with patch.object(io, buffer_type.__name__, side_effect=wrap), patch.object(artifacts.os, "close", side_effect=close):
                         with self.assertRaises(signal) as held:
                             if operation == "inventory-read":
                                 artifacts.administrative_artifact_inventory(prior, self.pack)
@@ -574,13 +568,79 @@ class AdministrativeArtifactTests(unittest.TestCase):
                 artifacts.administrative_artifact_inventory(target, self.pack)
                 self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
 
+    def test_retained_raw_recovery_survives_administrative_control_translation(self):
+        prior = self.root / "accepted"
+        accepted = self.publish(prior)
+        raw_type = io.FileIO
+        for operation in ("publish-write", "publish-read", "inventory-read"):
+            for body_failed in (False, True):
+                for signal in (KeyboardInterrupt, SystemExit):
+                    primary = OSError("synthetic body failure") if body_failed else None
+                    interruption = signal("synthetic buffer interruption")
+                    raw_failure = OSError("synthetic raw invalidation")
+                    mode = "wb" if operation == "publish-write" else "rb"
+                    buffer_type = io.BufferedWriter if mode == "wb" else io.BufferedReader
+                    captured = []
+                    class RetainedRaw(raw_type):
+                        def close(self):
+                            raise raw_failure
+                    def acquire(fd, selected_mode, *, closefd):
+                        if selected_mode != mode:
+                            return raw_type(fd, selected_mode, closefd=closefd)
+                        raw = RetainedRaw(fd, selected_mode, closefd=closefd)
+                        captured.append((raw, fd))
+                        return raw
+                    class InterruptedBuffer:
+                        def __init__(self, raw):
+                            self.stream = buffer_type(raw)
+                        def __getattr__(self, name):
+                            return getattr(self.stream, name)
+                        def read(self, size):
+                            if primary is not None:
+                                raise primary
+                            return self.stream.read(size)
+                        def flush(self):
+                            if primary is not None:
+                                raise primary
+                            self.stream.flush()
+                        def close(self):
+                            raise interruption
+                    with self.subTest(operation=operation, body_failed=primary is not None, signal=signal):
+                        try:
+                            with patch.object(io, "FileIO", side_effect=acquire), patch.object(io, buffer_type.__name__, side_effect=InterruptedBuffer):
+                                with self.assertRaises(signal) as held:
+                                    if operation == "inventory-read":
+                                        artifacts.administrative_artifact_inventory(prior, self.pack)
+                                    else:
+                                        self.publish()
+                            self.assertIs(interruption, held.exception)
+                            self.assertIs(primary, held.exception.primary_error)
+                            self.assertIs(primary, held.exception.__cause__)
+                            self.assertEqual((raw_failure,), held.exception.cleanup_error.exceptions)
+                            raw, descriptor = captured[0]
+                            self.assertIs(raw, held.exception.retained_stream)
+                            self.assertEqual(descriptor, held.exception.retained_descriptor)
+                            self.assertFalse(raw.closed)
+                            os.fstat(descriptor)
+                            if operation != "inventory-read":
+                                self.assertFalse(held.exception.published)
+                                self.assertIsNone(held.exception.pending_name)
+                            self.assertFalse(self.target.exists())
+                            self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
+                        finally:
+                            for raw, descriptor in captured:
+                                raw_type.close(raw)
+                                self.assertTrue(raw.closed)
+                                os.close(descriptor)
+                        self.assertEqual(accepted, artifacts.administrative_artifact_inventory(prior, self.pack))
+
 
     def test_stream_acquisition_releases_the_raw_descriptor_once(self):
         from comparative_evidence.artifact_boundary import _read_regular_file
         source = self.root / "source"
         source.write_bytes(b"owned source")
         for operation in ("read", "write", "partial_wrap"):
-            real_close = os.close
+            real_close, real_raw = os.close, io.FileIO
             acquired, closed = [], []
             failure = OSError(errno.ENOMEM, "synthetic stream acquisition failure")
             def wrap(fd, *args, **kwargs):
@@ -588,13 +648,13 @@ class AdministrativeArtifactTests(unittest.TestCase):
                 self.assertFalse(kwargs["closefd"])
                 if operation == "partial_wrap":
                     # FileIO cleanup during a later wrapper failure retains our raw fd.
-                    io.FileIO(fd, args[0], closefd=kwargs["closefd"]).close()
+                    real_raw(fd, args[0], closefd=kwargs["closefd"]).close()
                 raise failure
             def close(fd):
                 closed.append(fd)
                 real_close(fd)
             with self.subTest(operation=operation), artifacts._directory(self.root) as parent_fd:
-                with patch.object(artifacts.os, "fdopen", side_effect=wrap), patch.object(artifacts.os, "close", side_effect=close):
+                with patch.object(io, "FileIO", side_effect=wrap), patch.object(artifacts.os, "close", side_effect=close):
                     with self.assertRaises(OSError) as held:
                         if operation == "read":
                             _read_regular_file(source, "source", max_bytes=64)
@@ -619,7 +679,7 @@ class AdministrativeArtifactTests(unittest.TestCase):
                 real_close(fd)
             expected = primary or interruption
             with self.subTest(primary=primary is not None):
-                with patch.object(artifacts.os, "fdopen", return_value=BorrowedStream()), patch.object(artifacts.os, "close", side_effect=close):
+                with patch.object(io, "BufferedWriter", return_value=BorrowedStream()), patch.object(artifacts.os, "close", side_effect=close):
                     with self.assertRaises(type(expected)) as held:
                         with _owned_binary_stream(descriptor, "wb"):
                             if primary is not None:

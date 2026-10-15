@@ -105,6 +105,9 @@ def _failure_details(
         )
     interruption = _interruption(error) or _interruption(cleanup)
     if interruption is not None:
+        if hasattr(error, "retained_stream"):
+            interruption.retained_stream = error.retained_stream
+            interruption.retained_descriptor = error.retained_descriptor
         if interruption is not error:
             remaining = _other_cleanup(cleanup, interruption)
             if remaining is not None:
