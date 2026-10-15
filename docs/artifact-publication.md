@@ -86,3 +86,20 @@ publication interruption, retained cleanup work, occupied entries, existing
 empty directories, final symlinks, alias parents, concurrent reports, exact
 replay, CLI output selection, and released serializer bytes. The complete
 repository validator also compares both report families and Pages projections.
+
+### Numeric comparison capacity
+
+The legacy comparator evaluates numeric tolerance with exact integer ratios of
+its admitted JSON integers and binary floats. The relative allowance uses the
+expected value's magnitude. Directional report fields retain their existing
+finite JSON representation; `ComparisonArithmeticError` with code
+`comparison_arithmetic_capacity` returns an unrepresentable derived value to
+numeric-scale or successor-contract review before report digesting and
+publication. The previous complete output remains available.
+
+For P numeric paths, the calculation adds P rational arithmetic operations;
+work depends on operand bit length K, including fraction reduction. Binary
+floats have fixed-size ratios; admitted integer size belongs to the input
+representation boundary. This local calculation keeps each path's operands
+and intermediates for that path and adds no retained cache. Report traversal,
+key sorting, rendering, and publication retain their existing costs.

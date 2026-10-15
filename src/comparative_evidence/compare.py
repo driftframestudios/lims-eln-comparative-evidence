@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 from collections.abc import Mapping
 import math
 from typing import Any
@@ -34,6 +35,18 @@ COMPARISON_CONTRACT_VERSION = "1.2.0"
 TRUSTED_AGGREGATE_ARTIFACT_DIGEST = (
     "sha256:ddbce2fe891bfcd70515005714cdabf34e6430869cc2e2a4daca59016ac6ce3b"
 )
+
+
+class ComparisonArithmeticError(ValueError):
+    """A derived number exceeds the current finite report representation."""
+
+    code = "comparison_arithmetic_capacity"
+
+    def __init__(self) -> None:
+        super().__init__(
+            "comparison arithmetic requires finite report values; "
+            "review the numeric scale or use a successor report representation"
+        )
 
 
 CLASSIFICATIONS = {
@@ -393,7 +406,7 @@ def _validate_pair_contract(
             amount = tolerance.get(name, 0.0)
             if not isinstance(amount, (int, float)) or isinstance(amount, bool):
                 raise ValueError(f"numeric tolerance {path}.{name} requires a number")
-            if amount < 0 or not math.isfinite(amount):
+            if amount < 0 or (isinstance(amount, float) and not math.isfinite(amount)):
                 raise ValueError(f"numeric tolerance {path}.{name} requires a finite, nonnegative value")
     try:
         validate_observation_id(simulation.observation_id)
@@ -583,7 +596,11 @@ def _equivalent(expected: Any, actual: Any, tolerance: dict[str, float] | None) 
             return expected == actual
         absolute = tolerance.get("absolute", 0.0)
         relative = tolerance.get("relative", 0.0)
-        return abs(actual - expected) <= max(absolute, relative * abs(expected))
+        # Exact binary-float ratios preserve the asymmetric profile meaning through
+        # overflow, subnormal products, and mixed integer/float arithmetic.
+        return abs(Fraction(actual) - Fraction(expected)) <= max(
+            Fraction(absolute), Fraction(relative) * abs(Fraction(expected))
+        )
     if type(expected) is not type(actual):
         return False
     return expected == actual
@@ -624,8 +641,15 @@ def _classify_difference(
         if direction == "lower_is_better"
         else actual > expected
     )
-    delta = actual - expected
-    relative_delta = None if expected == 0 else delta / abs(expected)
+    try:
+        exact_delta = Fraction(actual) - Fraction(expected)
+        delta = actual - expected if isinstance(actual, int) and isinstance(expected, int) else float(exact_delta)
+        relative_delta = None if expected == 0 else float(Fraction(delta) / abs(Fraction(expected)))
+    except OverflowError as error:
+        raise ComparisonArithmeticError() from error
+    if any(isinstance(value, float) and not math.isfinite(value)
+           for value in (delta, relative_delta)):
+        raise ComparisonArithmeticError()
     side = "favorable" if favorable else "unfavorable"
     return (
         disposition[f"{side}_classification"],
