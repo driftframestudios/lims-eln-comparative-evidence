@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 from typing import Any
 
+from .legacy_json import validate_representation
 from .model import digest
 from .filesystem_publication import PublicationError, publish_manifest
 from .safety import (
@@ -74,6 +75,7 @@ def validate_simulated_closure_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     migration, security, observability, and role-separated acceptance claims.
     """
 
+    validate_representation(bundle)
     if set(bundle) != {
         "bundle_version",
         "future_reality_version",

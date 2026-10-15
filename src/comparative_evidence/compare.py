@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import math
 from typing import Any
 
+from .legacy_json import validate_representation
 from .contract_v1 import contract_reference
 from .gate import validate_for_accepted
 from .database_release import (
@@ -404,6 +405,7 @@ def _validate_pair_contract(
 
 
 def _validate_profile(profile: dict[str, Any]) -> None:
+    validate_representation(profile)
     allowed = {
         "profile_version",
         "scenario_id",

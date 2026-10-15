@@ -34,7 +34,10 @@ previous complete pair stays available. Earlier callers that overwrote a
 populated directory can select a new run directory or explicitly remove their
 own old output before invoking the comparator. The
 [artifact publication guide](docs/artifact-publication.md) explains admission,
-interruption recovery, and the local filesystem boundary.
+interruption recovery, and the local filesystem boundary. The
+[legacy representation capacities](docs/legacy-representation-capacity.md)
+name the input and saved-report limits shared by native and prepared-container
+callers.
 
 [Read the Golden Specimen report](https://cometspectrum.io/reports/golden-specimen/comparison.html)
 to see agreement, explained variation, and differences that need interpretation.

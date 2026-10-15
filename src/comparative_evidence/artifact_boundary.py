@@ -12,6 +12,7 @@ import re
 import stat
 
 from .contract_v1 import strict_json_loads
+from .legacy_json import REPORT_BUDGET, HTML_BYTES
 from .model import digest
 from .report import render_html
 
@@ -41,17 +42,19 @@ def report_artifact_inventory(root: Path) -> dict[str, str]:
         raise ReportArtifactError(
             "report root requires one concrete output directory"
         )
-    def contents():
-        for path in sorted(root.rglob("*")):
-            relative = path.relative_to(root).as_posix()
-            if path.is_symlink():
-                raise ReportArtifactError(
-                    f"report artifact {relative} requires a regular file"
-                )
-            if path.is_dir():
-                continue
-            yield relative, _read_regular_file(path, relative)
-    return _report_content_inventory(contents())
+    names = set()
+    with os.scandir(root) as entries:
+        for entry in entries:
+            names.add(entry.name)
+            if len(names) > len(REPORT_ARTIFACTS):
+                break
+    if names != REPORT_ARTIFACTS:
+        raise ReportArtifactError("report bundle requires exactly its JSON and HTML artifacts")
+    limits = {"comparison.json": REPORT_BUDGET.bytes, "comparison.html": HTML_BYTES}
+    return _report_content_inventory(
+        (name, _read_regular_file(root / name, name, max_bytes=limits[name]))
+        for name in REPORT_ARTIFACTS
+    )
 
 
 def _report_inventory_at(directory_fd: int, limits: dict[str, int]) -> dict[str, str]:
@@ -87,7 +90,7 @@ def _report_content_inventory(contents) -> dict[str, str]:
                     "comparison.json requires UTF-8 text"
                 ) from error
             try:
-                document = strict_json_loads(json_text)
+                document = strict_json_loads(json_text, budget=REPORT_BUDGET)
             except ValueError as error:
                 raise ReportArtifactError(
                     f"comparison.json requires strict JSON: {error}"

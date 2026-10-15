@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
+from .legacy_json import validate_representation
 from .contract_v1 import (
     ASSURANCE_STAGES,
     ContractBoundaryError,
@@ -61,6 +62,7 @@ class ObservationEnvelope:
     classification: Mapping[str, Any]
 
     def __post_init__(self) -> None:
+        validate_representation(vars(self), allow_frozen=True)
         for field in ("source", "result", "provenance", "classification"):
             object.__setattr__(self, field, _deep_freeze(getattr(self, field)))
         object.__setattr__(self, "approvals", _deep_freeze(self.approvals))
@@ -69,6 +71,7 @@ class ObservationEnvelope:
     def from_dict(cls, value: dict[str, Any]) -> "ObservationEnvelope":
         if not isinstance(value, dict):
             raise EnvelopeError("envelope requires a JSON object")
+        validate_representation(value)
         required = {
             "envelope_version",
             "observation_id",
