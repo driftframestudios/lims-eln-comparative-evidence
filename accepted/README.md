@@ -34,6 +34,12 @@ Each admitted manifest carries the raw-artifact digest, protected locator,
 independent reviewer, classification, and redaction disposition. Raw artifact
 bytes remain with their governed evidence owner.
 
+Acceptance-stage envelopes carry one accepting decision for each Scientific,
+Quality, and Regulatory domain. Their normalized approver identities are
+distinct from one another, the performer, and the reviewer. Other domains and
+non-accepting decisions retain their recorded context. The gate checks these
+associations in one pass over the bounded approval collection before publication.
+
 Generated manifests become visible after their complete bytes are verified.
 An identical generated-byte replay returns the accepted path; changed bytes
 require the namespace's new-identity route. Follow the
