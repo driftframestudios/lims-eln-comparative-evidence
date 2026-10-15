@@ -9,6 +9,7 @@ Work is O(study + report + HTML bytes), including bounded scoring and hashing.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import errno
 from hashlib import sha256
 import os
@@ -66,6 +67,68 @@ class AdministrativePublicationError(ValueError):
         super().__init__(self.code + ": " + recovery)
 
 
+def _interruption(error: BaseException | None) -> BaseException | None:
+    """Find the first control signal in the bounded owned-cleanup observations."""
+    if isinstance(error, (KeyboardInterrupt, SystemExit)):
+        return error
+    if isinstance(error, BaseExceptionGroup):
+        for child in error.exceptions:
+            found = _interruption(child)
+            if found is not None:
+                return found
+    return None
+
+
+def _other_cleanup(error: BaseException | None, interruption: BaseException) -> BaseException | None:
+    if error is interruption:
+        return None
+    if isinstance(error, BaseExceptionGroup):
+        children = [remaining for child in error.exceptions
+                    if (remaining := _other_cleanup(child, interruption)) is not None]
+        return error.derive(children) if children else None
+    return error
+
+
+def _failure_details(
+    error: BaseException, *, cleanup_only: bool = False,
+) -> tuple[BaseException | None, BaseException | None]:
+    """Preserve control meaning at each owned translation and record cause once."""
+    cleanup = getattr(error, "cleanup_error", None)
+    if cleanup_only:
+        cleanup = error if cleanup is None else BaseExceptionGroup(
+            "Resource cleanup observations", [error, cleanup],
+        )
+    interruption = _interruption(error) or _interruption(cleanup)
+    if interruption is not None:
+        if interruption is not error:
+            remaining = _other_cleanup(cleanup, interruption)
+            if remaining is not None:
+                _attach_cleanup(interruption, remaining)
+            if not cleanup_only and getattr(interruption, "primary_error", None) is None:
+                interruption.primary_error = error
+        if not hasattr(interruption, "primary_error"):
+            interruption.primary_error = None
+        if not hasattr(interruption, "cleanup_error"):
+            interruption.cleanup_error = None
+    return interruption, cleanup
+
+
+@contextmanager
+def _artifact_io():
+    """Normalize only the shared file helpers' owned stream outcomes.
+
+    Their direct exception groups contain teardown observations after a
+    successful body. Body failures instead retain attached cleanup_error.
+    """
+    try:
+        yield
+    except BaseException as error:
+        interruption, _ = _failure_details(error, cleanup_only=isinstance(error, BaseExceptionGroup))
+        if interruption is not None:
+            raise interruption from interruption.primary_error
+        raise
+
+
 def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
     from .administrative_evaluation import demonstration_study, evaluate, render_html
     from .administrative_report import admit_evaluation_report
@@ -79,13 +142,14 @@ def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
     if names != ADMINISTRATIVE_ARTIFACTS:
         raise AdministrativeArtifactError("bundle_membership")
     try:
-        content = {
-            name: _read_regular_file(
-                Path(name), name, max_bytes=limit,
-                directory_fd=directory_fd, single_link=True,
-            )
-            for name, limit in ADMINISTRATIVE_ARTIFACT_LIMITS.items()
-        }
+        with _artifact_io():
+            content = {
+                name: _read_regular_file(
+                    Path(name), name, max_bytes=limit,
+                    directory_fd=directory_fd, single_link=True,
+                )
+                for name, limit in ADMINISTRATIVE_ARTIFACT_LIMITS.items()
+            }
         for name in ("study.json", "comparison.json"):
             if any(content[name].startswith(marker) for marker in BYTE_ORDER_MARKS):
                 raise AdministrativeArtifactError("bundle_encoding")
@@ -101,10 +165,16 @@ def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
             raise AdministrativeArtifactError("bundle_report_binding")
         if content["comparison.html"] != render_html(reproduced).encode("utf-8"):
             raise AdministrativeArtifactError("bundle_html_projection")
-    except AdministrativeArtifactError:
-        raise
     except (ValueError, TypeError, RecursionError, OSError) as error:
-        raise AdministrativeArtifactError("bundle_content") from error
+        interruption, cleanup = _failure_details(error)
+        if interruption is not None:
+            raise interruption from interruption.primary_error
+        if isinstance(error, AdministrativeArtifactError):
+            raise
+        translated = AdministrativeArtifactError("bundle_content")
+        if cleanup is not None:
+            _attach_cleanup(translated, cleanup)
+        raise translated from error
     return {name: "sha256:" + sha256(payload).hexdigest() for name, payload in content.items()}
 
 
@@ -119,10 +189,16 @@ def administrative_artifact_inventory(root: Path, pack: ScenarioPack) -> dict[st
         admitted_pack = admit_pack(canonical_json_bytes(pack))
         with _directory(root) as descriptor:
             return _inventory_at(descriptor, admitted_pack)
-    except AdministrativeArtifactError:
-        raise
     except (ValueError, TypeError, OSError) as error:
-        raise AdministrativeArtifactError("bundle_source_or_directory") from error
+        interruption, cleanup = _failure_details(error)
+        if interruption is not None:
+            raise interruption from interruption.primary_error
+        if isinstance(error, AdministrativeArtifactError):
+            raise
+        translated = AdministrativeArtifactError("bundle_source_or_directory")
+        if cleanup is not None:
+            _attach_cleanup(translated, cleanup)
+        raise translated from error
 
 
 def publish_administrative_bundle(
@@ -141,6 +217,8 @@ def publish_administrative_bundle(
 
     stage = "prepare"
     published = False
+    pending = None
+    failure = None
     try:
         rename = _exclusive_rename()
         admitted_pack = admit_pack(canonical_json_bytes(pack))
@@ -157,7 +235,7 @@ def publish_administrative_bundle(
             pending = None
             descriptor = None
             identity = None
-            failure = cleanup_error = None
+            failure = None
             inventory = None
             try:
                 # An early collision saves preparation work; rename enforces the race boundary.
@@ -174,13 +252,14 @@ def publish_administrative_bundle(
                     pending = name
                     info = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
                     identity = (info.st_dev, info.st_ino)
-                descriptor = os.open(pending, _directory_flags(), dir_fd=parent_fd)
+                    descriptor = os.open(pending, _directory_flags(), dir_fd=parent_fd)
                 opened = os.fstat(descriptor)
                 if (opened.st_dev, opened.st_ino) != identity:
                     raise AdministrativeArtifactError("bundle_staging_identity")
                 stage = "write"
-                for name, payload in payloads.items():
-                    _write_artifact(descriptor, name, payload)
+                with _artifact_io():
+                    for name, payload in payloads.items():
+                        _write_artifact(descriptor, name, payload)
                 stage = "verify"
                 inventory = _inventory_at(descriptor, admitted_pack)
                 stage = "sync"
@@ -197,39 +276,46 @@ def publish_administrative_bundle(
             except BaseException as error:
                 failure = error
             finally:
+                cleanups = []
                 if descriptor is not None:
                     try:
                         os.close(descriptor)
-                    except OSError as error:
-                        cleanup_error = error
+                    except BaseException as error:
+                        cleanups.append(error)
                 if pending is not None:
                     try:
                         _cleanup_owned(parent_fd, pending, identity)
-                    except (OSError, ValueError) as error:
-                        cleanup_error = error if cleanup_error is None else ExceptionGroup(
-                            "Staging cleanup observations", [cleanup_error, error],
-                        )
-            if isinstance(failure, (KeyboardInterrupt, SystemExit)):
-                if cleanup_error is not None:
-                    _attach_cleanup(failure, cleanup_error)
+                        pending = None
+                    except BaseException as error:
+                        cleanups.append(error)
+            cleanup = (cleanups[0] if len(cleanups) == 1 else
+                       BaseExceptionGroup("Staging cleanup observations", cleanups)) if cleanups else None
+            if failure is not None:
+                if cleanup is not None:
+                    _attach_cleanup(failure, cleanup)
                 raise failure
-            if failure is not None or cleanup_error is not None:
-                nested_cleanup = getattr(failure, "cleanup_error", None)
-                if nested_cleanup is not None:
-                    cleanup_error = nested_cleanup if cleanup_error is None else BaseExceptionGroup(
-                        "Resource cleanup observations", [nested_cleanup, cleanup_error],
-                    )
-                if stage == "publish" and isinstance(failure, FileExistsError):
-                    stage = "destination_exists"
-                raise AdministrativePublicationError(
-                    stage if failure is not None else "cleanup",
-                    published=published, cleanup_error=cleanup_error, pending_name=pending,
-                ) from failure or cleanup_error
+            stage = "cleanup"
+            if cleanup is not None:
+                raise cleanup
             return inventory
-    except AdministrativePublicationError:
-        raise
-    except (ValueError, OSError) as error:
+    except BaseException as error:
+        # Normalize after parent-directory teardown, so its diagnostics also
+        # remain available. A control signal keeps process-control meaning;
+        # a preceding ordinary failure remains its explicit primary_error.
+        interruption, cleanup = _failure_details(error, cleanup_only=stage == "cleanup")
+        if interruption is not None:
+            interruption.stage = stage
+            interruption.published = published
+            interruption.pending_name = pending
+            if interruption.primary_error is not None:
+                raise interruption from interruption.primary_error
+            raise interruption
+        if not isinstance(error, Exception) or (
+            failure is None and stage != "cleanup" and not isinstance(error, (ValueError, OSError))
+        ):
+            raise
+        if stage == "publish" and isinstance(error, FileExistsError):
+            stage = "destination_exists"
         raise AdministrativePublicationError(
-            stage, published=published,
-            cleanup_error=getattr(error, "cleanup_error", None),
+            stage, published=published, cleanup_error=cleanup, pending_name=pending,
         ) from error

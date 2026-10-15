@@ -123,6 +123,22 @@ directory. Inspect and remove an abandoned sibling only after confirming its
 owning process has ended. Previously published bundles retain their names and
 bytes throughout recovery.
 
+`KeyboardInterrupt` and `SystemExit` retain their control meaning after all
+remaining owned cleanup has been attempted once. They carry `stage`,
+`published`, and `pending_name`; successful staging removal clears the pending
+name. A primary interruption keeps subsequent failures in `cleanup_error`.
+When teardown introduces the first interruption, an earlier ordinary failure
+remains available as `primary_error` and the exception cause. Other cleanup
+observations remain in `cleanup_error`. Interruption after publication keeps
+the complete bundle visible and reports `published=True` for verification.
+The content reader and direct inventory receiver preserve the same interruption
+and ordinary-cause relationship at their own error translations. File-I/O
+boundaries recognize the shared helpers' direct teardown groups as
+cleanup-only outcomes: a successful read or write keeps `primary_error=None`,
+and remaining stream/descriptor close observations stay in `cleanup_error`.
+Administrative normalization stays local: the released two-file publisher retains its existing
+error policy and destination contract.
+
 [Enterprise #36](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/36)
 owns the broader adapter handoff. [#40](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/40)
 owns additional source admission and exercised recovery procedures.
@@ -147,13 +163,21 @@ records through attributes, such as `report.eligibility.pairs`; their JSON
 field names and values stay stable.
 
 Admission checks strict JSON, finite numbers, unique keys, a 4 MiB input and
-canonical-output ceiling, 32 container levels, and 100,000 decoded values.
+canonical-output ceiling, 32 container levels, and 773,229 decoded values.
 Program's lexical depth check runs before decoding; its decoded-value and
 bounded-output helpers retain their original ownership. The model permits
 2 through 512 run records, 1 through 256 Program pairs, up to 4,096 attempts,
 1 through 8 cohorts, and up to 16,384 distinct label rows. Nested Program
 collections retain their own declared bounds. These limits bound accepted
 representations; process memory and elapsed time require separate observations.
+
+The decoded-value budget counts containers, member names and scalar values. It
+covers the full generated record envelope: 213 fixed values, 35 per label row,
+39 per run, 19 per cohort, and 701 per pair (both Program comparison copies plus
+eligibility with 32 controls and 36 reasons). The independent 4 MiB byte limit
+continues to apply. The largest authored repeat count with sixteen distinct
+prediction labels per completed run has a producer-to-admission-to-bundle
+regression, including its HTML semantic twin.
 
 Counts use strict integers and exact equality. Ratios carry a numerator,
 denominator, and value in [0, 1]; a zero denominator requires a zero numerator
@@ -170,6 +194,12 @@ eligibility governs paired estimates. Macro F1 divides by the distinct labels
 appearing in either expected or observed sets of scored runs; prediction-only
 labels contribute zero F1. An empty label union produces `null` macro F1.
 Two matching empty sets still have exact agreement and Jaccard one.
+Only positive-Jaccard runs can contribute true positives: each label contributes
+at most once per such run. Admission enumerates the finite intersection/union
+sizes allowed by two sixteen-label sets and each reported Jaccard value, using
+the declared float tolerance. Their minimum and maximum intersection totals
+bound aggregate true positives. These necessary bounds reconcile the encoded
+populations while source recomputation retains full label-set provenance.
 
 A saved report preserves declared counts and coherent relationships. The
 1.0.0 format omits per-run retry histories, raw expected/observed label sets,

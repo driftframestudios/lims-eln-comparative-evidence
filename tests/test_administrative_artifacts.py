@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import errno
+from html import unescape
 from importlib.util import find_spec
 import io
 import json
@@ -33,6 +34,9 @@ if HAS_PROFILE:
     from lims_eln_sim.administrative_pack import build_pack
     from comparative_evidence import administrative_artifacts as artifacts
     from comparative_evidence.administrative_evaluation import demonstration_study, evaluate, main
+    from comparative_evidence.administrative_report import (
+        MAX_REPORT_BYTES, MAX_REPORT_VALUES, admit_evaluation_report,
+    )
 
 
 @unittest.skipUnless(HAS_PROFILE, "administrative-study profile supplies the bounded source contracts")
@@ -68,6 +72,41 @@ class AdministrativeArtifactTests(unittest.TestCase):
         html = (self.target / "comparison.html").read_text()
         self.assertIn("64 scored runs of 72 planned", html)
         self.assertIn("Scientific oracle disagreements: 2", html)
+        self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
+
+    def test_max_repeat_and_label_outputs_roundtrip_through_complete_bundle(self):
+        pack = build_pack(repeats=4)
+        document = demonstration_study(pack).model_dump(mode="json", by_alias=True)
+        for index, observation in enumerate(document["observations"]):
+            if observation["status"] == "completed":
+                actual = json.loads(observation["administrative_output"]["text"])
+                actual["labels"] = [f"SYN-PREDICTION-{index}-{label}" for label in range(16)]
+                text = canonical_json_bytes(actual).decode()
+                observation["administrative_output"].update(text=text, digest=canonical_sha256(text))
+        study = admit_administrative_study(canonical_json_bytes(document))
+        report = evaluate(pack, study)
+        payload = canonical_json_bytes(report)
+        self.assertEqual((288, 256, 4099),
+                         (len(report.runs), report.scored_coverage.numerator, len(report.labels)))
+        # Count the wire representation independently of the intake helper.
+        pending, values = [json.loads(payload)], 0
+        while pending:
+            item = pending.pop()
+            values += 1
+            if isinstance(item, dict):
+                values += len(item)
+                pending.extend(item.values())
+            elif isinstance(item, list):
+                pending.extend(item)
+        self.assertGreater(values, 100000)
+        self.assertLessEqual(values, MAX_REPORT_VALUES)
+        self.assertLess(len(payload), MAX_REPORT_BYTES)
+        self.assertEqual(payload, canonical_json_bytes(admit_evaluation_report(payload)))
+        inventory = artifacts.publish_administrative_bundle(pack, study, report, self.target)
+        self.assertEqual(inventory, artifacts.administrative_artifact_inventory(self.target, pack))
+        self.assertEqual(payload + b"\n", (self.target / "comparison.json").read_bytes())
+        embedded = (self.target / "comparison.html").read_text().split('<pre id="report-json">', 1)[1].split("</pre>", 1)[0]
+        self.assertEqual(json.loads(payload), json.loads(unescape(embedded)))
         self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
 
     def test_verifier_rejects_changed_members_shapes_and_links(self):
@@ -250,6 +289,293 @@ class AdministrativeArtifactTests(unittest.TestCase):
         self.assertIs(close_error, held.exception.cleanup_error)
         self.assertEqual([], list(self.root.iterdir()))
         self.publish()
+
+    def test_secondary_close_interrupt_preserves_primary_and_completes_cleanup(self):
+        prior = self.root / "accepted"
+        accepted = self.publish(prior)
+        for signal in (KeyboardInterrupt, SystemExit):
+            target = self.root / signal.__name__
+            primary = OSError(errno.EIO, "synthetic write failure")
+            interruption = signal("synthetic close interruption")
+            real_close, real_write, real_cleanup = os.close, artifacts._write_artifact, artifacts._cleanup_owned
+            staging_fd, interrupted, cleanup_calls = None, False, []
+            def write(fd, name, payload):
+                nonlocal staging_fd
+                staging_fd = fd
+                real_write(fd, name, payload)
+                raise primary
+            def close(fd):
+                nonlocal interrupted
+                real_close(fd)
+                if fd == staging_fd and not interrupted:
+                    interrupted = True
+                    raise interruption
+            def cleanup(parent, name, identity):
+                # The acquired descriptor was released before the control signal;
+                # remaining cleanup gets its own ownership rather than a close retry.
+                with self.assertRaises(OSError):
+                    os.fstat(staging_fd)
+                cleanup_calls.append(name)
+                real_cleanup(parent, name, identity)
+            with self.subTest(signal=signal.__name__):
+                with patch.object(artifacts, "_write_artifact", side_effect=write), patch.object(artifacts.os, "close", side_effect=close), patch.object(artifacts, "_cleanup_owned", side_effect=cleanup):
+                    with self.assertRaises(signal) as held:
+                        self.publish(target)
+                self.assertIs(interruption, held.exception)
+                self.assertIs(primary, held.exception.primary_error)
+                self.assertIs(primary, held.exception.__cause__)
+                self.assertEqual("write", held.exception.stage)
+                self.assertFalse(held.exception.published)
+                self.assertIsNone(held.exception.pending_name)
+                self.assertEqual(1, len(cleanup_calls))
+                self.assertFalse(target.exists())
+                self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
+                self.assertEqual(accepted, artifacts.administrative_artifact_inventory(prior, self.pack))
+                self.assertEqual(accepted, self.publish(target))
+
+    def test_primary_interrupt_preserves_cleanup_failure_and_pending_ownership(self):
+        for signal in (KeyboardInterrupt, SystemExit):
+            target = self.root / signal.__name__
+            interruption = signal("synthetic write interruption")
+            cleanup = OSError(errno.EACCES, "synthetic staging cleanup failure")
+            with self.subTest(signal=signal.__name__):
+                with patch.object(artifacts, "_write_artifact", side_effect=interruption), patch.object(artifacts, "_cleanup_owned", side_effect=cleanup):
+                    with self.assertRaises(signal) as held:
+                        self.publish(target)
+                self.assertIs(interruption, held.exception)
+                self.assertIs(cleanup, held.exception.cleanup_error)
+                self.assertIsNone(held.exception.primary_error)
+                self.assertFalse(held.exception.published)
+                pending = self.root / held.exception.pending_name
+                self.assertTrue(pending.is_dir())
+                self.assertFalse(target.exists())
+                self.publish(target)
+                self.assertTrue(pending.is_dir())
+
+    def test_secondary_cleanup_interrupt_retains_pending_name_and_primary(self):
+        primary = OSError(errno.EIO, "synthetic write failure")
+        interruption = KeyboardInterrupt("synthetic staging cleanup interruption")
+        with patch.object(artifacts, "_write_artifact", side_effect=primary), patch.object(artifacts, "_cleanup_owned", side_effect=interruption):
+            with self.assertRaises(KeyboardInterrupt) as held:
+                self.publish()
+        self.assertIs(interruption, held.exception)
+        self.assertIs(primary, held.exception.primary_error)
+        self.assertIs(primary, held.exception.__cause__)
+        self.assertFalse(held.exception.published)
+        self.assertTrue((self.root / held.exception.pending_name).is_dir())
+        self.assertFalse(self.target.exists())
+
+    def test_first_cleanup_signal_keeps_later_staging_and_parent_diagnostics(self):
+        primary = OSError(errno.EIO, "synthetic write failure")
+        first_signal = KeyboardInterrupt("synthetic staging close interruption")
+        remove_failure = OSError(errno.EACCES, "synthetic staging removal failure")
+        later_signal = SystemExit("synthetic parent close interruption")
+        real_close = os.close
+        staging_fd = parent_fd = None
+        def write(fd, name, payload):
+            nonlocal staging_fd
+            staging_fd = fd
+            raise primary
+        def cleanup(parent, name, identity):
+            nonlocal parent_fd
+            parent_fd = parent
+            raise remove_failure
+        def close(fd):
+            real_close(fd)
+            if fd == staging_fd:
+                raise first_signal
+            if fd == parent_fd:
+                raise later_signal
+        with patch.object(artifacts, "_write_artifact", side_effect=write), patch.object(artifacts, "_cleanup_owned", side_effect=cleanup), patch.object(artifacts.os, "close", side_effect=close):
+            with self.assertRaises(KeyboardInterrupt) as held:
+                self.publish()
+        self.assertIs(first_signal, held.exception)
+        self.assertIs(primary, held.exception.primary_error)
+        self.assertIs(primary, held.exception.__cause__)
+        remaining, pending = [], [held.exception.cleanup_error]
+        while pending:
+            error = pending.pop(0)
+            if isinstance(error, BaseExceptionGroup):
+                pending[0:0] = error.exceptions
+            else:
+                remaining.append(error)
+        self.assertEqual([remove_failure, later_signal], remaining)
+        self.assertFalse(held.exception.published)
+        self.assertTrue((self.root / held.exception.pending_name).is_dir())
+        self.assertFalse(self.target.exists())
+
+    def test_nested_resource_cleanup_signal_keeps_control_meaning(self):
+        primary = OSError(errno.EIO, "synthetic stream write failure")
+        interruption = KeyboardInterrupt("synthetic stream close interruption")
+        artifacts._attach_cleanup(primary, interruption)
+        with patch.object(artifacts, "_write_artifact", side_effect=primary):
+            with self.assertRaises(KeyboardInterrupt) as held:
+                self.publish()
+        self.assertIs(interruption, held.exception)
+        self.assertIs(primary, held.exception.primary_error)
+        self.assertIs(primary, held.exception.__cause__)
+        self.assertFalse(held.exception.published)
+        self.assertIsNone(held.exception.pending_name)
+        self.assertEqual([], list(self.root.iterdir()))
+
+    def test_verification_read_cleanup_signal_survives_both_receiving_paths(self):
+        accepted = self.publish(self.root / "accepted")
+        real_fdopen = os.fdopen
+        for operation in ("publish", "inventory"):
+            primary = OSError(errno.EIO, "synthetic verification read failure")
+            interruption = KeyboardInterrupt("synthetic reader close interruption")
+            descriptors = []
+            class BorrowedReader:
+                def __init__(self, descriptor):
+                    self.descriptor = descriptor
+                def fileno(self):
+                    return self.descriptor
+                def read(self, *args):
+                    raise primary
+                def close(self):
+                    raise interruption
+            def wrap(fd, mode, **kwargs):
+                self.assertFalse(kwargs["closefd"])
+                if mode == "rb":
+                    descriptors.append(fd)
+                    return BorrowedReader(fd)
+                return real_fdopen(fd, mode, **kwargs)
+            with self.subTest(operation=operation):
+                with patch.object(artifacts.os, "fdopen", side_effect=wrap):
+                    with self.assertRaises(KeyboardInterrupt) as held:
+                        if operation == "publish":
+                            self.publish()
+                        else:
+                            artifacts.administrative_artifact_inventory(self.root / "accepted", self.pack)
+                self.assertIs(interruption, held.exception)
+                self.assertIs(primary, held.exception.primary_error)
+                self.assertIs(primary, held.exception.__cause__)
+                self.assertIsNone(held.exception.cleanup_error)
+                if operation == "publish":
+                    self.assertEqual("verify", held.exception.stage)
+                    self.assertFalse(held.exception.published)
+                    self.assertIsNone(held.exception.pending_name)
+                self.assertEqual(1, len(descriptors))
+                with self.assertRaises(OSError):
+                    os.fstat(descriptors[0])
+                self.assertFalse(self.target.exists())
+                self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
+                self.assertEqual(accepted, artifacts.administrative_artifact_inventory(self.root / "accepted", self.pack))
+        self.assertEqual(accepted, self.publish())
+
+    def test_inventory_directory_cleanup_signal_keeps_ordinary_verification_cause(self):
+        accepted = self.publish()
+        primary = artifacts.AdministrativeArtifactError("bundle_content")
+        interruption = SystemExit("synthetic inventory parent close interruption")
+        real_close = os.close
+        descriptor = None
+        def verify(fd, pack):
+            nonlocal descriptor
+            descriptor = fd
+            raise primary
+        def close(fd):
+            real_close(fd)
+            if fd == descriptor:
+                raise interruption
+        with patch.object(artifacts, "_inventory_at", side_effect=verify), patch.object(artifacts.os, "close", side_effect=close):
+            with self.assertRaises(SystemExit) as held:
+                artifacts.administrative_artifact_inventory(self.target, self.pack)
+        self.assertIs(interruption, held.exception)
+        self.assertIs(primary, held.exception.primary_error)
+        self.assertIs(primary, held.exception.__cause__)
+        self.assertEqual(accepted, artifacts.administrative_artifact_inventory(self.target, self.pack))
+
+    def test_successful_file_body_keeps_grouped_cleanup_signal_and_close_diagnostic(self):
+        prior = self.root / "accepted"
+        accepted = self.publish(prior)
+        real_fdopen, real_close = os.fdopen, os.close
+        for operation in ("publish-read", "inventory-read", "publish-write"):
+            for signal in (KeyboardInterrupt, SystemExit):
+                interruption = signal("synthetic stream close interruption")
+                close_error = OSError(errno.EIO, "synthetic raw descriptor close observation")
+                descriptors, raw_closes = [], []
+                selected_mode = "wb" if operation == "publish-write" else "rb"
+                class InterruptedClose:
+                    def __init__(self, stream):
+                        self.stream = stream
+                    def __getattr__(self, name):
+                        return getattr(self.stream, name)
+                    def close(self):
+                        self.stream.close()
+                        raise interruption
+                def wrap(fd, mode, **kwargs):
+                    self.assertFalse(kwargs["closefd"])
+                    stream = real_fdopen(fd, mode, **kwargs)
+                    if mode == selected_mode:
+                        descriptors.append(fd)
+                        return InterruptedClose(stream)
+                    return stream
+                def close(fd):
+                    real_close(fd)
+                    if descriptors and fd == descriptors[0] and not raw_closes:
+                        raw_closes.append(fd)
+                        raise close_error
+                with self.subTest(operation=operation, signal=signal.__name__):
+                    with patch.object(artifacts.os, "fdopen", side_effect=wrap), patch.object(artifacts.os, "close", side_effect=close):
+                        with self.assertRaises(signal) as held:
+                            if operation == "inventory-read":
+                                artifacts.administrative_artifact_inventory(prior, self.pack)
+                            else:
+                                self.publish()
+                    self.assertIs(interruption, held.exception)
+                    self.assertIsNone(held.exception.primary_error)
+                    self.assertIsNone(held.exception.__cause__)
+                    remaining, pending = [], [held.exception.cleanup_error]
+                    while pending:
+                        error = pending.pop(0)
+                        if isinstance(error, BaseExceptionGroup):
+                            pending[0:0] = error.exceptions
+                        else:
+                            remaining.append(error)
+                    self.assertEqual([close_error], remaining)
+                    self.assertEqual(1, len(descriptors))
+                    self.assertEqual(descriptors, raw_closes)
+                    if operation != "inventory-read":
+                        self.assertFalse(held.exception.published)
+                        self.assertIsNone(held.exception.pending_name)
+                        self.assertEqual("write" if operation == "publish-write" else "verify", held.exception.stage)
+                    self.assertFalse(self.target.exists())
+                    self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
+                    self.assertEqual(accepted, artifacts.administrative_artifact_inventory(prior, self.pack))
+
+    def test_postpublication_close_interrupt_preserves_complete_bundle(self):
+        for resource in ("staging", "parent"):
+            target = self.root / resource
+            real_close, real_write, native = os.close, artifacts._write_artifact, artifacts._exclusive_rename()
+            descriptor, interrupted = None, False
+            interruption = KeyboardInterrupt("synthetic final close interruption")
+            def write(fd, name, payload):
+                nonlocal descriptor
+                if resource == "staging":
+                    descriptor = fd
+                real_write(fd, name, payload)
+            def publish(parent, source, name):
+                nonlocal descriptor
+                if resource == "parent":
+                    descriptor = parent
+                native(parent, source, name)
+            def close(fd):
+                nonlocal interrupted
+                real_close(fd)
+                if fd == descriptor and not interrupted:
+                    interrupted = True
+                    raise interruption
+            with self.subTest(resource=resource):
+                with patch.object(artifacts, "_write_artifact", side_effect=write), patch.object(artifacts, "_exclusive_rename", return_value=publish), patch.object(artifacts.os, "close", side_effect=close):
+                    with self.assertRaises(KeyboardInterrupt) as held:
+                        self.publish(target)
+                self.assertIs(interruption, held.exception)
+                self.assertEqual("cleanup", held.exception.stage)
+                self.assertTrue(held.exception.published)
+                self.assertIsNone(held.exception.primary_error)
+                self.assertIsNone(held.exception.pending_name)
+                artifacts.administrative_artifact_inventory(target, self.pack)
+                self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
 
     def test_stream_acquisition_releases_the_raw_descriptor_once(self):
         from comparative_evidence.artifact_boundary import _read_regular_file
