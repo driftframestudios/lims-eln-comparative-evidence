@@ -147,13 +147,21 @@ records through attributes, such as `report.eligibility.pairs`; their JSON
 field names and values stay stable.
 
 Admission checks strict JSON, finite numbers, unique keys, a 4 MiB input and
-canonical-output ceiling, 32 container levels, and 100,000 decoded values.
+canonical-output ceiling, 32 container levels, and 773,229 decoded values.
 Program's lexical depth check runs before decoding; its decoded-value and
 bounded-output helpers retain their original ownership. The model permits
 2 through 512 run records, 1 through 256 Program pairs, up to 4,096 attempts,
 1 through 8 cohorts, and up to 16,384 distinct label rows. Nested Program
 collections retain their own declared bounds. These limits bound accepted
 representations; process memory and elapsed time require separate observations.
+
+The decoded-value budget counts containers, member names and scalar values. It
+covers the full generated record envelope: 213 fixed values, 35 per label row,
+39 per run, 19 per cohort, and 701 per pair (both Program comparison copies plus
+eligibility with 32 controls and 36 reasons). The independent 4 MiB byte limit
+continues to apply. The largest authored repeat count with sixteen distinct
+prediction labels per completed run has a producer-to-admission-to-bundle
+regression, including its HTML semantic twin.
 
 Counts use strict integers and exact equality. Ratios carry a numerator,
 denominator, and value in [0, 1]; a zero denominator requires a zero numerator

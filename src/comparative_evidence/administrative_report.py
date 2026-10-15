@@ -33,7 +33,19 @@ from lims_eln_sim.administrative_pack import MAX_BYTES, ScenarioPack, Token, adm
 REPORT_SCHEMA_ID = "urn:driftframe:comparison:administrative-evaluation:1.0.0"
 MAX_REPORT_BYTES = 4 * 1024 * 1024
 MAX_REPORT_DEPTH = 32
-MAX_REPORT_VALUES = 100000
+MAX_REPORT_LABELS = 16384
+MAX_REPORT_RUNS = 512
+MAX_REPORT_GROUPS = 8
+# Count containers, member names and scalar values in the generated wire shape.
+# Fixed metadata includes ten ratios, eight status counts and nested metadata.
+# Each Program comparison has up to 35 source-derived reasons and two output
+# families; eligibility carries 32 controls (17 values each) and 36 reasons.
+# Both copies of the comparison are budgeted. The independent byte cap also
+# bounds inputs whose Program reason collections exceed the producer envelope.
+MAX_REPORT_VALUES = (
+    213 + 35 * MAX_REPORT_LABELS + 39 * MAX_REPORT_RUNS + 19 * MAX_REPORT_GROUPS
+    + (MAX_REPORT_RUNS // 2) * (2 * (15 + 35 + 2) + 17 + 32 * 17 + 36)
+)
 FLOAT_REL_TOL = 1e-12
 FLOAT_ABS_TOL = 1e-12
 PROFILE = {"id":"administrative-fields", "version":"1.0.0", "primary":"exact label-set match", "averaging":"micro over label decisions; macro over labels with expected or observed support", "zero_denominator":"null", "empty_set_jaccard":1, "paired_estimator":"equal subject weight after within-subject repeat means", "uncertainty":"descriptive fixture observations; inferential intervals require an independently reviewed sampling design"}
@@ -221,9 +233,9 @@ class EvaluationReport(ContractModel):
     policy_agreement: Ratio
     raw_preservation: Ratio
     scientific_oracle_disagreements: Count
-    labels: Annotated[tuple[LabelScore, ...], Field(max_length=16384)]
-    groups: Annotated[tuple[GroupScore, ...], Field(min_length=1, max_length=8)]
-    runs: Annotated[tuple[RunScore, ...], Field(min_length=2, max_length=512)]
+    labels: Annotated[tuple[LabelScore, ...], Field(max_length=MAX_REPORT_LABELS)]
+    groups: Annotated[tuple[GroupScore, ...], Field(min_length=1, max_length=MAX_REPORT_GROUPS)]
+    runs: Annotated[tuple[RunScore, ...], Field(min_length=2, max_length=MAX_REPORT_RUNS)]
     identity_comparison: StudyComparisonReport
     eligibility: StudyInterpretation
 

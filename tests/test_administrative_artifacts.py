@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import errno
+from html import unescape
 from importlib.util import find_spec
 import io
 import json
@@ -33,6 +34,9 @@ if HAS_PROFILE:
     from lims_eln_sim.administrative_pack import build_pack
     from comparative_evidence import administrative_artifacts as artifacts
     from comparative_evidence.administrative_evaluation import demonstration_study, evaluate, main
+    from comparative_evidence.administrative_report import (
+        MAX_REPORT_BYTES, MAX_REPORT_VALUES, admit_evaluation_report,
+    )
 
 
 @unittest.skipUnless(HAS_PROFILE, "administrative-study profile supplies the bounded source contracts")
@@ -68,6 +72,41 @@ class AdministrativeArtifactTests(unittest.TestCase):
         html = (self.target / "comparison.html").read_text()
         self.assertIn("64 scored runs of 72 planned", html)
         self.assertIn("Scientific oracle disagreements: 2", html)
+        self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
+
+    def test_max_repeat_and_label_outputs_roundtrip_through_complete_bundle(self):
+        pack = build_pack(repeats=4)
+        document = demonstration_study(pack).model_dump(mode="json", by_alias=True)
+        for index, observation in enumerate(document["observations"]):
+            if observation["status"] == "completed":
+                actual = json.loads(observation["administrative_output"]["text"])
+                actual["labels"] = [f"SYN-PREDICTION-{index}-{label}" for label in range(16)]
+                text = canonical_json_bytes(actual).decode()
+                observation["administrative_output"].update(text=text, digest=canonical_sha256(text))
+        study = admit_administrative_study(canonical_json_bytes(document))
+        report = evaluate(pack, study)
+        payload = canonical_json_bytes(report)
+        self.assertEqual((288, 256, 4099),
+                         (len(report.runs), report.scored_coverage.numerator, len(report.labels)))
+        # Count the wire representation independently of the intake helper.
+        pending, values = [json.loads(payload)], 0
+        while pending:
+            item = pending.pop()
+            values += 1
+            if isinstance(item, dict):
+                values += len(item)
+                pending.extend(item.values())
+            elif isinstance(item, list):
+                pending.extend(item)
+        self.assertGreater(values, 100000)
+        self.assertLessEqual(values, MAX_REPORT_VALUES)
+        self.assertLess(len(payload), MAX_REPORT_BYTES)
+        self.assertEqual(payload, canonical_json_bytes(admit_evaluation_report(payload)))
+        inventory = artifacts.publish_administrative_bundle(pack, study, report, self.target)
+        self.assertEqual(inventory, artifacts.administrative_artifact_inventory(self.target, pack))
+        self.assertEqual(payload + b"\n", (self.target / "comparison.json").read_bytes())
+        embedded = (self.target / "comparison.html").read_text().split('<pre id="report-json">', 1)[1].split("</pre>", 1)[0]
+        self.assertEqual(json.loads(payload), json.loads(unescape(embedded)))
         self.assertEqual([], list(self.root.glob(".administrative-pending-*")))
 
     def test_verifier_rejects_changed_members_shapes_and_links(self):

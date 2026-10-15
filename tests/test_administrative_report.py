@@ -20,7 +20,7 @@ if HAS_PROFILE:
     from lims_eln_sim.administrative_pack import admit_pack, build_pack
     from comparative_evidence.administrative_evaluation import demonstration_study, evaluate, render_html
     from comparative_evidence.administrative_report import (
-        MAX_REPORT_BYTES, PROFILE, REPORT_SCHEMA_ID, ReportAdmissionError,
+        MAX_REPORT_BYTES, MAX_REPORT_VALUES, PROFILE, REPORT_SCHEMA_ID, ReportAdmissionError,
         admit_evaluation_report, verify_evaluation_report,
     )
 
@@ -495,7 +495,7 @@ class AdministrativeReportTests(unittest.TestCase):
             (b'{"private-canary":NaN}', "report_json_number"),
             (b'{"private-canary":1e9999}', "report_json_number"),
             (b"[" * 33 + b"0" + b"]" * 33, "report_json_depth"),
-            (b"[" + b"0," * 100000 + b"0]", "report_decoded_values"),
+            (b"[" + b"0," * MAX_REPORT_VALUES + b"0]", "report_decoded_values"),
             (b" " * (MAX_REPORT_BYTES + 1), "report_input_bytes"),
             (b'{"unfinished":', "report_json_syntax"), (b"[]", "report_shape"),
             (b"{}", "report_schema"), ("{}", "report_payload"),
@@ -521,6 +521,41 @@ class AdministrativeReportTests(unittest.TestCase):
         document = independent_document()
         document["eligibility"]["pairs"][0]["eligible"] = False
         self.rejected(document, "report_eligibility")
+
+    def test_decoded_budget_covers_each_generated_record_owner(self):
+        # Expand the structural envelope independently. Repeated identities and
+        # reasons here count capacity; semantic report admission has its own tests.
+        document = self.report.model_dump(mode="json", by_alias=True)
+        document["status_counts"] = {status: 0 for status in (
+            "completed", "pending", "abstained", "failed", "timeout",
+            "invalid_response", "cancelled", "excluded",
+        )}
+        document["runs"] = [document["runs"][0]] * 512
+        document["labels"] = [document["labels"][0]] * 16384
+        document["groups"] = [document["groups"][0]] * 8
+        for comparison in (document["identity_comparison"], document["eligibility"]["comparison"]):
+            row = deepcopy(comparison["comparisons"][0])
+            row["reason_fields"] = ["source control"] * 35
+            row["expected_invariant_violations"] = ["scientific", "administrative"]
+            comparison["comparisons"] = [row] * 256
+        pair = deepcopy(document["eligibility"]["pairs"][0])
+        pair["controls"] = [{
+            "a": {"name": "source_control", "standing": "specified", "value": "a"},
+            "b": {"name": "source_control", "standing": "specified", "value": "b"},
+        }] * 32
+        pair["reasons"] = ["source control"] * 36
+        document["eligibility"]["pairs"] = [pair] * 256
+        pending, values = [document], 0
+        while pending:
+            item = pending.pop()
+            values += 1
+            if isinstance(item, dict):
+                values += len(item)
+                pending.extend(item.values())
+            elif isinstance(item, list):
+                pending.extend(item)
+        self.assertEqual(773229, values)
+        self.assertEqual(values, MAX_REPORT_VALUES)
 
     def test_html_uses_admitted_values_and_rejects_unchecked_copy(self):
         report = self.admit(independent_document())
