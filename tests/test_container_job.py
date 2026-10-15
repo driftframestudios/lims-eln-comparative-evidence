@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -69,6 +70,22 @@ class ContainerBoundaryTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 context.prepare(source,target,patches=self.patch_directory,architecture="arm64")
             self.assertEqual(before,(target/"context-receipt.json").read_bytes())
+
+    def test_prepared_context_imports_core_entry(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "context"
+            context.prepare(ROOT, target, patches=self.patch_directory, architecture="arm64")
+            result = subprocess.run(
+                [sys.executable, "-I", "-S", "-B", "-c",
+                 "import sys; sys.path[:0] = ['infra', 'src']; "
+                 "import container_entry; "
+                 "from comparative_evidence import gate, report, simulated_closure"],
+                cwd=target / "source",
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_source_and_failure_boundaries(self):
         for kind in ("symlink","directory","hardlink","failure"):
