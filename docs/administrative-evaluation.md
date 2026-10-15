@@ -198,8 +198,19 @@ Only positive-Jaccard runs can contribute true positives: each label contributes
 at most once per such run. Admission enumerates the finite intersection/union
 sizes allowed by two sixteen-label sets and each reported Jaccard value, using
 the declared float tolerance. Their minimum and maximum intersection totals
-bound aggregate true positives. These necessary bounds reconcile the encoded
-populations while source recomputation retains full label-set provenance.
+bound aggregate true positives. The same cardinalities bind each intersection
+to its symmetric difference (false positives plus false negatives). Admission
+checks the aggregate against the convex sum of those finite segments, using
+exact integer supporting bounds. For example, Jaccard one-half requires equal
+intersection and error totals when every scored run has that value.
+
+With R runs, L labels, G groups and K distinct cardinality segments, this check
+adds O(K squared) integer work and O(K) storage to the existing reconciliation.
+Segment discovery examines a fixed sixteen-label cardinality family for each
+distinct score; K stays within that finite family. Repeated scores share their
+calculation. These are necessary joint arithmetic bounds. Integer assignment
+of particular labels to individual runs and full label provenance remain with
+source recomputation; the 1.0.0 summary does not carry those assignments.
 
 A saved report preserves declared counts and coherent relationships. The
 1.0.0 format omits per-run retry histories, raw expected/observed label sets,
@@ -239,7 +250,7 @@ recomputation, and preserves its existing staging and recovery behavior.
 
 These signals support distinct decisions:
 
-- Admission establishes self-consistency of the saved representation.
+- Admission establishes the declared structural and necessary arithmetic relationships.
 - A digest identifies the exact canonical content against a trusted coordinate.
 - Recomputation establishes agreement with the admitted study and authored pack.
 - Provenance review establishes whether those source identities and assertions
