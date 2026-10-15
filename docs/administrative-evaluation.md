@@ -123,6 +123,22 @@ directory. Inspect and remove an abandoned sibling only after confirming its
 owning process has ended. Previously published bundles retain their names and
 bytes throughout recovery.
 
+`KeyboardInterrupt` and `SystemExit` retain their control meaning after all
+remaining owned cleanup has been attempted once. They carry `stage`,
+`published`, and `pending_name`; successful staging removal clears the pending
+name. A primary interruption keeps subsequent failures in `cleanup_error`.
+When teardown introduces the first interruption, an earlier ordinary failure
+remains available as `primary_error` and the exception cause. Other cleanup
+observations remain in `cleanup_error`. Interruption after publication keeps
+the complete bundle visible and reports `published=True` for verification.
+The content reader and direct inventory receiver preserve the same interruption
+and ordinary-cause relationship at their own error translations. File-I/O
+boundaries recognize the shared helpers' direct teardown groups as
+cleanup-only outcomes: a successful read or write keeps `primary_error=None`,
+and remaining stream/descriptor close observations stay in `cleanup_error`.
+Administrative normalization stays local: the released two-file publisher retains its existing
+error policy and destination contract.
+
 [Enterprise #36](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/36)
 owns the broader adapter handoff. [#40](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/40)
 owns additional source admission and exercised recovery procedures.
