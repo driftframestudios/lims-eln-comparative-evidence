@@ -4,11 +4,16 @@ The three-file profile composes the released regular-file reader and the
 invocation-owned staging pattern from infra/container_runtime.py. Its package
 API owns caller-selected destinations, bounded recomputation and exclusive
 publication. The released two-file report contract retains its own verifier.
-Work is O(study + report + HTML bytes), including bounded scoring and hashing.
+Preparation and file traversal scale with artifact bytes. Study admission and
+independent scoring retain their own bounded graph, sorting and model costs.
+The staging owner adds constant resource state and one attempt per release.
 """
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from dataclasses import dataclass
+from enum import Enum
 import errno
 from hashlib import sha256
 import os
@@ -66,6 +71,69 @@ class AdministrativePublicationError(ValueError):
         super().__init__(self.code + ": " + recovery)
 
 
+def _interruption(error: BaseException | None) -> BaseException | None:
+    """Find the first control signal in the bounded owned-cleanup observations."""
+    if isinstance(error, (KeyboardInterrupt, SystemExit)):
+        return error
+    if isinstance(error, BaseExceptionGroup):
+        for child in error.exceptions:
+            found = _interruption(child)
+            if found is not None:
+                return found
+    return None
+
+
+def _other_cleanup(error: BaseException | None, interruption: BaseException) -> BaseException | None:
+    if error is interruption:
+        return None
+    if isinstance(error, BaseExceptionGroup):
+        # subgroup preserves traceback, cause, context and notes on retained groups.
+        return error.subgroup(
+            lambda item: not isinstance(item, BaseExceptionGroup) and item is not interruption,
+        )
+    return error
+
+
+def _failure_details(
+    error: BaseException, *, cleanup_only: bool = False,
+) -> tuple[BaseException | None, BaseException | None]:
+    """Preserve control meaning at each owned translation and record cause once."""
+    cleanup = getattr(error, "cleanup_error", None)
+    if cleanup_only:
+        cleanup = error if cleanup is None else BaseExceptionGroup(
+            "Resource cleanup observations", [error, cleanup],
+        )
+    interruption = _interruption(error) or _interruption(cleanup)
+    if interruption is not None:
+        if interruption is not error:
+            remaining = _other_cleanup(cleanup, interruption)
+            if remaining is not None:
+                _attach_cleanup(interruption, remaining)
+            if not cleanup_only and getattr(interruption, "primary_error", None) is None:
+                interruption.primary_error = error
+        if not hasattr(interruption, "primary_error"):
+            interruption.primary_error = None
+        if not hasattr(interruption, "cleanup_error"):
+            interruption.cleanup_error = None
+    return interruption, cleanup
+
+
+@contextmanager
+def _artifact_io():
+    """Normalize only the shared file helpers' owned stream outcomes.
+
+    Their direct exception groups contain teardown observations after a
+    successful body. Body failures instead retain attached cleanup_error.
+    """
+    try:
+        yield
+    except BaseException as error:
+        interruption, _ = _failure_details(error, cleanup_only=isinstance(error, BaseExceptionGroup))
+        if interruption is not None:
+            raise interruption from interruption.primary_error
+        raise
+
+
 def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
     from .administrative_evaluation import demonstration_study, evaluate, render_html
     from .administrative_report import admit_evaluation_report
@@ -79,13 +147,14 @@ def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
     if names != ADMINISTRATIVE_ARTIFACTS:
         raise AdministrativeArtifactError("bundle_membership")
     try:
-        content = {
-            name: _read_regular_file(
-                Path(name), name, max_bytes=limit,
-                directory_fd=directory_fd, single_link=True,
-            )
-            for name, limit in ADMINISTRATIVE_ARTIFACT_LIMITS.items()
-        }
+        with _artifact_io():
+            content = {
+                name: _read_regular_file(
+                    Path(name), name, max_bytes=limit,
+                    directory_fd=directory_fd, single_link=True,
+                )
+                for name, limit in ADMINISTRATIVE_ARTIFACT_LIMITS.items()
+            }
         for name in ("study.json", "comparison.json"):
             if any(content[name].startswith(marker) for marker in BYTE_ORDER_MARKS):
                 raise AdministrativeArtifactError("bundle_encoding")
@@ -101,10 +170,16 @@ def _inventory_at(directory_fd: int, pack: ScenarioPack) -> dict[str, str]:
             raise AdministrativeArtifactError("bundle_report_binding")
         if content["comparison.html"] != render_html(reproduced).encode("utf-8"):
             raise AdministrativeArtifactError("bundle_html_projection")
-    except AdministrativeArtifactError:
-        raise
     except (ValueError, TypeError, RecursionError, OSError) as error:
-        raise AdministrativeArtifactError("bundle_content") from error
+        interruption, cleanup = _failure_details(error)
+        if interruption is not None:
+            raise interruption from interruption.primary_error
+        if isinstance(error, AdministrativeArtifactError):
+            raise
+        translated = AdministrativeArtifactError("bundle_content")
+        if cleanup is not None:
+            _attach_cleanup(translated, cleanup)
+        raise translated from error
     return {name: "sha256:" + sha256(payload).hexdigest() for name, payload in content.items()}
 
 
@@ -119,10 +194,160 @@ def administrative_artifact_inventory(root: Path, pack: ScenarioPack) -> dict[st
         admitted_pack = admit_pack(canonical_json_bytes(pack))
         with _directory(root) as descriptor:
             return _inventory_at(descriptor, admitted_pack)
-    except AdministrativeArtifactError:
-        raise
     except (ValueError, TypeError, OSError) as error:
-        raise AdministrativeArtifactError("bundle_source_or_directory") from error
+        interruption, cleanup = _failure_details(error)
+        if interruption is not None:
+            raise interruption from interruption.primary_error
+        if isinstance(error, AdministrativeArtifactError):
+            raise
+        translated = AdministrativeArtifactError("bundle_source_or_directory")
+        if cleanup is not None:
+            _attach_cleanup(translated, cleanup)
+        raise translated from error
+
+
+class _Phase(Enum):
+    PREPARE = "prepare"
+    ACQUIRE = "acquire"
+    WRITE = "write"
+    VERIFY = "verify"
+    SYNC_STAGING = "sync_staging"
+    PUBLISH = "publish"
+    SYNC_PARENT = "sync_parent"
+    CLEANUP = "cleanup"
+    DESTINATION_EXISTS = "destination_exists"
+
+    @property
+    def public_stage(self) -> str:
+        # Existing callers receive one sync stage; ownership distinguishes its sides.
+        return "sync" if self in (_Phase.SYNC_STAGING, _Phase.SYNC_PARENT) else self.value
+
+
+@dataclass
+class _PublicationState:
+    phase: _Phase = _Phase.PREPARE
+    published: bool = False
+    pending_name: str | None = None
+    operation_error: BaseException | None = None
+
+
+class _AdministrativeStaging:
+    """Own the acquired descriptor and private sibling until rename or release."""
+
+    def __init__(self, parent_fd: int, state: _PublicationState):
+        self.parent_fd = parent_fd
+        self.state = state
+        self.descriptor: int | None = None
+        self.identity: tuple[int, int] | None = None
+
+    def acquire(self, target_name: str) -> None:
+        # The early check saves staging work; exclusive rename enforces the race boundary.
+        try:
+            os.stat(target_name, dir_fd=self.parent_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            self.state.phase = _Phase.DESTINATION_EXISTS
+            raise FileExistsError(errno.EEXIST, "destination exists")
+        with _record_transition():
+            name = ".administrative-pending-" + uuid4().hex
+            os.mkdir(name, mode=0o700, dir_fd=self.parent_fd)
+            self.state.pending_name = name
+            info = os.stat(name, dir_fd=self.parent_fd, follow_symlinks=False)
+            self.identity = (info.st_dev, info.st_ino)
+            self.descriptor = os.open(name, _directory_flags(), dir_fd=self.parent_fd)
+        opened = os.fstat(self.descriptor)
+        if (opened.st_dev, opened.st_ino) != self.identity:
+            raise AdministrativeArtifactError("bundle_staging_identity")
+
+    def publish(self, rename, target_name: str) -> None:
+        if not _same_directory(self.parent_fd, self.state.pending_name, self.identity):
+            raise AdministrativeArtifactError("bundle_staging_identity")
+        with _record_transition():
+            rename(self.parent_fd, self.state.pending_name, target_name)
+            self.state.published = True
+            self.state.pending_name = None
+
+    def release(self) -> BaseException | None:
+        """Attempt both owned releases, retaining their observation order."""
+        observations = []
+        if self.descriptor is not None:
+            descriptor, self.descriptor = self.descriptor, None
+            try:
+                os.close(descriptor)
+            except BaseException as error:
+                observations.append(error)
+        if self.state.pending_name is not None:
+            try:
+                _cleanup_owned(self.parent_fd, self.state.pending_name, self.identity)
+                self.state.pending_name = None
+            except BaseException as error:
+                observations.append(error)
+        if len(observations) == 1:
+            return observations[0]
+        if observations:
+            return BaseExceptionGroup("Staging cleanup observations", observations)
+        return None
+
+
+@contextmanager
+def _administrative_staging(target: Path, state: _PublicationState):
+    """Finish staging and parent release before the public error policy runs."""
+    state.phase = _Phase.ACQUIRE
+    with _directory(target.parent, create=True) as parent_fd:
+        staging = _AdministrativeStaging(parent_fd, state)
+        try:
+            staging.acquire(target.name)
+            yield staging
+        except BaseException as error:
+            state.operation_error = error
+            raise
+        finally:
+            cleanup = staging.release()
+            if state.operation_error is not None:
+                if cleanup is not None:
+                    _attach_cleanup(state.operation_error, cleanup)
+            else:
+                state.phase = _Phase.CLEANUP
+                if cleanup is not None:
+                    raise cleanup
+
+
+def _prepare_bundle(pack: ScenarioPack, study: AdministrativeStudy, report: EvaluationReport):
+    from .administrative_evaluation import render_html
+
+    admitted_pack = admit_pack(canonical_json_bytes(pack))
+    payloads = {
+        "study.json": canonical_json_bytes(study) + b"\n",
+        "comparison.json": canonical_json_bytes(report) + b"\n",
+        "comparison.html": render_html(report).encode("utf-8"),
+    }
+    if any(len(payload) > ADMINISTRATIVE_ARTIFACT_LIMITS[name] for name, payload in payloads.items()):
+        raise AdministrativeArtifactError("bundle_bytes")
+    return admitted_pack, payloads
+
+
+def _raise_publication_failure(error: BaseException, state: _PublicationState) -> None:
+    """Apply administrative interruption and diagnostic policy after all teardown."""
+    stage = state.phase.public_stage
+    interruption, cleanup = _failure_details(error, cleanup_only=state.phase is _Phase.CLEANUP)
+    if interruption is not None:
+        interruption.stage = stage
+        interruption.published = state.published
+        interruption.pending_name = state.pending_name
+        if interruption.primary_error is not None:
+            raise interruption from interruption.primary_error
+        raise interruption
+    if not isinstance(error, Exception) or (
+        state.operation_error is None and state.phase is not _Phase.CLEANUP
+        and not isinstance(error, (ValueError, OSError))
+    ):
+        raise error
+    if state.phase is _Phase.PUBLISH and isinstance(error, FileExistsError):
+        stage = _Phase.DESTINATION_EXISTS.value
+    raise AdministrativePublicationError(
+        stage, published=state.published, cleanup_error=cleanup, pending_name=state.pending_name,
+    ) from error
 
 
 def publish_administrative_bundle(
@@ -137,99 +362,24 @@ def publish_administrative_bundle(
     distinct staging names. Hostile same-user namespace mutation is outside
     this local filesystem protocol.
     """
-    from .administrative_evaluation import render_html
-
-    stage = "prepare"
-    published = False
+    state = _PublicationState()
     try:
         rename = _exclusive_rename()
-        admitted_pack = admit_pack(canonical_json_bytes(pack))
-        payloads = {
-            "study.json": canonical_json_bytes(study) + b"\n",
-            "comparison.json": canonical_json_bytes(report) + b"\n",
-            "comparison.html": render_html(report).encode("utf-8"),
-        }
-        if any(len(payload) > ADMINISTRATIVE_ARTIFACT_LIMITS[name] for name, payload in payloads.items()):
-            raise AdministrativeArtifactError("bundle_bytes")
+        admitted_pack, payloads = _prepare_bundle(pack, study, report)
         target = destination.absolute()
-        stage = "acquire"
-        with _directory(target.parent, create=True) as parent_fd:
-            pending = None
-            descriptor = None
-            identity = None
-            failure = cleanup_error = None
-            inventory = None
-            try:
-                # An early collision saves preparation work; rename enforces the race boundary.
-                try:
-                    os.stat(target.name, dir_fd=parent_fd, follow_symlinks=False)
-                except FileNotFoundError:
-                    pass
-                else:
-                    stage = "destination_exists"
-                    raise FileExistsError(errno.EEXIST, "destination exists")
-                with _record_transition():
-                    name = ".administrative-pending-" + uuid4().hex
-                    os.mkdir(name, mode=0o700, dir_fd=parent_fd)
-                    pending = name
-                    info = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
-                    identity = (info.st_dev, info.st_ino)
-                descriptor = os.open(pending, _directory_flags(), dir_fd=parent_fd)
-                opened = os.fstat(descriptor)
-                if (opened.st_dev, opened.st_ino) != identity:
-                    raise AdministrativeArtifactError("bundle_staging_identity")
-                stage = "write"
+        with _administrative_staging(target, state) as staging:
+            state.phase = _Phase.WRITE
+            with _artifact_io():
                 for name, payload in payloads.items():
-                    _write_artifact(descriptor, name, payload)
-                stage = "verify"
-                inventory = _inventory_at(descriptor, admitted_pack)
-                stage = "sync"
-                os.fsync(descriptor)
-                stage = "publish"
-                if not _same_directory(parent_fd, pending, identity):
-                    raise AdministrativeArtifactError("bundle_staging_identity")
-                with _record_transition():
-                    rename(parent_fd, pending, target.name)
-                    published = True
-                    pending = None
-                stage = "sync"
-                os.fsync(parent_fd)
-            except BaseException as error:
-                failure = error
-            finally:
-                if descriptor is not None:
-                    try:
-                        os.close(descriptor)
-                    except OSError as error:
-                        cleanup_error = error
-                if pending is not None:
-                    try:
-                        _cleanup_owned(parent_fd, pending, identity)
-                    except (OSError, ValueError) as error:
-                        cleanup_error = error if cleanup_error is None else ExceptionGroup(
-                            "Staging cleanup observations", [cleanup_error, error],
-                        )
-            if isinstance(failure, (KeyboardInterrupt, SystemExit)):
-                if cleanup_error is not None:
-                    _attach_cleanup(failure, cleanup_error)
-                raise failure
-            if failure is not None or cleanup_error is not None:
-                nested_cleanup = getattr(failure, "cleanup_error", None)
-                if nested_cleanup is not None:
-                    cleanup_error = nested_cleanup if cleanup_error is None else BaseExceptionGroup(
-                        "Resource cleanup observations", [nested_cleanup, cleanup_error],
-                    )
-                if stage == "publish" and isinstance(failure, FileExistsError):
-                    stage = "destination_exists"
-                raise AdministrativePublicationError(
-                    stage if failure is not None else "cleanup",
-                    published=published, cleanup_error=cleanup_error, pending_name=pending,
-                ) from failure or cleanup_error
-            return inventory
-    except AdministrativePublicationError:
-        raise
-    except (ValueError, OSError) as error:
-        raise AdministrativePublicationError(
-            stage, published=published,
-            cleanup_error=getattr(error, "cleanup_error", None),
-        ) from error
+                    _write_artifact(staging.descriptor, name, payload)
+            state.phase = _Phase.VERIFY
+            inventory = _inventory_at(staging.descriptor, admitted_pack)
+            state.phase = _Phase.SYNC_STAGING
+            os.fsync(staging.descriptor)
+            state.phase = _Phase.PUBLISH
+            staging.publish(rename, target.name)
+            state.phase = _Phase.SYNC_PARENT
+            os.fsync(staging.parent_fd)
+        return inventory
+    except BaseException as error:
+        _raise_publication_failure(error, state)

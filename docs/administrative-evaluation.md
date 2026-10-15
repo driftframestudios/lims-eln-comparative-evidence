@@ -123,6 +123,31 @@ directory. Inspect and remove an abandoned sibling only after confirming its
 owning process has ended. Previously published bundles retain their names and
 bytes throughout recovery.
 
+The administrative publisher carries one invocation state through preparation,
+acquisition, writing, verification, staging sync, exclusive publication, parent
+sync, and cleanup. A dedicated staging owner records the descriptor and directory
+identity as they are acquired, then attempts each release once. Descriptor zero
+is an owned descriptor. The publication operation transfers the private name to
+the final name while termination signals wait for the ownership record.
+
+| Boundary | Receiving behavior |
+| --- | --- |
+| Before exclusive rename | The final name retains its prior state; the owner releases its staging directory |
+| After exclusive rename | The final name contains the complete bundle; the owner releases its descriptor |
+| Operation plus teardown failure | The operation remains the cause and ordered cleanup observations remain locally inspectable |
+| Cleanup interruption | The first `KeyboardInterrupt` or `SystemExit` retains control meaning after the remaining releases; prior operation and secondary cleanup observations remain attached |
+
+The existing filesystem helpers own regular-file streams, anchored parent
+traversal, identity checks and exclusive rename. This administrative owner composes
+those mechanics with its own collision and interruption policies. The released
+two-file report and manifest publishers keep their own replay policies. This
+boundary avoids routing distinct public contracts through one general workflow.
+Preparation and file traversal scale with artifact bytes; admission, sorting and
+independent scoring retain their separately bounded costs. The lifecycle adds
+constant resource state, with diagnostic storage proportional to observed
+cleanup failures. Exact source recomputation remains the bundle's verification
+step.
+
 [Enterprise #36](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/36)
 owns the broader adapter handoff. [#40](https://github.com/driftframestudios/lims-eln-comparative-evidence/issues/40)
 owns additional source admission and exercised recovery procedures.
