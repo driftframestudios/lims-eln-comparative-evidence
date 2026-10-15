@@ -1,10 +1,13 @@
 """Saved administrative-report coherence and separate source recomputation.
 
 Program owns nested comparison/eligibility and JSON resource guards. Comparative
-owns score coherence. Indexes take O(R + L + G) space; reconciliation is O(R + L
-+ G), followed by bounded serialization. Decoder/model costs retain their own
-byte, depth and collection envelopes. Admission establishes internal agreement;
-source recomputation establishes agreement with a separately admitted oracle.
+owns score coherence. Indexes take O(R + L + G) space. Reconciliation takes
+O(R*C + L + G + K*K) time with O(K) additional segment storage, where C is the
+fixed label-cardinality search space and K counts canonical overlap segments.
+Bounded serialization follows; decoder/model costs retain their own byte,
+depth and collection envelopes. Admission establishes necessary arithmetic
+relationships; source recomputation establishes agreement with a separately
+admitted oracle.
 """
 
 from __future__ import annotations

@@ -190,13 +190,21 @@ class AdministrativeReportTests(unittest.TestCase):
                 document = with_label_sets([(("SYN-A", "SYN-B"), ("SYN-A", "SYN-B", "SYN-C"))] * 4)
                 self.assertEqual(fraction(8, 12, 2 / 3), document["micro_precision"])
                 self.assertEqual(fraction(16, 20, 0.8), document["micro_f1"])
+                accepted = self.admit(document)
                 for run, score in zip(document["runs"], scores, strict=True):
                     run["jaccard"] = score
                 document["mean_jaccard"] = sum(scores) / 4
                 self.rejected(document, "report_label_joint_counts")
-                unchecked = type(self.report).model_construct(**document)
-                with self.assertRaises(ReportAdmissionError):
+                unchecked = accepted.model_copy(update={
+                    "runs": tuple(
+                        run.model_copy(update={"jaccard": score})
+                        for run, score in zip(accepted.runs, scores, strict=True)
+                    ),
+                    "mean_jaccard": sum(scores) / 4,
+                })
+                with self.assertRaises(ReportAdmissionError) as held:
                     render_html(unchecked)
+                self.assertEqual(held.exception.code, "report_label_joint_counts")
 
     def test_joint_cardinality_admission_retains_float_tolerance(self):
         document = with_label_sets([(("SYN-A",), ("SYN-A", "SYN-B"))] * 4)
