@@ -12,6 +12,11 @@ import math
 import re
 from typing import Any
 
+from .legacy_json import (
+    ContractBoundaryError, INPUT_BUDGET, REPORT_BUDGET, JsonBudget,
+    bounded_integer, preflight_json, validate_representation,
+)
+
 
 CONTRACT_VERSION = "1.0.0"
 CONTRACT_DISTRIBUTION_VERSION = "0.3.1"
@@ -83,19 +88,18 @@ _UTC_TIMESTAMP = re.compile(
 )
 
 
-class ContractBoundaryError(ValueError):
-    """A value returns to the named contract-completion path."""
-
-
-def strict_json_loads(content: str | bytes) -> Any:
+def strict_json_loads(content: str | bytes, *, budget: JsonBudget = INPUT_BUDGET) -> Any:
     """Read one finite JSON document with unique object keys."""
 
-    return json.loads(
-        content,
+    document = json.loads(
+        preflight_json(content, budget),
+        parse_int=lambda text: bounded_integer(text, budget),
         parse_constant=_reject_nonfinite,
         parse_float=_finite_float,
         object_pairs_hook=_unique_object,
     )
+    validate_representation(document, budget)
+    return document
 
 
 def _reject_nonfinite(value: str) -> None:
@@ -266,48 +270,54 @@ def contract_reference() -> dict[str, Any]:
     }
 
 
-def project_observation_v1(value: Any) -> dict[str, Any]:
-    """Project a local envelope onto the shared contract-v1 nucleus."""
-
-    if not isinstance(value, dict):
-        raise ContractBoundaryError("observation envelope requires one JSON object")
-    _validate_json_value(value)
-    document = deepcopy(value)
-    version = document.get("envelope_version")
+def _project_observation_owned(document: dict[str, Any]) -> dict[str, Any]:
+    """Project a detached snapshot while preserving the richer owner's fields."""
+    projected = dict(document)
+    version = projected.get("envelope_version")
     if version not in {None, CONTRACT_VERSION, "1.2.0"}:
         raise ContractBoundaryError(
             "envelope_version maps through the released 1.0.0 compatibility boundary"
         )
-    document["envelope_version"] = CONTRACT_VERSION
+    projected["envelope_version"] = CONTRACT_VERSION
     source = document.get("source")
     if isinstance(source, dict):
-        shared_source_fields = (
-            "environment_id",
-            "implementation_commit",
-            "configuration_digest",
-        )
-        document["source"] = {
+        projected["source"] = {
             field: source[field]
-            for field in shared_source_fields
+            for field in ("environment_id", "implementation_commit", "configuration_digest")
             if field in source
         }
-    return document
+    # Shared validation trims these fields; the richer owner's snapshot retains
+    # its original bytes and the compatibility projection owns the trimmed view.
+    if isinstance(document.get("provenance"), dict):
+        projected["provenance"] = dict(document["provenance"])
+    return projected
 
 
-def validate_observation_compatibility(value: Any) -> dict[str, Any]:
-    """Validate shared fields while retaining the richer local envelope."""
-
-    validate_observation_v1(project_observation_v1(value))
+def _observation_snapshot(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ContractBoundaryError("observation envelope requires one JSON object")
+    validate_representation(value)
     return deepcopy(value)
 
 
-def validate_observation_v1(value: Any) -> dict[str, Any]:
-    """Validate the standalone compatibility surface for envelope contract v1."""
+def project_observation_v1(value: Any) -> dict[str, Any]:
+    """Project a local envelope onto the shared contract-v1 nucleus."""
+    return _project_observation_owned(_observation_snapshot(value))
 
-    if not isinstance(value, dict):
-        raise ContractBoundaryError("observation envelope requires one JSON object")
-    _validate_json_value(value)
-    document = deepcopy(value)
+
+def validate_observation_compatibility(value: Any) -> dict[str, Any]:
+    """Validate shared fields through one detached richer-envelope snapshot."""
+    document = _observation_snapshot(value)
+    _validate_observation_owned(_project_observation_owned(document))
+    return document
+
+
+def validate_observation_v1(value: Any) -> dict[str, Any]:
+    """Validate and detach the standalone envelope contract-v1 surface."""
+    return _validate_observation_owned(_observation_snapshot(value))
+
+
+def _validate_observation_owned(document: dict[str, Any]) -> dict[str, Any]:
     document.setdefault("envelope_version", CONTRACT_VERSION)
     document.setdefault("approvals", [])
     fields = {
@@ -435,7 +445,7 @@ def validate_golden_specimen_observation(value: Any) -> dict[str, Any]:
         raise ContractBoundaryError(
             "golden specimen observation requires one JSON object"
         )
-    _validate_json_value(value)
+    validate_representation(value)
     document = deepcopy(value)
     document.setdefault("envelope_version", CONTRACT_VERSION)
     document.setdefault("approvals", [])
@@ -504,7 +514,7 @@ def validate_golden_specimen_projection(value: Any) -> dict[str, Any]:
         raise ContractBoundaryError(
             "golden specimen result projection requires one JSON object"
         )
-    _validate_json_value(value)
+    validate_representation(value)
     projection = deepcopy(value)
     fields = {
         "projection_id",
@@ -788,20 +798,5 @@ def _require_utc_timestamp(value: Any, field: str) -> datetime:
 
 
 def _validate_json_value(value: Any, path: str = "$") -> None:
-    if value is None or isinstance(value, (bool, int, str)):
-        return
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            raise ContractBoundaryError(f"{path} carries a finite JSON number")
-        return
-    if isinstance(value, list):
-        for index, item in enumerate(value):
-            _validate_json_value(item, f"{path}[{index}]")
-        return
-    if isinstance(value, dict):
-        for key, item in value.items():
-            if not isinstance(key, str):
-                raise ContractBoundaryError(f"{path} carries textual JSON object keys")
-            _validate_json_value(item, f"{path}.{key}")
-        return
-    raise ContractBoundaryError(f"{path} carries a JSON-compatible value")
+    # Canonical records include expanded reports; public input owners use INPUT.
+    validate_representation(value, REPORT_BUDGET)
