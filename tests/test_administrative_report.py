@@ -100,6 +100,40 @@ def independent_document():
     }
 
 
+def with_label_sets(populations):
+    """Independent set oracle for the four-run identity fixture."""
+    document = independent_document()
+    populations = [(set(expected), set(observed)) for expected, observed in populations]
+    assert len(populations) == len(document["runs"])
+    counts = {}
+    for run, (expected, observed) in zip(document["runs"], populations, strict=True):
+        run.update(exact_labels=expected == observed,
+                   jaccard=len(expected & observed) / len(expected | observed) if expected | observed else 1.0)
+        for label in expected | observed:
+            tp, fp, fn = counts.setdefault(label, [0, 0, 0])
+            counts[label] = [tp + int(label in expected & observed),
+                             fp + int(label in observed - expected),
+                             fn + int(label in expected - observed)]
+    def divided(n, d):
+        return fraction(n, d, n / d if d else None)
+    document["labels"] = [
+        {"label": label, "support": tp + fn, "true_positive": tp,
+         "false_positive": fp, "false_negative": fn,
+         "precision": divided(tp, tp + fp), "recall": divided(tp, tp + fn),
+         "f1": divided(2 * tp, 2 * tp + fp + fn)}
+        for label, (tp, fp, fn) in sorted(counts.items())
+    ]
+    tp, fp, fn = (sum(values[index] for values in counts.values()) for index in range(3))
+    document.update(
+        exact_label_agreement=divided(sum(run["exact_labels"] for run in document["runs"]), 4),
+        mean_jaccard=sum(run["jaccard"] for run in document["runs"]) / 4,
+        micro_precision=divided(tp, tp + fp), micro_recall=divided(tp, tp + fn),
+        micro_f1=divided(2 * tp, 2 * tp + fp + fn),
+        macro_f1=sum(row["f1"]["value"] for row in document["labels"]) / len(counts) if counts else None,
+    )
+    return document
+
+
 @unittest.skipUnless(HAS_PROFILE, "administrative-study profile supplies the source-owned contracts")
 class AdministrativeReportTests(unittest.TestCase):
     @classmethod
@@ -130,6 +164,58 @@ class AdministrativeReportTests(unittest.TestCase):
         self.assertIsNone(report.groups[1].workflow_difference_minutes)
         self.assertEqual((0, 0, 1.0), (report.runs[2].required_facts, report.runs[2].supplied_facts,
                                        report.runs[2].jaccard))
+
+    def test_joint_bounds_preserve_independent_set_populations_and_html(self):
+        full = tuple(f"SYN-{index}" for index in range(16))
+        populations = (
+            [((), ())] * 4,
+            [(("SYN-A",), ("SYN-B",))] * 4,
+            [(full, full)] * 4,
+            [(("SYN-A", "SYN-B"), ("SYN-B", "SYN-C")),
+             (("SYN-A",), ("SYN-A", "SYN-B")),
+             ((), ("SYN-A",)), (("SYN-A",), ())],
+            [(full, ("SYN-EXTRA",)), (("SYN-A",), full), ((), ()), (full, full)],
+        )
+        for population in populations:
+            with self.subTest(population=population):
+                document = with_label_sets(population)
+                report = self.admit(document)
+                embedded = render_html(report).split('<pre id="report-json">', 1)[1].split("</pre>", 1)[0]
+                self.assertEqual(report.model_dump(mode="json", by_alias=True), json.loads(unescape(embedded)))
+                self.assertEqual(document["micro_f1"], report.micro_f1.model_dump())
+
+    def test_joint_totals_reject_uniform_and_mixed_score_contradictions(self):
+        for scores in ((0.5,) * 4, (0.5, 0.5, 0.25, 0.25)):
+            with self.subTest(scores=scores):
+                document = with_label_sets([(("SYN-A", "SYN-B"), ("SYN-A", "SYN-B", "SYN-C"))] * 4)
+                self.assertEqual(fraction(8, 12, 2 / 3), document["micro_precision"])
+                self.assertEqual(fraction(16, 20, 0.8), document["micro_f1"])
+                accepted = self.admit(document)
+                for run, score in zip(document["runs"], scores, strict=True):
+                    run["jaccard"] = score
+                document["mean_jaccard"] = sum(scores) / 4
+                self.rejected(document, "report_label_joint_counts")
+                unchecked = accepted.model_copy(update={
+                    "runs": tuple(
+                        run.model_copy(update={"jaccard": score})
+                        for run, score in zip(accepted.runs, scores, strict=True)
+                    ),
+                    "mean_jaccard": sum(scores) / 4,
+                })
+                with self.assertRaises(ReportAdmissionError) as held:
+                    render_html(unchecked)
+                self.assertEqual(held.exception.code, "report_label_joint_counts")
+
+    def test_joint_cardinality_admission_retains_float_tolerance(self):
+        document = with_label_sets([(("SYN-A",), ("SYN-A", "SYN-B"))] * 4)
+        for run in document["runs"]:
+            run["jaccard"] += 5e-13
+        document["mean_jaccard"] = document["runs"][0]["jaccard"]
+        self.admit(document)
+        for run in document["runs"]:
+            run["jaccard"] += 1e-6
+        document["mean_jaccard"] = document["runs"][0]["jaccard"]
+        self.rejected(document, "report_run_score")
 
     def test_generated_roundtrip_typed_records_and_recomputation(self):
         payload = canonical_json_bytes(self.report)

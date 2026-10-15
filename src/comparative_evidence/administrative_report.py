@@ -1,16 +1,19 @@
 """Saved administrative-report coherence and separate source recomputation.
 
 Program owns nested comparison/eligibility and JSON resource guards. Comparative
-owns score coherence. Indexes take O(R + L + G) space; reconciliation is O(R + L
-+ G), followed by bounded serialization. Decoder/model costs retain their own
-byte, depth and collection envelopes. Admission establishes internal agreement;
-source recomputation establishes agreement with a separately admitted oracle.
+owns score coherence. Indexes take O(R + L + G) space. Reconciliation takes
+O(R*C + L + G + K*K) time with O(K) additional segment storage, where C is the
+fixed label-cardinality search space and K counts canonical overlap segments.
+Bounded serialization follows; decoder/model costs retain their own byte,
+depth and collection envelopes. Admission establishes necessary arithmetic
+relationships; source recomputation establishes agreement with a separately
+admitted oracle.
 """
 
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from math import isclose
+from math import gcd, isclose
 from typing import Annotated, Literal, Self, cast
 
 from pydantic import Field, ValidationError, model_validator
@@ -60,7 +63,7 @@ ReportCode = Literal[
     "report_schema", "report_shape", "report_identity_comparison", "report_eligibility",
     "report_ratio", "report_run_score", "report_label_score", "report_run_coverage",
     "report_pair_coverage", "report_status_counts", "report_attempt_counts",
-    "report_score_counts", "report_label_counts", "report_group_coverage",
+    "report_score_counts", "report_label_counts", "report_label_joint_counts", "report_group_coverage",
     "report_group_counts", "report_group_threshold", "report_group_estimate",
     "report_study_binding", "report_scoring_binding", "report_interpretation_profile",
     "report_pack_source", "report_study_source", "report_pack_binding",
@@ -70,7 +73,7 @@ ReportCode = Literal[
 _COHERENCE_CODES = frozenset({
     "report_ratio", "report_run_score", "report_label_score", "report_run_coverage",
     "report_pair_coverage", "report_status_counts", "report_attempt_counts",
-    "report_score_counts", "report_label_counts", "report_group_coverage",
+    "report_score_counts", "report_label_counts", "report_label_joint_counts", "report_group_coverage",
     "report_group_counts", "report_group_threshold", "report_group_estimate",
     "report_study_binding", "report_scoring_binding", "report_interpretation_profile", "report_eligibility",
 })
@@ -95,20 +98,58 @@ def _same_float(actual: float | None, expected: float | None) -> bool:
     return isclose(actual, expected, rel_tol=FLOAT_REL_TOL, abs_tol=FLOAT_ABS_TOL)
 
 
-def _intersection_bounds(jaccard: float) -> tuple[int, int]:
-    """Bound intersection size using the two sixteen-label set capacities."""
+OverlapSegment = tuple[tuple[int, int], tuple[int, int]]
+
+
+def _overlap_segment(jaccard: float) -> OverlapSegment:
+    """Endpoints of the feasible (intersection, symmetric difference) hull.
+
+    A partial score admits multiples of one reduced integer ratio. With at
+    most sixteen labels on each side, distinct ratios are farther apart than
+    the declared float tolerance; their feasible points lie on one segment.
+    """
     if jaccard == 0:
-        return 0, 0
+        return (0, 1), (0, 32)
     if jaccard == 1:
         # An exact match includes the declared empty/empty convention.
-        return 0, 16
-    intersections = [
-        intersection for intersection in range(1, 16)
+        return (0, 0), (16, 0)
+    points = [
+        (intersection, union - intersection) for intersection in range(1, 16)
         for union in range(intersection + 1, 33 - intersection)
         if _same_float(jaccard, intersection / union)
     ]
-    _require(bool(intersections), "report_run_score")
-    return min(intersections), max(intersections)
+    _require(bool(points), "report_run_score")
+    return points[0], points[-1]
+
+
+def _reconcile_overlap_totals(
+    segments: Counter[OverlapSegment], intersection: int, errors: int,
+) -> None:
+    """Check exact supporting bounds of the summed cardinality segments.
+
+    A sum of segments has edge directions drawn from those same segments.
+    Their perpendiculars plus the coordinate axes therefore bound the whole
+    convex sum, including a single segment or point. Integer dot products keep
+    this joint check exact. This is a necessary arithmetic condition, rather
+    than an integer assignment of individual labels to runs.
+
+    K distinct segments cost O(K**2) time and O(K) space. K is bounded by the
+    finite sixteen-label ratio family, independently of report label count.
+    """
+    normals = {(1, 0), (0, 1)}
+    for low, high in segments:
+        dx, dy = high[0] - low[0], high[1] - low[1]
+        divisor = gcd(dx, dy)
+        if divisor:
+            normals.add((dy // divisor, -dx // divisor))
+    for x, y in normals:
+        lower = upper = 0
+        for (low, high), multiplicity in segments.items():
+            endpoints = (x * low[0] + y * low[1], x * high[0] + y * high[1])
+            lower += multiplicity * min(endpoints)
+            upper += multiplicity * max(endpoints)
+        _require(lower <= x * intersection + y * errors <= upper,
+                 "report_label_joint_counts")
 
 
 class Ratio(ContractModel):
@@ -316,7 +357,7 @@ def _reconcile_report(report: EvaluationReport) -> None:
     overlapping = sum(row.jaccard > 0 for row in scored)
     # Each union is at most 32 minus its intersection. The fixed label cap
     # bounds this search; repeated Jaccard values share one local calculation.
-    bounds = {value: _intersection_bounds(value) for value in {row.jaccard for row in scored}}
+    bounds = {value: _overlap_segment(value) for value in {row.jaccard for row in scored}}
     tp = fp = fn = 0
     for row in report.labels:
         _require(max(row.support, row.true_positive + row.false_positive) <= count, "report_label_counts")
@@ -328,11 +369,12 @@ def _reconcile_report(report: EvaluationReport) -> None:
         fp += row.false_positive
         fn += row.false_negative
     # Matching empty sets have Jaccard one and require no true positives.
-    _require(sum(bounds[row.jaccard][0] for row in scored) <= tp
-             <= sum(bounds[row.jaccard][1] for row in scored),
+    _require(sum(bounds[row.jaccard][0][0] for row in scored) <= tp
+             <= sum(bounds[row.jaccard][1][0] for row in scored),
              "report_label_counts")
     _require(differing <= fp + fn <= 32 * differing
              and max(tp + fp, tp + fn) <= 16 * count, "report_label_counts")
+    _reconcile_overlap_totals(Counter(bounds[row.jaccard] for row in scored), tp, fp + fn)
     _ratio_counts(report.micro_precision, tp, tp + fp, "report_label_counts")
     _ratio_counts(report.micro_recall, tp, tp + fn, "report_label_counts")
     _ratio_counts(report.micro_f1, 2 * tp, 2 * tp + fp + fn, "report_label_counts")
