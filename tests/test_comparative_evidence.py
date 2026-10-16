@@ -1055,6 +1055,76 @@ class ComparativeEvidenceTests(unittest.TestCase):
             admitted = json.loads(destination.read_text())
             self.assertEqual(len(admitted["approvals"]), 3)
 
+    def test_acceptance_preserves_domain_to_approver_associations(self) -> None:
+        cases = (
+            # An extra Scientific identity cannot compensate for shared roles.
+            (("scientific", "test-sci-one"), ("scientific", "test-sci-two"),
+             ("quality", "test-shared"), ("regulatory", "test-shared")),
+            (("scientific", "test-sci"), ("scientific", "test-sci"),
+             ("quality", "test-quality"), ("regulatory", "test-regulatory")),
+            (("scientific", "test-sci"), ("quality", "test-shared"),
+             ("regulatory", "TEST-SHARED")),
+        )
+        for decisions in cases:
+            with self.subTest(decisions=decisions), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                retained = admit(ObservationEnvelope.from_dict(accepted_envelope_value()), root)
+                prior = retained.read_bytes()
+                document = accepted_envelope_value()
+                document["approvals"] = [
+                    {"domain": domain, "decision": "accept", "approver": person}
+                    for domain, person in decisions
+                ]
+                envelope = ObservationEnvelope.from_dict(document)
+                before = envelope.as_dict()
+                with self.assertRaises(AdmissionError), patch(
+                    "comparative_evidence.gate.publish_manifest"
+                ) as publish:
+                    admit(envelope, root)
+                publish.assert_not_called()
+                self.assertEqual(prior, retained.read_bytes())
+                self.assertEqual([retained], list(root.iterdir()))
+                self.assertEqual(before, envelope.as_dict())
+
+    def test_acceptance_normalizes_identity_before_separation(self) -> None:
+        for identity in ("TEST-QUALITY-OWNER", "ｔｅｓｔ-quality-owner"):
+            document = accepted_envelope_value()
+            envelope = ObservationEnvelope.from_dict(document)
+            # Exercise the gate's identity owner with a detached typed envelope.
+            decisions = deepcopy(document["approvals"])
+            decisions[2]["approver"] = identity
+            envelope = replace(envelope, approvals=tuple(decisions))
+            with self.subTest(identity=identity), tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(AdmissionError, "distinct accountable"):
+                    admit(envelope, Path(temporary))
+                self.assertEqual([], list(Path(temporary).iterdir()))
+        for field in ("performed_by", "reviewed_by"):
+            document = accepted_envelope_value()
+            document["approvals"][0]["approver"] = document["provenance"][field].upper()
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(AdmissionError, "distinct from execution and review"):
+                    admit(ObservationEnvelope.from_dict(document), Path(temporary))
+
+    def test_acceptance_retains_other_decisions_and_identical_replay(self) -> None:
+        document = accepted_envelope_value()
+        document["approvals"].extend([
+            {"domain": "engineering", "decision": "accept", "approver": "test-engineer"},
+            {"domain": "scientific", "decision": "revise", "approver": "test-science-reviewer"},
+        ])
+        envelope = ObservationEnvelope.from_dict(document)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            destination = admit(envelope, root)
+            content = destination.read_bytes()
+            self.assertEqual(destination, admit(envelope, root))
+            self.assertEqual(content, destination.read_bytes())
+            self.assertEqual(document["approvals"], json.loads(content)["approvals"])
+        for stage in ("qualified", "validated"):
+            document["assurance_stage"] = stage
+            document["approvals"] = []
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as temporary:
+                self.assertTrue(admit(ObservationEnvelope.from_dict(document), Path(temporary)).is_file())
+
     def test_admission_confines_repository_safe_identity(self) -> None:
         value = observed_envelope_value()
         value["observation_id"] = "../ESCAPED"

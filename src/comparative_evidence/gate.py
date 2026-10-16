@@ -82,24 +82,29 @@ def validate_for_accepted(envelope: ObservationEnvelope) -> None:
     validate_classification(envelope.classification)
     validate_repository_safe_content(envelope.as_dict())
     if envelope.assurance_stage == "accepted":
-        accepted_approvals = [
-            approval for approval in envelope.approvals if approval.get("decision") == "accept"
-        ]
-        approval_domains = {approval.get("domain") for approval in accepted_approvals}
         required_domains = {"scientific", "quality", "regulatory"}
-        missing_domains = sorted(required_domains - approval_domains)
+        # One decision per required domain preserves the role-to-person relation.
+        approvers_by_domain: dict[str, str] = {}
+        for approval in envelope.approvals:
+            domain = approval.get("domain")
+            if approval.get("decision") != "accept" or domain not in required_domains:
+                continue
+            if domain in approvers_by_domain:
+                raise AdmissionError(
+                    "acceptance-stage evidence requires one accepting decision per accountable domain"
+                )
+            approvers_by_domain[domain] = normalize_identity(
+                approval.get("approver"), f"{domain}_approver"
+            )
+        missing_domains = sorted(required_domains - approvers_by_domain.keys())
         if missing_domains:
             raise AdmissionError(
                 "acceptance-stage evidence requires accountable "
                 + ", ".join(missing_domains)
                 + " approval; route the packet to the named approvers"
             )
-        approver_identities = [
-            normalize_identity(approval.get("approver"), f"{approval.get('domain')}_approver")
-            for approval in accepted_approvals
-            if approval.get("domain") in required_domains
-        ]
-        if len(set(approver_identities)) != len(required_domains):
+        approver_identities = set(approvers_by_domain.values())
+        if len(approver_identities) != len(required_domains):
             raise AdmissionError(
                 "acceptance-stage evidence requires distinct accountable scientific, quality, and regulatory approvers"
             )
