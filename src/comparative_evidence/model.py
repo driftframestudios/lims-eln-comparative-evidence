@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
+from .legacy_json import validate_representation
 from .contract_v1 import (
     ASSURANCE_STAGES,
     ContractBoundaryError,
@@ -61,6 +62,7 @@ class ObservationEnvelope:
     classification: Mapping[str, Any]
 
     def __post_init__(self) -> None:
+        validate_representation(vars(self), allow_frozen=True)
         for field in ("source", "result", "provenance", "classification"):
             object.__setattr__(self, field, _deep_freeze(getattr(self, field)))
         object.__setattr__(self, "approvals", _deep_freeze(self.approvals))
@@ -69,6 +71,7 @@ class ObservationEnvelope:
     def from_dict(cls, value: dict[str, Any]) -> "ObservationEnvelope":
         if not isinstance(value, dict):
             raise EnvelopeError("envelope requires a JSON object")
+        validate_representation(value)
         required = {
             "envelope_version",
             "observation_id",
@@ -89,9 +92,15 @@ class ObservationEnvelope:
             raise EnvelopeError(f"envelope fields require a released definition: {', '.join(extra)}")
         if value["envelope_version"] != "1.2.0":
             raise EnvelopeError("envelope_version requires the released 1.2.0 contract")
-        if value["evidence_mode"] not in EVIDENCE_MODES:
+        if (
+            not isinstance(value["evidence_mode"], str)
+            or value["evidence_mode"] not in EVIDENCE_MODES
+        ):
             raise EnvelopeError("evidence_mode requires planned, simulated, or observed")
-        if value["assurance_stage"] not in ASSURANCE_STAGES:
+        if (
+            not isinstance(value["assurance_stage"], str)
+            or value["assurance_stage"] not in ASSURANCE_STAGES
+        ):
             raise EnvelopeError("assurance_stage requires a released assurance-stage value")
         for field in ("observation_id", "scenario_id"):
             if not isinstance(value[field], str) or not value[field].strip():

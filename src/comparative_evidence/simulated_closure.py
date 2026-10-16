@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import re
 from typing import Any
 
-from .model import canonical_json, digest
+from .legacy_json import validate_representation
+from .model import digest
+from .filesystem_publication import PublicationError, publish_manifest
 from .safety import (
     EvidenceSafetyError,
     validate_digest,
@@ -74,6 +75,7 @@ def validate_simulated_closure_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     migration, security, observability, and role-separated acceptance claims.
     """
 
+    validate_representation(bundle)
     if set(bundle) != {
         "bundle_version",
         "future_reality_version",
@@ -143,7 +145,6 @@ def admit_simulated_closure(bundle: dict[str, Any], directory: Path) -> Path:
     """Immutably admit one internally coherent selected-future closure."""
 
     summary = validate_simulated_closure_bundle(bundle)
-    directory.mkdir(parents=True, exist_ok=True)
     destination = directory / f"{summary['future_reality_version']}.json"
     payload = {
         "namespace": "simulated-closures",
@@ -152,27 +153,15 @@ def admit_simulated_closure(bundle: dict[str, Any], directory: Path) -> Path:
         "bundle": bundle,
         "summary": summary,
     }
-    serialized = json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n"
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    if hasattr(os, "O_NOFOLLOW"):
-        flags |= os.O_NOFOLLOW
+    serialized = (json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
     try:
-        descriptor = os.open(destination, flags, 0o600)
-    except FileExistsError:
-        existing = json.loads(destination.read_text(encoding="utf-8"))
-        if canonical_json(existing) != canonical_json(payload):
-            raise SimulatedClosureError(
-                "simulated closure is immutable; select a new future reality version"
-            )
-        return destination
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
-            stream.write(serialized)
-            stream.flush()
-            os.fsync(stream.fileno())
-    except Exception:
-        destination.unlink(missing_ok=True)
-        raise
+        publish_manifest(serialized, destination)
+    except PublicationError as error:
+        action = (
+            "simulated closure is immutable; select a new future reality version; "
+            if error.stage == "destination_exists" else "simulated closure publication: "
+        )
+        raise SimulatedClosureError(action + str(error)) from error
     return destination
 
 

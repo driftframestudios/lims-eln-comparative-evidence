@@ -12,6 +12,7 @@ from .contract_v1 import (
     validate_golden_specimen_observation,
 )
 from .normalize import path_value
+from .legacy_json import validate_representation
 
 
 COMPARISON_CONTRACT_VERSION = "1.0.0"
@@ -78,6 +79,8 @@ def compare_golden_specimen(
     while adjudication remains limited to ``result.projection``.
     """
 
+    validate_representation(profile)
+    validate_representation(constellation)
     rules = _validate_profile(profile)
     implementation_document = validate_golden_specimen_observation(implementation)
     simulation_document = validate_golden_specimen_observation(simulation)

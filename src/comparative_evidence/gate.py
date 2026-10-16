@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-import stat
 
-from .model import ObservationEnvelope, canonical_json, strict_json_loads
+from .model import ObservationEnvelope
+from .filesystem_publication import PublicationError, publish_manifest
 from .database_release import (
     DatabaseReleaseError,
     validate_database_release_coordinate,
@@ -116,54 +115,19 @@ def admit(envelope: ObservationEnvelope, accepted_directory: Path) -> Path:
         observation_id = validate_observation_id(envelope.observation_id)
     except EvidenceSafetyError as error:
         raise AdmissionError(str(error)) from error
-    accepted_directory.mkdir(parents=True, exist_ok=True)
-    accepted_root = accepted_directory.resolve()
-    destination = accepted_root / f"{observation_id}.json"
-    if destination.resolve(strict=False).parent != accepted_root:
-        raise AdmissionError("accepted manifest identity requires containment in the accepted namespace")
+    destination = accepted_directory.absolute() / f"{observation_id}.json"
     payload = {
         **envelope.as_dict(),
         "accepted_namespace": True,
         "envelope_digest": envelope.content_digest,
     }
-    serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    if hasattr(os, "O_NOFOLLOW"):
-        flags |= os.O_NOFOLLOW
+    serialized = (json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
     try:
-        descriptor = os.open(destination, flags, 0o600)
-    except FileExistsError:
-        existing = _read_existing_manifest(destination)
-        if canonical_json(existing) != canonical_json(payload):
-            raise AdmissionError(
-                "accepted manifests are immutable; create a superseding observation with a new observation_id"
-            )
-        return destination
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
-            stream.write(serialized)
-            stream.flush()
-            os.fsync(stream.fileno())
-    except Exception:
-        destination.unlink(missing_ok=True)
-        raise
+        publish_manifest(serialized, destination)
+    except PublicationError as error:
+        action = (
+            "accepted manifests are immutable; create a superseding observation with a new observation_id; "
+            if error.stage == "destination_exists" else "accepted manifest publication: "
+        )
+        raise AdmissionError(action + str(error)) from error
     return destination
-
-
-def _read_existing_manifest(path: Path) -> dict:
-    flags = os.O_RDONLY
-    if hasattr(os, "O_NOFOLLOW"):
-        flags |= os.O_NOFOLLOW
-    try:
-        descriptor = os.open(path, flags)
-    except OSError as error:
-        raise AdmissionError(
-            "accepted manifest requires a regular repository file; preserve the namespace and inspect the entry"
-        ) from error
-    with os.fdopen(descriptor, encoding="utf-8") as stream:
-        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-            raise AdmissionError("accepted manifest requires a regular repository file")
-        value = strict_json_loads(stream.read())
-        if not isinstance(value, dict):
-            raise AdmissionError("accepted manifest requires a JSON object")
-        return value

@@ -341,11 +341,7 @@ class BranchFlowTests(unittest.TestCase):
         validation_marker = "\n  comparative-validation:\n"
         report_job, validation_job = manual_workflow.split(validation_marker, 1)
         wrong_job_shallow_checkout = (
-            report_job.replace(
-                "          persist-credentials: false",
-                "          persist-credentials: false\n          fetch-depth: 0",
-                1,
-            )
+            report_job
             + validation_marker
             + validation_job.replace(
                 "          fetch-depth: 0",
@@ -392,6 +388,22 @@ class BranchFlowTests(unittest.TestCase):
                         manual_workflow_text=mutated,
                         declared_controls=declared,
                     )
+
+    def test_manual_matrix_checkout_supplies_its_own_release_history(self) -> None:
+        workflow, manual, dependabot, declared = self.automation_documents()
+        marker = "\n  comparative-validation:\n"
+        matrix, validation = manual.split(marker, 1)
+        mutations = {
+            "shallow matrix": matrix.replace("          fetch-depth: 0", "          fetch-depth: 1", 1),
+            "missing matrix history": matrix.replace("          fetch-depth: 0\n", "", 1),
+            "comment decoy": matrix.replace("          fetch-depth: 0", "          # fetch-depth: 0", 1),
+            "disabled source acquisition": matrix.replace("        with:\n", "        if: false\n        with:\n", 1),
+        }
+        for label, changed in mutations.items():
+            with self.subTest(label=label), self.assertRaisesRegex(AutomationContractError, "matrix checkout"):
+                validate_automation_documents(workflow, dependabot,
+                    manual_workflow_text=changed + marker + validation,
+                    declared_controls=declared)
 
     def test_dependabot_contract_rejects_material_mutations(self) -> None:
         workflow, manual_workflow, dependabot, declared = self.automation_documents()

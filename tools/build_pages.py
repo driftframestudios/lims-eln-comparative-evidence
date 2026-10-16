@@ -1470,7 +1470,10 @@ def validate_projection(
             report_json_path,
             label=f"{label} report JSON",
         )
-        report_document = runtime.strict_json_loads(report_bytes)
+        report_document = runtime.strict_json_loads(
+            report_bytes,
+            budget=runtime.contract_v1_module.REPORT_BUDGET,
+        )
         if not isinstance(report_document, dict) or (
             manifest.get(manifest_field) != report_document.get("report_digest")
         ):

@@ -5,6 +5,7 @@ import math
 from typing import Any
 
 from .model import digest
+from .legacy_json import validate_representation
 from .safety import validate_digest, validate_repository_safe_content
 
 
@@ -18,6 +19,7 @@ class CalibrationError(ValueError):
 def score_calibration(ledger: dict[str, Any]) -> dict[str, Any]:
     """Score independently resolved forecasts while preserving an empty baseline."""
 
+    validate_representation(ledger)
     if set(ledger) != {
         "ledger_version",
         "forecast_family",
