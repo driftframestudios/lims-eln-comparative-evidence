@@ -46,6 +46,14 @@ Regular-file
 admission retains the shared reader's `ReportArtifactError`. Error messages
 identify the recovery category while input values stay with their caller.
 
+Within that allowance, envelope enum fields and comparison-profile paths and
+adjudication enums establish their primitive shapes before set membership or
+uniqueness checks. Invalid shapes receive the existing field-specific
+`EnvelopeError` or profile `ValueError`; supported values retain the same
+grammar, cross-field checks, and report identity. Path validation scans member
+shapes before building its uniqueness set, retaining linear member work and
+the existing set storage.
+
 The compatibility adapter creates one detached snapshot, validates a shallow
 shared-contract projection, and freezes the retained richer envelope. Its shared
 projection owns fields that validation trims; the richer snapshot preserves the
