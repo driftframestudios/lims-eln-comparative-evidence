@@ -438,8 +438,8 @@ def _validate_profile(profile: dict[str, Any]) -> None:
         paths = profile[field]
         if (
             not isinstance(paths, list)
-            or len(paths) != len(set(paths))
             or not all(isinstance(path, str) and path.startswith("$.") for path in paths)
+            or len(paths) != len(set(paths))
         ):
             raise ValueError(f"{field} requires unique released result paths")
         for path in paths:
@@ -479,12 +479,18 @@ def _validate_profile(profile: dict[str, Any]) -> None:
             raise ValueError(
                 f"adjudication {path} requires directional released fields"
             )
-        if disposition["direction"] not in {"lower_is_better", "higher_is_better"}:
+        if (
+            not isinstance(disposition["direction"], str)
+            or disposition["direction"] not in {"lower_is_better", "higher_is_better"}
+        ):
             raise ValueError(
                 f"adjudication {path}.direction requires lower_is_better or higher_is_better"
             )
         for field in ("favorable_classification", "unfavorable_classification"):
-            if disposition[field] not in CLASSIFICATIONS:
+            if (
+                not isinstance(disposition[field], str)
+                or disposition[field] not in CLASSIFICATIONS
+            ):
                 raise ValueError(
                     f"adjudication {path}.{field} requires a released classification"
                 )

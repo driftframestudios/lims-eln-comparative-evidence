@@ -92,9 +92,15 @@ class ObservationEnvelope:
             raise EnvelopeError(f"envelope fields require a released definition: {', '.join(extra)}")
         if value["envelope_version"] != "1.2.0":
             raise EnvelopeError("envelope_version requires the released 1.2.0 contract")
-        if value["evidence_mode"] not in EVIDENCE_MODES:
+        if (
+            not isinstance(value["evidence_mode"], str)
+            or value["evidence_mode"] not in EVIDENCE_MODES
+        ):
             raise EnvelopeError("evidence_mode requires planned, simulated, or observed")
-        if value["assurance_stage"] not in ASSURANCE_STAGES:
+        if (
+            not isinstance(value["assurance_stage"], str)
+            or value["assurance_stage"] not in ASSURANCE_STAGES
+        ):
             raise EnvelopeError("assurance_stage requires a released assurance-stage value")
         for field in ("observation_id", "scenario_id"):
             if not isinstance(value[field], str) or not value[field].strip():
