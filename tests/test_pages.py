@@ -12,6 +12,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import re
+import xml.etree.ElementTree as ET
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -388,6 +391,47 @@ class PagesProjectionTests(unittest.TestCase):
             index = (projection / "index.html").read_text(encoding="utf-8")
             self.assertIn('class="skip-link"', index)
             self.assertIn('<main id="content"', index)
+
+
+    def test_first_reading_and_chart_retain_complete_tabular_values(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory:
+            output = self.build(Path(directory), "site")
+            document = (output / "index.html").read_text(encoding="utf-8")
+            self.assertLess(document.index('id="first-reading"'),
+                            document.index('id="source-coordinate"'))
+            self.assertIn("Both producers in this example are simulated.", document)
+            self.assertIn("Repository overview (collaborator access)", document)
+            table_start = document.index('<table data-label="Golden Specimen classification counts">')
+            table = ET.fromstring(document[table_start:document.index("</table>", table_start) + 8])
+            self.assertEqual(
+                [("Agreement", "10"), ("Explainable variation", "4"), ("Material divergence", "3")],
+                [(row.find("th").text, row.find("td").text) for row in table.findall("./tbody/tr")],
+            )
+            self.assertTrue(all(cell.attrib.get("scope") == "col" for cell in table.findall("./thead/tr/th")))
+            self.assertTrue(all(row.find("th").attrib.get("scope") == "row" for row in table.findall("./tbody/tr")))
+            self.assertIn('tabindex="0" aria-labelledby="classification-caption"', document)
+
+    def test_chart_geometry_uses_the_selected_count_scale(self) -> None:
+        # These are renderer inputs; report admission is exercised by the owning tests.
+        for counts, widths in (
+            ({"agreement": 10, "explainable_variation": 4, "material_divergence": 3}, [330.0, 132.0, 99.0]),
+            ({"agreement": 0, "explainable_variation": 0, "material_divergence": 17}, [0.0, 0.0, 330.0]),
+        ):
+            with self.subTest(counts=counts):
+                document = pages_builder._index_html(
+                    canonical_origin=DEFAULT_CANONICAL_ORIGIN,
+                    repository_url=DEFAULT_REPOSITORY_URL,
+                    source_revision=REVISION,
+                    reference_report={"report_digest": "sha256:" + "a" * 64},
+                    golden_report={"summary": {"classification_counts": counts, "leaf_paths_compared": 17}},
+                    runtime=SimpleNamespace(render_public_boundary=lambda: ""),
+                )
+                figure = ET.fromstring(re.search(r"<svg\b.*?</svg>", document, re.S).group())
+                namespace = {"s": "http://www.w3.org/2000/svg"}
+                rectangles = figure.findall(".//s:rect", namespace)
+                self.assertEqual(widths, [float(rect.attrib["width"]) for rect in rectangles])
+                self.assertTrue(all(rect.attrib["x"] == "280" for rect in rectangles))
+                self.assertEqual("counts-title counts-desc", figure.attrib["aria-labelledby"])
 
     def test_source_links_use_the_complete_revision(self) -> None:
         with tempfile.TemporaryDirectory(prefix="comparative-pages-") as directory:

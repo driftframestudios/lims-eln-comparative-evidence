@@ -1029,6 +1029,23 @@ footer { padding: 0 0 2rem; }
   .metrics, .source-list { grid-template-columns: 1fr; }
   .page-shell { width: min(100% - 1.25rem, 72rem); }
 }
+.evidence-figure { margin: 1.5rem 0; }
+.figure-scroll, .table-scroll { overflow-x: auto; border: 1px solid var(--line); padding: .5rem; }
+.figure-scroll:focus-visible, .table-scroll:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+.evidence-figure svg { display: block; width: 100%; min-width: 36rem; height: auto; color: #17345f; }
+.evidence-figure figcaption { max-width: 66ch; margin-top: .75rem; color: var(--muted); }
+table { width: 100%; min-width: 42rem; border-collapse: collapse; }
+caption { text-align: left; padding: .75rem; font-weight: 700; }
+th, td { text-align: left; padding: .75rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th { background: #e7efff; color: #17345f; }
+tbody th { width: 30%; }
+@media print {
+  .skip-link { display: none; }
+  .figure-scroll, .table-scroll { overflow: visible; border: 0; padding: 0; }
+  .evidence-figure svg, table { min-width: 0; }
+  tr { break-inside: avoid; }
+}
+
 @media (forced-colors: active) {
   .panel, .button { border-color: CanvasText; }
 }
@@ -1055,6 +1072,30 @@ def _index_html(
     runtime: _RuntimeBindings,
 ) -> str:
     counts = golden_report["summary"]["classification_counts"]
+    total = golden_report["summary"]["leaf_paths_compared"]
+    categories = (
+        ("agreement", "Agreement", "Matching compared values."),
+        ("explainable_variation", "Explainable variation", "Differences admitted by the comparison profile."),
+        ("material_divergence", "Material divergence", "Differences requiring further disposition."),
+    )
+    scale_max = max(1, *(counts[key] for key, _, _ in categories))
+    bars = []
+    rows = []
+    for position, (key, label, meaning) in enumerate(categories):
+        count = counts[key]
+        y = 45 + position * 65
+        width = 330 * count / scale_max
+        bars.append(
+            f'<text x="20" y="{y + 21}">{escape(label)}</text>'
+            f'<rect x="280" y="{y}" width="{width:.2f}" height="30" fill="#2855f3"/>'
+            f'<text x="630" y="{y + 21}">{count}</text>'
+        )
+        rows.append(
+            f'<tr data-label="{escape(label, quote=True)}">'
+            f'<th scope="row">{escape(label)}</th>'
+            f'<td data-label="Compared paths">{count}</td>'
+            f'<td data-label="Reading">{escape(meaning)}</td></tr>'
+        )
     source_items = "\n".join(
         "<li><a href=\""
         + escape(_source_url(repository_url, source_revision, path), quote=True)
@@ -1071,36 +1112,62 @@ def _index_html(
 <body>
 <a class="skip-link" href="#content">Skip to evidence</a>
 <header class="page-shell">
-  <p class="kicker">Shared-result verification</p>
-  <h1>Inspect the Golden Specimen result and its sources.</h1>
-  <p class="lede">This deterministic report compares the decision-relevant result from a durable workbench snapshot with the accepted selected-future result. Both inputs are simulated and pass through the same released projection contract.</p>
+  <p class="kicker">LIMS/ELN Comparative Evidence</p>
+  <h1>See what changed in a synthetic laboratory workflow.</h1>
+  <p class="lede">Compare two producers of the same laboratory record, inspect agreement and meaningful differences, and carry the evidence into review. This public example uses simulated inputs for a laboratory information management system (LIMS) and electronic laboratory notebook (ELN).</p>
   <div class="actions">
-    <a class="button" href="reports/golden-specimen/comparison.html">Open the readable report</a>
+    <a class="button" href="reports/golden-specimen/comparison.html">View the worked comparison</a>
     <a class="button" href="reports/golden-specimen/comparison.json">Inspect report JSON</a>
   </div>
 </header>
 <main id="content" class="page-shell">
+  <section class="panel" aria-labelledby="first-reading">
+    <h2 id="first-reading">Start with one difference</h2>
+    <ol>
+      <li>View the Golden Specimen report and choose a field classified as material divergence.</li>
+      <li>Compare its two values and the profile rule that gives the difference meaning.</li>
+      <li>Use the report JSON to inspect the same result and its source identities.</li>
+    </ol>
+    <p>The report compares a durable-workbench snapshot with a selected-future scenario through the shared projection contract. Both producers in this example are simulated. The reading task works with the published artifacts; source-based reproduction is available to authorized repository collaborators.</p>
+  </section>
   <section class="panel" aria-labelledby="report-summary">
     <h2 id="report-summary">What this run establishes</h2>
-    <p>The same two fixtures, committed profile, constellation lock, and comparator produce one stable report digest across all 17 shared projection leaves.</p>
-    <div class="metrics" aria-label="Golden Specimen report summary">
-      <div class="metric"><strong>{golden_report['summary']['leaf_paths_compared']}</strong>paths compared</div>
-      <div class="metric"><strong>{counts['agreement']}</strong>agreements</div>
-      <div class="metric"><strong>{counts['explainable_variation']}</strong>explainable variations</div>
-      <div class="metric"><strong>{counts['material_divergence']}</strong>material divergences</div>
+    <p>The same two fixtures, committed profile, constellation lock and comparator produce one stable report digest across {total} shared projection leaves. Each leaf is one compared field path.</p>
+    <figure class="evidence-figure">
+      <div class="figure-scroll" role="region" tabindex="0" aria-label="Comparison count chart">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 275" role="img" aria-labelledby="counts-title counts-desc">
+          <title id="counts-title">Classification counts for {total} compared paths</title>
+          <desc id="counts-desc">All bars start at zero and use one count scale. The following table provides every count and its reading. Counts describe this report's fields, rather than a population outcome.</desc>
+          <g fill="currentColor" font-family="sans-serif" font-size="18">
+            {''.join(bars)}
+            <text x="280" y="250">0</text>
+            <text x="610" y="250" text-anchor="end">{scale_max} paths</text>
+          </g>
+          <path d="M280 35V220H610" fill="none" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </div>
+      <figcaption>Counts share a zero baseline and one scale. Color identifies the common measure; category labels carry the distinction. The chart describes field classifications in this example, with scientific interpretation retained by the report and its reviewer.</figcaption>
+    </figure>
+    <div class="table-scroll" role="region" tabindex="0" aria-labelledby="classification-caption">
+      <table data-label="Golden Specimen classification counts">
+        <caption id="classification-caption">Every classification in the {total}-path comparison</caption>
+        <thead><tr><th scope="col">Classification</th><th scope="col">Compared paths</th><th scope="col">Reading</th></tr></thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>
     </div>
   </section>
-  <section class="panel" aria-labelledby="source-coordinate">
-    <h2 id="source-coordinate">Source coordinate</h2>
-    <p>Every source link below resolves to revision <code>{escape(source_revision)}</code>. The <a href="projection-manifest.json">projection manifest</a> records byte counts and SHA-256 identities for this complete candidate.</p>
-    <ul class="source-list">{source_items}</ul>
-    <p><a href="{escape(repository_url, quote=True)}">Open the repository overview</a></p>
-  </section>
   <section class="panel" aria-labelledby="reading-boundary">
-    <h2 id="reading-boundary">Reading boundary</h2>
-    <p>The Golden Specimen report verifies two simulated producers. Environment-observed evidence enters through its independent provenance and acceptance route.</p>
-    <p>The <a href="reports/reference/comparison.html">contract-shape reference</a> and its <a href="reports/reference/comparison.json">machine-readable report</a> remain available as a separate exercise of classifier and visibility behavior. Its report digest is <code>{escape(reference_report['report_digest'])}</code>.</p>
+    <h2 id="reading-boundary">Choose the next useful question</h2>
+    <p>Use the <a href="reports/reference/comparison.html">contract-shape reference</a> and its <a href="reports/reference/comparison.json">machine-readable report</a> to inspect classifier and visibility behavior separately. Its report digest is <code>{escape(reference_report['report_digest'])}</code>.</p>
+    <p>The <a href="https://cometspectrum.org/">Program guide</a> explains the five repository roles. The <a href="https://fieldformlab.org/">Governance guide</a> explains evidence records and review boundaries.</p>
+    <p>Environment-observed results enter through their own provenance and acceptance route. Administrative study tools, configured database evidence and interactive workbench delivery retain their separately reviewed source and release scopes.</p>
     <p><a href="data-use.html">Read the data-use and crawler-intent note</a></p>
+  </section>
+  <section class="panel" aria-labelledby="source-coordinate">
+    <h2 id="source-coordinate">Reproduce from the selected source</h2>
+    <p>Authorized repository collaborators can use the source guide and fixtures below. Every source link resolves to revision <code>{escape(source_revision)}</code>. The public <a href="projection-manifest.json">projection manifest</a> records byte counts and SHA-256 identities for this complete candidate.</p>
+    <ul class="source-list">{source_items}</ul>
+    <p><a href="{escape(repository_url, quote=True)}">Repository overview (collaborator access)</a></p>
   </section>
 </main>
 <footer class="page-shell">
