@@ -218,7 +218,10 @@ class AdministrativeOrientationTests(unittest.TestCase):
     def test_quick_start_and_receiving_routes(self):
         root=Path(__file__).resolve().parents[1]
         text=(root/"README.md").read_text()
-        self.assertLess(text.index("--output build/first-comparison"),text.index("## Choose your route"))
+        self.assertLess(
+            text.index('--output "$comparison_work/first-comparison"'),
+            text.index("## Choose your route"),
+        )
         for target in ("lims-eln-comparative-evidence/issues/44","lims-eln-program-specification/issues/54","lims-eln-comparative-evidence/issues/40","docs/administrative-evaluation.md"):
             self.assertIn(target,text)
         self.assertTrue((root/"docs/administrative-evaluation.md").is_file())
