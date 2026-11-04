@@ -40,7 +40,8 @@ interruption recovery, and the local filesystem boundary.
 to see agreement, explained variation, and differences that need interpretation.
 The [matching JSON](https://cometspectrum.io/reports/golden-specimen/comparison.json)
 carries the same comparison for further analysis. Start with one differing
-measurement and follow its input, unit, and classification.
+measurement and follow its input, unit, and classification. To inspect the
+value at one path, [try the lookup example](#follow-a-comparison-path).
 
 To reproduce a result, use the [local examples](#run-it). To bring a new result
 into review, choose its [observed-evidence route](accepted/README.md) or
@@ -305,6 +306,31 @@ alignment and release-path alignment remain separate machine-readable judgments,
 equivalent schemas reached through distinct migration systems retain visible
 provenance. Simulated, planned, and caller-supplied observed receipt identities remain
 separate evidence coordinates.
+
+### Follow a comparison path
+
+The [path lookup example](src/comparative_evidence/normalize.py) retrieves a
+replicate measurement, a present null, and an absent field from synthetic
+input. A null means the field is present. An absent field raises `KeyError`.
+The report identifies which side lacks required evidence. The scientific
+reviewer decides what the measurement means.
+
+With the Python 3.12 virtual environment from the quick start, run the
+example from the repository root using the standard library.
+
+```bash
+.venv/bin/python -m doctest src/comparative_evidence/normalize.py
+```
+
+To exercise the traversal failures and the report's missing-side decision
+together with the example, install the optional test runner in that environment.
+
+```bash
+.venv/bin/python -m pip install 'pytest==9.2.0'
+.venv/bin/python -m pytest -q --doctest-modules \
+  src/comparative_evidence/normalize.py tests/examples/test_path_lookup.py \
+  tests/test_comparative_evidence.py::ComparativeEvidenceTests::test_missing_required_path_is_a_critical_specification_violation
+```
 
 ## Build the Pages candidate
 

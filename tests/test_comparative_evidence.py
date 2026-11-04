@@ -681,22 +681,34 @@ class ComparativeEvidenceTests(unittest.TestCase):
         actual_value = observed_envelope_value()
         del simulation_value["result"]["security"]["tenant_boundary"]
         del actual_value["result"]["security"]["tenant_boundary"]
+        simulated_measurement = simulation_value["result"]["specimen"]["result"]
+        actual_measurement = actual_value["result"]["specimen"]["result"]
+        del simulated_measurement["unit"]
+        actual_measurement["unit"] = None
+        simulated_measurement["quality_flag"] = None
+        del actual_measurement["quality_flag"]
         report = compare(
             ObservationEnvelope.from_dict(simulation_value),
             ObservationEnvelope.from_dict(actual_value),
             load("specification/comparison-profile.json"),
         )
-        difference = next(
-            item
-            for item in report["differences"]
-            if item["path"] == "$.security.tenant_boundary"
-        )
-        self.assertEqual(
-            difference["classification"],
-            "shared_specification_violation",
-        )
-        self.assertTrue(difference["critical"])
-        self.assertEqual(report["summary"]["critical_differences"], 1)
+        differences = {item["path"]: item for item in report["differences"]}
+        for path, missing_sides in (
+            ("$.security.tenant_boundary", ["simulation", "observed"]),
+            ("$.specimen.result.unit", ["simulation"]),
+            ("$.specimen.result.quality_flag", ["observed"]),
+        ):
+            with self.subTest(path=path):
+                difference = differences[path]
+                self.assertEqual(
+                    difference["classification"], "shared_specification_violation"
+                )
+                self.assertTrue(difference["critical"])
+                self.assertEqual(
+                    difference["comparison"],
+                    {"mode": "required_presence", "missing_sides": missing_sides},
+                )
+        self.assertEqual(report["summary"]["critical_differences"], 3)
 
     def test_directional_adjudication_distinguishes_slower_recovery(self) -> None:
         actual_value = observed_envelope_value()
