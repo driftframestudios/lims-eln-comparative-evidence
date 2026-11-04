@@ -26,6 +26,22 @@ def normalize(value: Any, ignored_paths: set[str], path: str = "$") -> Any:
 
 
 def path_value(value: dict[str, Any], path: str) -> Any:
+    """Follow a released comparison path to the value in one input observation.
+
+    >>> observation = {"replicates": [{"value": 1.25}, {"value": None}]}
+    >>> path_value(observation, "$.replicates[0].value")
+    1.25
+    >>> path_value(observation, "$.replicates[1].value") is None
+    True
+    >>> path_value(observation, "$.replicates[1].unit")
+    Traceback (most recent call last):
+        ...
+    KeyError: 'unit'
+
+    A present JSON null returns None. A missing field raises KeyError and a
+    missing array position raises IndexError. A step on the wrong container
+    raises TypeError. Unsupported path syntax raises ValueError.
+    """
     tokens = comparison_path_tokens(path)
     current: Any = value
     for field, index in tokens:
